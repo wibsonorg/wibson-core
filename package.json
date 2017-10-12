@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "truffle-contract": "^1.1.8",
     "truffle-solidity-loader": "0.0.8"
   },
   "dependencies": {
