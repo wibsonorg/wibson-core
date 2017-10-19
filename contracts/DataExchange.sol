@@ -56,8 +56,8 @@ contract DataExchange {
 
   mapping(address => mapping(address => OrderValue)) internal orderValues;
   mapping(uint => OrderKey) internal orderKeys;
-  address[] openOrders;
-  uint orderSize;
+  address[] public openOrders;
+  uint public orderSize;
 
   address public contractOwner;
 
@@ -140,6 +140,10 @@ contract DataExchange {
 
   function getOrderAddressFor(address buyer, address seller) public returns (address) {
     return orders[buyer][seller];
+  }
+
+  function getOpenOrders() public returns (address[]) {
+    return openOrders;
   }
 
   function removeAndSwapAt(address buyer, address seller) internal returns (bool) {
