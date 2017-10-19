@@ -191,7 +191,7 @@ contract DataOrder {
   Status public status;
 
   // Timestamps
-  uint public createadAt;
+  uint public createdAt;
   uint public dataAddedAt;
   uint public notaryAcceptedAt;
   uint public transactionCompletedAt;
