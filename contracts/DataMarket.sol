@@ -2,6 +2,13 @@ pragma solidity ^0.4.11;
 
 // import "./DataToken.sol";
 
+
+// 1. placeOrder (buyer)
+// 2. acceptToBeNotary (notary)
+// 3. addDataResponse (buyer)
+// 4. finishOrder
+
+
 /*
  * @title Data Market contract.
  * @author Cristian Adamo <cristian@grandata.com>
