@@ -100,7 +100,7 @@ contract DataExchange {
     address buyer,
     string data,
     string signature
-  ) public returns (bool) {
+  ) public constant returns (bool) {
     require(orders[buyer][msg.sender] != 0x0);
     var order = DataOrder(orders[buyer][msg.sender]);
     require (order.seller() == msg.sender);
@@ -125,24 +125,23 @@ contract DataExchange {
     return okay;
   }
 
-  function acceptToBeNotary(address buyer, address seller) public returns (bool) {
+  function acceptToBeNotary(address buyer, address seller) public constant returns (bool) {
     require(orders[buyer][seller] != 0x0);
     var order = DataOrder(orders[buyer][seller]);
     require (order.notary() == msg.sender);
 
     var okay = order.acceptToBeNotary();
     if (okay) {
-      removeAndSwapAt(buyer, seller);
       NotaryAccepted(order, buyer, seller, msg.sender);
     }
     return okay;
   }
 
-  function getOrderAddressFor(address buyer, address seller) public returns (address) {
+  function getOrderAddressFor(address buyer, address seller) public constant returns (address) {
     return orders[buyer][seller];
   }
 
-  function getOpenOrders() public returns (address[]) {
+  function getOpenOrders() public constant returns (address[]) {
     return openOrders;
   }
 
@@ -242,7 +241,7 @@ contract DataOrder {
     signature = _signature;
     status = Status.OrderCreated;
 
-    createadAt = now;
+    createdAt = now;
     contractOwner = msg.sender;
   }
 
@@ -257,7 +256,7 @@ contract DataOrder {
     require (msg.sender == contractOwner);
     require (status == Status.OrderCreated);
 
-    data = _data;
+    decryptionKey = _data;
     status = Status.DataAdded;
     dataSignature = _signature;
     dataAddedAt = now;
@@ -268,11 +267,12 @@ contract DataOrder {
     require (msg.sender == contractOwner);
     require (status == Status.DataAdded);
 
+    status = Status.TransactionCompleted;
     transactionCompletedAt = now;
     return true;
   }
 
-  function getStatusAsString() public returns (bytes32) {
+  function getStatusAsString() public constant returns (bytes32) {
     if (status == Status.OrderCreated) {
       return bytes32("OrderCreated");
     }
@@ -296,6 +296,8 @@ contract DataOrder {
     if (status == Status.TransactionCompletedByNotary) {
       return bytes32("TransactionCompletedByNotary");
     }
+
+    return bytes32("unknown");
   }
 
   function kill() public {
