@@ -1,6 +1,80 @@
 pragma solidity ^0.4.11;
 
+
+// ---( Libraries )-------------------------------------------------------------
+
+
+
+
+/*
+
+// 1. Buyer call.
+function placeOrder(address[] _notaries, uint256 mba, string filters, string terms, string buyerURL) return (orderAddr)
+
+// 2. Notary Call.
+function acceptToBeNotary(address orderAddr) return (bool)
+
+// 3. Buyer call.
+function addDataResponseToOrder(address orderAddr, address seller, address notary, uint256 price, string hash, string signature) return (bool)
+
+// 4. Seller call.
+function hasDataResponseBeenAccepted(address orderAddr) return (bool)
+
+// 5. Seller, Buyer or approved Notary call.
+function closeOrder(address orderAddr, address seller) return (bool)
+
+*/
+
+// ---( DataExchange )----------------------------------------------------------
 contract DataExchange {
+
+  // Events
+  event NewOrder(
+    address orderAddr,
+    address buyer,
+    address[] notaries,
+    string filters,
+    string dataRequest,
+    string terms,
+    string buyerURL,
+    uint minimimBudgetForAudit,
+    bool certificationFlag,
+    uint serviceFee
+    //uint timestamps
+  );
+
+  event NotaryAccepted(
+    address orderAddr,
+    address buyer,
+    address notary
+  );
+
+  event DataAdded(
+    address orderAddr,
+    address buyer,
+    address seller,
+    address notary,
+    uint256 price,
+    string hash,
+    string signature,
+    uint timestamps
+  );
+
+  event TransactionCompleted(
+    address orderAddr,
+    address buyer,
+    address seller,
+    address notary,
+    bytes32 status,
+    uint timestamps
+  );
+
+
+  // NOTE: in both mappings first key is the buyer, second one is the seller.
+  // Mapping of contracts shares of the buyer-seller contract.
+  mapping(address => mapping(address => address)) public orderResponses;
+
+  // Order tracking.
 
   struct OrderValue {
     uint index;
@@ -10,51 +84,10 @@ contract DataExchange {
 
   struct OrderKey {
     address buyer;
-    address seller;
+    address orderAddr;
   }
 
-  // Events
-  event NewOrder(
-    address orderAddr,
-    address buyer,
-    address seller,
-    address notary,
-    uint256 price,
-    string filters,
-    string terms,
-    string encryptedData,
-    string signature
-  );
-
-  event DataAdded(
-    address orderAddr,
-    address buyer,
-    address seller,
-    string decryptionKey,
-    string signature
-  );
-
-  event NotaryAccepted(
-    address orderAddr,
-    address buyer,
-    address seller,
-    address notary
-  );
-
-  event TransactionCompleted(
-    address orderAddr,
-    address buyer,
-    address seller,
-    address notary,
-    bytes32 status
-  );
-
-
-  // NOTE: in both mappings first key is the buyer, second one is the seller.
-  // Mapping of contracts shares of the buyer-seller contract.
-  mapping(address => mapping(address => address)) public orders;
-
-  mapping(address => mapping(address => OrderValue)) internal orderValues;
+  mapping(address => OrderValue[]) internal orderValues;
   mapping(uint => OrderKey) internal orderKeys;
   address[] public openOrders;
   uint public orderSize;
@@ -66,85 +99,118 @@ contract DataExchange {
     orderSize = 0;
   }
 
+  // Step 1.
   function newOrder(
-    address seller,
-    address notary,
-    uint256 price,
+    address[] notaries,
     string filters,
+    string dataRequest,
     string terms,
-    string data,
-    string signature
+    string buyerURL,
+    uint minimimBudgetForAudit,
+    bool certificationFlag,
+    uint serviceFee
   ) public returns (address) {
+    require(notaries.length > 0);
+    require(minimimBudgetForAudit > uint256(0));
+    // require(serviceFee > uint256(0));
+
     address newOrderAddr = new DataOrder(
       msg.sender,
-      seller,
-      notary,
-      price,
+      notaries,
       filters,
+      dataRequest,
       terms,
-      data,
-      signature
+      buyerURL,
+      minimimBudgetForAudit,
+      certificationFlag,
+      serviceFee
     );
 
-    orders[msg.sender][seller] = newOrderAddr;
     openOrders.push(newOrderAddr);
-    orderValues[msg.sender][seller] = OrderValue(orderSize, newOrderAddr, now);
-    orderKeys[orderSize] = OrderKey(msg.sender, seller);
+    orderValues[msg.sender].push(OrderValue(orderSize, newOrderAddr, now));
+    orderKeys[orderSize] = OrderKey(msg.sender, newOrderAddr);
     orderSize++;
 
-    NewOrder(newOrderAddr, msg.sender, seller, notary, price, filters, terms, data, signature);
+    NewOrder(
+      newOrderAddr,
+      msg.sender,
+      notaries,
+      filters,
+      dataRequest,
+      terms,
+      buyerURL,
+      minimimBudgetForAudit,
+      certificationFlag,
+      serviceFee
+    );
+
     return newOrderAddr;
   }
 
-  function addDataResponseToOrder(
-    address buyer,
-    string data,
-    string signature
-  ) public constant returns (bool) {
-    require(orders[buyer][msg.sender] != 0x0);
-    var order = DataOrder(orders[buyer][msg.sender]);
-    require (order.seller() == msg.sender);
+  // Step 2.
+  function acceptToBeNotary(address orderAddr) public constant returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
 
-    var okay = order.addDataResponse(data, signature);
+    var okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
-      DataAdded(order, buyer, msg.sender, data, signature);
+      NotaryAccepted(order, order.buyer(), msg.sender);
     }
     return okay;
   }
 
+  // Step 3.
+  function addDataResponseToOrder(
+    address orderAddr,
+    address seller,
+    address notary,
+    uint256 price,
+    string hash,
+    string signature
+  ) public returns (bool) {
+    require(orderResponses[msg.sender][seller] == 0x0);
+
+    orderResponses[msg.sender][seller] = orderAddr;
+    var order = DataOrder(orderAddr);
+
+    require(order.hasNotaryAccepted(notary) == true);
+
+    var okay = order.addDataResponse(seller, notary, price, hash, signature);
+    if (okay) {
+      DataAdded(order, order.buyer(), msg.sender, notary, price, hash, signature, now);
+    }
+    return okay;
+  }
+
+  // Step 4.
+  function hasDataResponseBeenAccepted(address orderAddr) public constant returns (bool) {
+    require(orderAddr != 0x0);
+    return true;
+  }
+
+  // Step 5.
   function closeOrder(address buyer, address seller) public returns (bool) {
-    require(orders[buyer][seller] != 0x0);
-    var order = DataOrder(orders[buyer][seller]);
-    require (order.notary() == msg.sender || order.buyer() == msg.sender);
+    require(orderResponses[buyer][seller] != 0x0);
+    var order = DataOrder(orderResponses[buyer][seller]);
+    require (order.hasNotaryAccepted(msg.sender) || order.buyer() == msg.sender);
 
     var okay = order.close();
     if (okay) {
-      removeAndSwapAt(buyer, seller);
-      TransactionCompleted(order, buyer, seller, order.notary(), order.getStatusAsString());
-    }
-    return okay;
-  }
-
-  function acceptToBeNotary(address buyer, address seller) public constant returns (bool) {
-    require(orders[buyer][seller] != 0x0);
-    var order = DataOrder(orders[buyer][seller]);
-    require (order.notary() == msg.sender);
-
-    var okay = order.acceptToBeNotary();
-    if (okay) {
-      NotaryAccepted(order, buyer, seller, msg.sender);
+      // removeAndSwapAt(buyer, seller);
+      TransactionCompleted(order, buyer, seller, msg.sender, order.getStatusAsString(), now);
     }
     return okay;
   }
 
   function getOrderAddressFor(address buyer, address seller) public constant returns (address) {
-    return orders[buyer][seller];
+    return orderResponses[buyer][seller];
   }
 
   function getOpenOrders() public constant returns (address[]) {
     return openOrders;
   }
 
+  /*
   function removeAndSwapAt(address buyer, address seller) internal returns (bool) {
     var deleteValue = orderValues[buyer][seller];
     uint deleteIndex = deleteValue.index;
@@ -161,6 +227,7 @@ contract DataExchange {
     orderSize--;
     return true;
   }
+  */
 
   function kill() public {
     if (msg.sender == contractOwner) {
@@ -170,131 +237,167 @@ contract DataExchange {
 }
 
 
+
+// ---( DataOrder )-------------------------------------------------------------
+
 contract DataOrder {
   // Persons involved
-  address public seller;
   address public buyer;
-  address public notary;
 
-  // Information exchanges
-  string public data;
-  string public decryptionKey;
-
-  // Marketplace conditions
-  string public filters;
-  string public terms;
-  uint256 public price; // In GDT token.
-
-  string public signature;
-  string public dataSignature;
-  Status public status;
+  string filters;
+  string dataRequest;
+  string terms;
+  string buyerURL;
+  uint minimimBudgetForAudit;
+  bool certificationFlag;
+  uint serviceFee;
 
   // Timestamps
   uint public createdAt;
   uint public dataAddedAt;
-  uint public notaryAcceptedAt;
   uint public transactionCompletedAt;
+
+  OrderStatus public orderStatus;
 
   address public contractOwner;
 
-  enum Status {
+  enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
     DataAdded,
+    TransactionCompleted
+  }
+
+  enum DataResponseStatus {
+    DataResponseAdded,
     RefundedToBuyer,
     TransactionCompleted,
     TransactionCompletedByNotary
   }
 
-  function DataOrder(
-    address _buyer,
-    address _seller,
-    address _notary,
-    uint256 _price,
-    string _filters,
-    string _terms,
-    string _data,
-    string _signature
-  ) public {
-    // Seller, Buyer and Notary must be set.
-    require(_seller != 0x0);
-    require(_buyer != 0x0);
-    require(_notary != 0x0);
-    // Price must be non-zero.
-    require(_price > uint256(0));
-    // Invariant: the seller could not be the notary nor the buyer could be
-    //            the notary nor the seller should be the buyer.
-    require(_seller != _notary);
-    require(_buyer != _notary);
-    require(_buyer != _seller);
-    require(msg.sender != _notary);
-    require(msg.sender != _seller);
-    require(msg.sender != _buyer);
-
-    seller = _seller;
-    buyer = _buyer;
-    notary = _notary;
-    price = _price;
-    filters = _filters;
-    terms = _terms;
-    data = _data;
-    signature = _signature;
-    status = Status.OrderCreated;
-
-    createdAt = now;
-    contractOwner = msg.sender;
+  // --- Notary Information ---
+  struct NotaryInfo {
+    bool accepted;
+    uint acceptedAt;
   }
 
-  function acceptToBeNotary() public returns (bool) {
+  mapping(address => NotaryInfo) internal notaryInfo;
+  address[] public acceptedNotaries;
+  address[] public notaries;
+
+  // --- Seller Information ---
+  struct SellerInfo {
+    address notary;
+    uint256 price;
+    string hash;
+    string signature;
+    uint createdAt;
+    DataResponseStatus status;
+  }
+
+  mapping(address => SellerInfo) public sellerInfo;
+  address[] public sellers;
+
+
+  function DataOrder(
+    address _buyer,
+    address[] _notaries,
+    string _filters,
+    string _dataRequest,
+    string _terms,
+    string _buyerURL,
+    uint _minimimBudgetForAudit,
+    bool _certificationFlag,
+    uint _serviceFee
+  ) public {
+    require(_buyer != 0x0);
+    require(msg.sender != _buyer);
+    // @todo(cristian): add notary unique validation.
+    require(_minimimBudgetForAudit > uint256(0));
+    // require(_serviceFee > uint256(0));
+
+    contractOwner = msg.sender;
+
+    buyer = _buyer;
+    notaries = _notaries;
+    filters = _filters;
+    dataRequest = _dataRequest;
+    terms = _terms;
+    buyerURL = _buyerURL;
+    minimimBudgetForAudit = _minimimBudgetForAudit;
+    certificationFlag = _certificationFlag;
+    serviceFee = _serviceFee;
+    orderStatus = OrderStatus.OrderCreated;
+
+    for (uint i = 0; i < _notaries.length; i++) {
+      notaryInfo[_notaries[i]] = NotaryInfo(false, 0);
+    }
+
+    createdAt = now;
+  }
+
+  function acceptToBeNotary(address notary) public returns (bool) {
     require (msg.sender == contractOwner);
-    status = Status.OrderCreated;
-    notaryAcceptedAt = now;
+    require (notaryInfo[notary].accepted == false);
+    notaryInfo[notary] = NotaryInfo(true, now);
+    acceptedNotaries.push(notary);
+    orderStatus = OrderStatus.NotaryAccepted;
     return true;
   }
 
-  function addDataResponse(string _data, string _signature) public returns (bool) {
+  function addDataResponse(
+    address seller,
+    address notary,
+    uint256 price,
+    string hash,
+    string signature
+  ) public returns (bool) {
     require (msg.sender == contractOwner);
-    require (status == Status.OrderCreated);
+    require (notaryInfo[notary].accepted == true);
+    require (orderStatus == OrderStatus.NotaryAccepted);
 
-    decryptionKey = _data;
-    status = Status.DataAdded;
-    dataSignature = _signature;
-    dataAddedAt = now;
+    sellerInfo[seller] = SellerInfo(
+      notary,
+      price,
+      hash,
+      signature,
+      now,
+      DataResponseStatus.DataResponseAdded
+    );
+
+    sellers.push(seller);
+
     return true;
   }
 
   function close() public returns (bool) {
     require (msg.sender == contractOwner);
-    require (status == Status.DataAdded);
+    require (orderStatus == OrderStatus.DataAdded);
 
-    status = Status.TransactionCompleted;
+    orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = now;
     return true;
   }
 
+  function hasNotaryAccepted(address notary) public constant returns (bool) {
+    return notaryInfo[notary].accepted == true;
+  }
+
   function getStatusAsString() public constant returns (bytes32) {
-    if (status == Status.OrderCreated) {
+    if (orderStatus == OrderStatus.OrderCreated) {
       return bytes32("OrderCreated");
     }
 
-    if (status == Status.NotaryAccepted) {
+    if (orderStatus == OrderStatus.NotaryAccepted) {
       return bytes32("NotaryAccepted");
     }
 
-    if (status == Status.DataAdded) {
+    if (orderStatus == OrderStatus.DataAdded) {
       return bytes32("DataAdded");
     }
 
-    if (status == Status.RefundedToBuyer) {
-      return bytes32("RefundedToBuyer");
-    }
-
-    if (status == Status.TransactionCompleted) {
+    if (orderStatus == OrderStatus.TransactionCompleted) {
       return bytes32("TransactionCompleted");
-    }
-
-    if (status == Status.TransactionCompletedByNotary) {
-      return bytes32("TransactionCompletedByNotary");
     }
 
     return bytes32("unknown");

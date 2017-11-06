@@ -12,7 +12,7 @@ contract DataToken {
   uint256 public totalSupply;
 
   mapping(address => uint256) balances;
-  mapping (address => mapping (address => uint256)) allowed;
+  mapping(address => mapping (address => uint256)) allowed;
 
   function DataToken() {
     totalSupply = INITIAL_SUPPLY * 10 ** uint256(decimals);
