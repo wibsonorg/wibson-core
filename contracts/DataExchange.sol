@@ -183,10 +183,12 @@ contract DataExchange {
   }
 
   // Step 4.
+  /*
   function hasDataResponseBeenAccepted(address orderAddr) public constant returns (bool) {
-    require(orderAddr != 0x0);
+
     return true;
   }
+  */
 
   // Step 5.
   function closeOrder(address buyer, address seller) public returns (bool) {
