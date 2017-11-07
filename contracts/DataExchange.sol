@@ -148,7 +148,7 @@ contract DataExchange {
   }
 
   // Step 2.
-  function acceptToBeNotary(address orderAddr) public constant returns (bool) {
+  function acceptToBeNotary(address orderAddr) public returns (bool) {
     require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
 
@@ -331,16 +331,18 @@ contract DataOrder {
     serviceFee = _serviceFee;
     orderStatus = OrderStatus.OrderCreated;
 
+    /*
     for (uint i = 0; i < _notaries.length; i++) {
       notaryInfo[_notaries[i]] = NotaryInfo(false, 0);
     }
+    */
 
     createdAt = now;
   }
 
   function acceptToBeNotary(address notary) public returns (bool) {
     require (msg.sender == contractOwner);
-    require (notaryInfo[notary].accepted == false);
+    // require (notaryInfo[notary].accepted == false);
     notaryInfo[notary] = NotaryInfo(true, now);
     acceptedNotaries.push(notary);
     orderStatus = OrderStatus.NotaryAccepted;
