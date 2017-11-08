@@ -246,13 +246,13 @@ contract DataOrder {
   // Persons involved
   address public buyer;
 
-  string filters;
-  string dataRequest;
-  string terms;
-  string buyerURL;
-  uint minimimBudgetForAudit;
-  bool certificationFlag;
-  uint serviceFee;
+  string public filters;
+  string public dataRequest;
+  string public terms;
+  string public buyerURL;
+  uint public minimimBudgetForAudit;
+  bool public certificationFlag;
+  uint public serviceFee;
 
   // Timestamps
   uint public createdAt;
