@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.15;
 
 
 // ---( Libraries )-------------------------------------------------------------
@@ -92,9 +92,17 @@ contract DataExchange {
   address[] public openOrders;
   uint public orderSize;
 
+  // Notaries tracking
+
+  mapping(address => address[]) public ordersByNotary;
+  mapping(uint => OrderKey) internal notaryOpenOrders;
+
+
+  address[] public allowedNotaries;
   address public contractOwner;
 
-  function DataExchange() public {
+  function DataExchange(address[] availableNotaries) public {
+    allowedNotaries = availableNotaries;
     contractOwner = msg.sender;
     orderSize = 0;
   }
@@ -130,6 +138,10 @@ contract DataExchange {
     orderValues[msg.sender].push(OrderValue(orderSize, newOrderAddr, now));
     orderKeys[orderSize] = OrderKey(msg.sender, newOrderAddr);
     orderSize++;
+
+    for (uint i = 0; i < notaries.length; i++) {
+      ordersByNotary[notaries[i]].push(newOrderAddr);
+    }
 
     NewOrder(
       newOrderAddr,
@@ -208,24 +220,29 @@ contract DataExchange {
     return orderResponses[buyer][seller];
   }
 
+  function getOrderAddressesForNotary(address notary) public constant returns (address[]) {
+    address[] memory addrs = ordersByNotary[notary];
+    return addrs;
+  }
+
   function getOpenOrders() public constant returns (address[]) {
     return openOrders;
   }
 
   /*
   function removeAndSwapAt(address buyer, address seller) internal returns (bool) {
-    var deleteValue = orderValues[buyer][seller];
+    var deleteValue = orderResponses[buyer][seller];
     uint deleteIndex = deleteValue.index;
-    delete orderValues[buyer][seller];
+    delete orderResponses[buyer][seller];
     delete openOrders[openOrders.length-1];
 
     var orderKey = orderKeys[openOrders.length-1];
-    var orderValue = orderValues[orderKey.buyer][orderKey.seller];
+    var orderValue = orderResponses[orderKey.buyer][orderKey.seller];
 
     orderKeys[deleteIndex] = orderKeys[openOrders.length-1];
     delete orderKeys[openOrders.length-1];
     openOrders[deleteIndex] = orderValue.orderAddr;
-    orderValues[orderKey.buyer][orderKey.seller].index = deleteIndex;
+    orderResponses[orderKey.buyer][orderKey.seller].index = deleteIndex;
     orderSize--;
     return true;
   }
