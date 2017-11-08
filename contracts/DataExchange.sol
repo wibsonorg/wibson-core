@@ -221,8 +221,7 @@ contract DataExchange {
   }
 
   function getOrderAddressesForNotary(address notary) public constant returns (address[]) {
-    address[] memory addrs = ordersByNotary[notary];
-    return addrs;
+    return ordersByNotary[notary];
   }
 
   function getOpenOrders() public constant returns (address[]) {
