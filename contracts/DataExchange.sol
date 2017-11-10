@@ -93,16 +93,18 @@ contract DataExchange {
   uint public orderSize;
 
   // Notaries tracking
-
-  mapping(address => address[]) public ordersByNotary;
-  mapping(uint => OrderKey) internal notaryOpenOrders;
-
-
+  mapping(address => address[]) public openOrdersByNotary;
   address[] public allowedNotaries;
   address public contractOwner;
 
-  function DataExchange(address[] availableNotaries) public {
-    allowedNotaries = availableNotaries;
+  // Seller Tracking
+  mapping(address => address[]) public ordersBySeller;
+
+  // Buyer Tracking
+  mapping(address => address[]) public ordersByBuyer;
+
+  function DataExchange(address[] _allowedNotaries) public {
+    allowedNotaries = _allowedNotaries;
     contractOwner = msg.sender;
     orderSize = 0;
   }
@@ -140,8 +142,10 @@ contract DataExchange {
     orderSize++;
 
     for (uint i = 0; i < notaries.length; i++) {
-      ordersByNotary[notaries[i]].push(newOrderAddr);
+      openOrdersByNotary[notaries[i]].push(newOrderAddr);
     }
+
+    ordersByBuyer[msg.sender].push(newOrderAddr);
 
     NewOrder(
       newOrderAddr,
@@ -189,6 +193,7 @@ contract DataExchange {
 
     var okay = order.addDataResponse(seller, notary, price, hash, signature);
     if (okay) {
+      ordersBySeller[seller].push(orderAddr);
       DataAdded(order, order.buyer(), msg.sender, notary, price, hash, signature, now);
     }
     return okay;
@@ -211,27 +216,37 @@ contract DataExchange {
     var okay = order.close();
     if (okay) {
       // removeAndSwapAt(buyer, seller);
-      TransactionCompleted(order, buyer, seller, msg.sender, order.getStatusAsString(), now);
+      TransactionCompleted(order, buyer, seller, msg.sender, order.getOrderStatusAsString(), now);
     }
     return okay;
   }
 
-  function getOrderAddressFor(address buyer, address seller) public constant returns (address) {
+  function getOrderFor(address buyer, address seller) public constant returns (address) {
     return orderResponses[buyer][seller];
   }
 
-  function getOrderAddressesForNotary(address notary) public constant returns (address[]) {
-    var notaryOrders = ordersByNotary[notary];
-    address[] memory newOrders = new address[](notaryOrders.length);
+  function getOpenOrdersForNotary(address notary) public constant returns (address[]) {
+    return getArrayFromMapping(openOrdersByNotary[notary]);
+  }
 
-    for(uint i = 0; i < notaryOrders.length; i++) {
-        newOrders[i] = notaryOrders[i];
-    }
-    return newOrders;
+  function getOrdersForSeller(address seller) public constant returns (address[]) {
+    return getArrayFromMapping(ordersBySeller[seller]);
+  }
+
+  function getOrdersForBuyer(address buyer) public constant returns (address[]) {
+    return getArrayFromMapping(ordersByBuyer[buyer]);
   }
 
   function getOpenOrders() public constant returns (address[]) {
     return openOrders;
+  }
+
+  function getArrayFromMapping(address[] xs) internal constant returns (address[]) {
+    address[] memory rs = new address[](xs.length);
+    for(uint i = 0; i < xs.length; i++) {
+        rs[i] = xs[i];
+    }
+    return rs;
   }
 
   /*
@@ -253,7 +268,7 @@ contract DataExchange {
   }
   */
 
-  function kill() public {
+  function kill() public constant {
     if (msg.sender == contractOwner) {
       selfdestruct(contractOwner);
     }
@@ -321,7 +336,6 @@ contract DataOrder {
 
   mapping(address => SellerInfo) public sellerInfo;
   address[] public sellers;
-
 
   function DataOrder(
     address _buyer,
@@ -409,7 +423,40 @@ contract DataOrder {
     return notaryInfo[notary].accepted == true;
   }
 
-  function getStatusAsString() public constant returns (bytes32) {
+  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, bytes32) {
+    var info = sellerInfo[seller];
+    return (
+      seller,
+      info.notary,
+      info.price,
+      info.hash,
+      info.signature,
+      info.createdAt,
+      getDataResponseStatusAsString(info.status)
+    );
+  }
+
+  function getDataResponseStatusAsString(DataResponseStatus drs) internal constant returns (bytes32) {
+    if (drs == DataResponseStatus.DataResponseAdded) {
+      return bytes32("DataResponseAdded");
+    }
+
+    if (drs == DataResponseStatus.RefundedToBuyer) {
+      return bytes32("RefundedToBuyer");
+    }
+
+    if (drs == DataResponseStatus.TransactionCompleted) {
+      return bytes32("TransactionCompleted");
+    }
+
+    if (drs == DataResponseStatus.TransactionCompletedByNotary) {
+      return bytes32("TransactionCompletedByNotary");
+    }
+
+    return bytes32("unknown");
+  }
+
+  function getOrderStatusAsString() public constant returns (bytes32) {
     if (orderStatus == OrderStatus.OrderCreated) {
       return bytes32("OrderCreated");
     }
@@ -429,7 +476,7 @@ contract DataOrder {
     return bytes32("unknown");
   }
 
-  function kill() public {
+  function kill() public constant {
     if (msg.sender == contractOwner) {
       selfdestruct(contractOwner);
     }
