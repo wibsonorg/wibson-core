@@ -9,6 +9,7 @@ contract DataOrder {
   string public dataRequest;
   string public terms;
   string public buyerURL;
+  string public publicKey;
   uint public minimimBudgetForAudit;
   bool public certificationFlag;
   uint public serviceFee;
@@ -50,7 +51,6 @@ contract DataOrder {
   struct SellerInfo {
     address notary;
     uint256 price;
-    string publicKey;
     string hash;
     string signature;
     uint createdAt;
@@ -67,9 +67,10 @@ contract DataOrder {
     string _dataRequest,
     string _terms,
     string _buyerURL,
-    uint _minimimBudgetForAudit,
-    bool _certificationFlag,
-    uint _serviceFee
+    string _publicKey,
+    uint _minimimBudgetForAudit
+    // bool _certificationFlag
+    // uint _serviceFee
   ) public {
     require(_buyer != 0x0);
     require(msg.sender != _buyer);
@@ -85,9 +86,10 @@ contract DataOrder {
     dataRequest = _dataRequest;
     terms = _terms;
     buyerURL = _buyerURL;
+    publicKey = _publicKey;
     minimimBudgetForAudit = _minimimBudgetForAudit;
-    certificationFlag = _certificationFlag;
-    serviceFee = _serviceFee;
+    certificationFlag = false; // _certificationFlag;
+    serviceFee = 0; //_serviceFee;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = now;
   }
@@ -119,7 +121,6 @@ contract DataOrder {
     address seller,
     address notary,
     uint256 price,
-    string publicKey,
     string hash,
     string signature
   ) public returns (bool) {
@@ -130,7 +131,6 @@ contract DataOrder {
     sellerInfo[seller] = SellerInfo(
       notary,
       price,
-      publicKey,
       hash,
       signature,
       now,
@@ -165,13 +165,12 @@ contract DataOrder {
     return notaryInfo[notary].accepted == true;
   }
 
-  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, string, uint, bytes32) {
+  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, bytes32) {
     var info = sellerInfo[seller];
     return (
       seller,
       info.notary,
       info.price,
-      info.publicKey,
       info.hash,
       info.signature,
       info.createdAt,

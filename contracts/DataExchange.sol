@@ -14,10 +14,11 @@ contract DataExchange {
     string dataRequest,
     string terms,
     string buyerURL,
-    uint minimimBudgetForAudit,
-    bool certificationFlag,
-    uint serviceFee
-    //uint timestamps
+    string publicKey,
+    uint minimimBudgetForAudit
+    // bool certificationFlag
+    // uint serviceFee
+    // uint timestamps
   );
 
   event NotaryAccepted(
@@ -32,7 +33,6 @@ contract DataExchange {
     address seller,
     address notary,
     uint256 price,
-    string publicKey,
     string hash,
     string signature,
     uint timestamps
@@ -97,9 +97,10 @@ contract DataExchange {
     string dataRequest,
     string terms,
     string buyerURL,
-    uint minimimBudgetForAudit,
-    bool certificationFlag,
-    uint serviceFee
+    string publicKey,
+    uint minimimBudgetForAudit
+    // bool certificationFlag
+    //uint serviceFee
   ) public returns (address) {
     require(notaries.length > 0);
     require(minimimBudgetForAudit > uint256(0));
@@ -112,9 +113,10 @@ contract DataExchange {
       dataRequest,
       terms,
       buyerURL,
-      minimimBudgetForAudit,
-      certificationFlag,
-      serviceFee
+      publicKey,
+      minimimBudgetForAudit
+      // certificationFlag
+      // serviceFee
     );
 
     orderValues[newOrderAddr] = OrderValue(orderSize, now);
@@ -135,9 +137,10 @@ contract DataExchange {
       dataRequest,
       terms,
       buyerURL,
-      minimimBudgetForAudit,
-      certificationFlag,
-      serviceFee
+      publicKey,
+      minimimBudgetForAudit
+      // certificationFlag
+      // serviceFee
     );
 
     return newOrderAddr;
@@ -162,7 +165,6 @@ contract DataExchange {
     address seller,
     address notary,
     uint256 price,
-    string publicKey,
     string hash,
     string signature
   ) public returns (bool) {
@@ -173,10 +175,10 @@ contract DataExchange {
 
     require(order.hasNotaryAccepted(notary) == true);
 
-    var okay = order.addDataResponse(seller, notary, price, publicKey, hash, signature);
+    var okay = order.addDataResponse(seller, notary, price, hash, signature);
     if (okay) {
       ordersBySeller[seller].push(orderAddr);
-      DataAdded(order, order.buyer(), msg.sender, notary, price, publicKey, hash, signature, now);
+      DataAdded(order, order.buyer(), msg.sender, notary, price, hash, signature, now);
     }
     return okay;
   }
