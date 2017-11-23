@@ -1,6 +1,7 @@
 pragma solidity ^0.4.15;
 
 import './DataOrder.sol';
+import './SimpleDataToken.sol';
 
 // ---( DataExchange )----------------------------------------------------------
 contract DataExchange {
@@ -32,7 +33,7 @@ contract DataExchange {
     address buyer,
     address seller,
     address notary,
-    uint256 price,
+    //uint256 price,
     string hash,
     string signature,
     uint timestamps
@@ -84,10 +85,13 @@ contract DataExchange {
   // Buyer Tracking
   mapping(address => address[]) public ordersByBuyer;
 
-  function DataExchange(address[] _allowedNotaries) public {
+  SimpleDataToken sdt;
+
+  function DataExchange(address[] _allowedNotaries, address _tokenAddr) public {
     allowedNotaries = _allowedNotaries;
     contractOwner = msg.sender;
     orderSize = 0;
+    sdt = SimpleDataToken(_tokenAddr);
   }
 
   // Step 1.
@@ -160,50 +164,80 @@ contract DataExchange {
   }
 
   // Step 3.
+  function setOrderPrice(address orderAddr, uint256 _price) public returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
+    return order.setPrice(_price);
+  }
+
+  // Step 4.
   function addDataResponseToOrder(
     address orderAddr,
     address seller,
     address notary,
-    uint256 price,
     string hash,
     string signature
   ) public returns (bool) {
+    require(orderAddr != 0x0);
     require(orderResponses[msg.sender][seller] == 0x0);
-
     orderResponses[msg.sender][seller] = orderAddr;
-    var order = DataOrder(orderAddr);
 
+    var order = DataOrder(orderAddr);
     require(order.hasNotaryAccepted(notary) == true);
 
-    var okay = order.addDataResponse(seller, notary, price, hash, signature);
+    var okay = order.addDataResponse(seller, notary, hash, signature);
     if (okay) {
       ordersBySeller[seller].push(orderAddr);
-      DataAdded(order, order.buyer(), msg.sender, notary, price, hash, signature, now);
+      DataAdded(order, order.buyer(), msg.sender, notary, hash, signature, now);
     }
     return okay;
   }
 
-  // Step 4.
-  function hasDataResponseBeenAccepted(address orderAddr) public constant returns (bool) {
+  // Step 5.
+  function dataResponsesAdded(address orderAddr) public returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
+    return order.dataResponsesAdded();
+  }
+
+  // Step 6.
+  function hasDataResponseBeenAccepted(address orderAddr) public returns (bool) {
     require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender) == true;
   }
 
-  // Step 5.
-  function closeOrder(address buyer, address seller) public returns (bool) {
+  // Step 7.
+  function closeDataResponse(address buyer, address seller) public returns (bool) {
     require(orderResponses[buyer][seller] != 0x0);
     var order = DataOrder(orderResponses[buyer][seller]);
-    require (order.hasNotaryAccepted(msg.sender) && order.buyer() == msg.sender);
+    require (order.hasSellerBeenAccepted(seller) && order.buyer() == msg.sender);
+    uint256 orderPrice = order.price();
 
-    // @todo(cristian): move funds.
+    require (hasBalanceToBuy(buyer, orderPrice));
 
-    var okay = order.close();
+    var okay = order.closeDataResponse(seller);
     if (okay) {
-      removeAndSwapAt(buyer, seller);
+      moveFundsToSeller(buyer, seller, orderPrice);
+
+      //removeAndSwapAt(buyer, seller);
       TransactionCompleted(order, buyer, seller, msg.sender, order.getOrderStatusAsString(), now);
     }
     return okay;
+  }
+
+  /*/ Step 8.
+  function close() {
+
+  }
+  */
+
+  function hasBalanceToBuy(address buyer, uint256 _price) internal returns (bool) {
+    return sdt.allowance(buyer, this) >= _price;
+  }
+
+  function moveFundsToSeller(address buyer, address seller, uint256 _price) internal returns (bool) {
+    return sdt.transferFrom(buyer, seller, _price);
   }
 
   function getOrderFor(address buyer, address seller) public constant returns (address) {

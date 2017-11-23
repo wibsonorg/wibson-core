@@ -14,6 +14,8 @@ contract DataOrder {
   bool public certificationFlag;
   uint public serviceFee;
 
+  uint256 public price;
+
   // Timestamps
   uint public createdAt;
   uint public dataAddedAt;
@@ -26,6 +28,7 @@ contract DataOrder {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
+    PriceSet,
     DataAdded,
     TransactionCompleted
   }
@@ -50,9 +53,9 @@ contract DataOrder {
   // --- Seller Information ---
   struct SellerInfo {
     address notary;
-    uint256 price;
     string hash;
     string signature;
+    uint closedAt;
     uint createdAt;
     DataResponseStatus status;
   }
@@ -117,22 +120,28 @@ contract DataOrder {
     return true;
   }
 
+  function setPrice(uint256 value) public returns (bool) {
+    require (orderStatus == OrderStatus.NotaryAccepted);
+    price = value;
+    orderStatus = OrderStatus.PriceSet;
+    return true;
+  }
+
   function addDataResponse(
     address seller,
     address notary,
-    uint256 price,
     string hash,
     string signature
   ) public returns (bool) {
     require (msg.sender == contractOwner);
     require (notaryInfo[notary].accepted == true);
-    require (orderStatus == OrderStatus.NotaryAccepted);
+    require (orderStatus == OrderStatus.PriceSet);
 
     sellerInfo[seller] = SellerInfo(
       notary,
-      price,
       hash,
       signature,
+      0,
       now,
       DataResponseStatus.DataResponseAdded
     );
@@ -142,9 +151,24 @@ contract DataOrder {
     return true;
   }
 
+  function dataResponsesAdded() public returns (bool) {
+    require (orderStatus == OrderStatus.PriceSet);
+    orderStatus = OrderStatus.DataAdded;
+    return true;
+  }
+
   function hasSellerBeenAccepted(address seller) public constant returns (bool) {
     require(seller != 0x0);
+    return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
+  }
+
+  function closeDataResponse(address seller) public returns (bool) {
+    require (seller != 0x0);
+    require (msg.sender == contractOwner);
+    require (orderStatus == OrderStatus.DataAdded);
     if (sellerInfo[seller].status == DataResponseStatus.DataResponseAdded) {
+      sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
+      sellerInfo[seller].closedAt = now;
       return true;
     }
     return false;
@@ -159,20 +183,19 @@ contract DataOrder {
     return true;
   }
 
-
-
   function hasNotaryAccepted(address notary) public constant returns (bool) {
     return notaryInfo[notary].accepted == true;
   }
 
-  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, bytes32) {
+  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, uint, bytes32) {
     var info = sellerInfo[seller];
     return (
       seller,
       info.notary,
-      info.price,
+      price,
       info.hash,
       info.signature,
+      info.closedAt,
       info.createdAt,
       getDataResponseStatusAsString(info.status)
     );
