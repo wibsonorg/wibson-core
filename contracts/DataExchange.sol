@@ -85,6 +85,9 @@ contract DataExchange {
   // Buyer Tracking
   mapping(address => address[]) public ordersByBuyer;
 
+  // Buyer Balanace tracking
+  mapping(address => uint256) public buyerBalance;
+
   SimpleDataToken sdt;
 
   function DataExchange(address[] _allowedNotaries, address _tokenAddr) public {
@@ -183,10 +186,16 @@ contract DataExchange {
     orderResponses[msg.sender][seller] = orderAddr;
 
     var order = DataOrder(orderAddr);
+    address buyer = order.buyer();
+    uint256 orderPrice = order.price();
+
     require(order.hasNotaryAccepted(notary) == true);
+    require(hasBalanceToBuy(buyer, orderPrice));
 
     var okay = order.addDataResponse(seller, notary, hash, signature);
     if (okay) {
+      moveFundsTo(buyer, this, orderPrice);
+      buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
       DataAdded(order, order.buyer(), msg.sender, notary, hash, signature, now);
     }
@@ -210,15 +219,18 @@ contract DataExchange {
   // Step 7.
   function closeDataResponse(address buyer, address seller) public returns (bool) {
     require(orderResponses[buyer][seller] != 0x0);
+
     var order = DataOrder(orderResponses[buyer][seller]);
-    require (order.hasSellerBeenAccepted(seller) && order.buyer() == msg.sender);
     uint256 orderPrice = order.price();
 
-    require (hasBalanceToBuy(buyer, orderPrice));
+    require(order.hasSellerBeenAccepted(seller) && order.buyer() == msg.sender);
 
     var okay = order.closeDataResponse(seller);
     if (okay) {
-      moveFundsToSeller(buyer, seller, orderPrice);
+      require(buyerBalance[buyer] >= orderPrice);
+      allowWithdraw(seller, orderPrice);
+
+      buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
 
       //removeAndSwapAt(buyer, seller);
       TransactionCompleted(order, buyer, seller, msg.sender, order.getOrderStatusAsString(), now);
@@ -236,8 +248,16 @@ contract DataExchange {
     return sdt.allowance(buyer, this) >= _price;
   }
 
-  function moveFundsToSeller(address buyer, address seller, uint256 _price) internal returns (bool) {
-    return sdt.transferFrom(buyer, seller, _price);
+  function moveFundsTo(address from, address to, uint256 _price) internal returns (bool) {
+    return sdt.transferFrom(from, to, _price);
+  }
+
+  function allowWithdraw(address to, uint256 amount) internal returns (bool) {
+    if (sdt.allowance(this, to) > 0) {
+      return sdt.increaseApproval(to, amount);
+    } else {
+      return sdt.approve(to, amount);
+    }
   }
 
   function getOrderFor(address buyer, address seller) public constant returns (address) {

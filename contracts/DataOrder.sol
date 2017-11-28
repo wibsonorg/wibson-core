@@ -98,7 +98,7 @@ contract DataOrder {
   }
 
   function acceptToBeNotary(address notary) public returns (bool) {
-    require (msg.sender == contractOwner);
+    require(msg.sender == contractOwner);
 
     var allowed = false;
     for (uint i = 0; i < notaries.length; i++) {
@@ -121,7 +121,7 @@ contract DataOrder {
   }
 
   function setPrice(uint256 value) public returns (bool) {
-    require (orderStatus == OrderStatus.NotaryAccepted);
+    require(orderStatus == OrderStatus.NotaryAccepted);
     price = value;
     orderStatus = OrderStatus.PriceSet;
     return true;
@@ -133,9 +133,9 @@ contract DataOrder {
     string hash,
     string signature
   ) public returns (bool) {
-    require (msg.sender == contractOwner);
-    require (notaryInfo[notary].accepted == true);
-    require (orderStatus == OrderStatus.PriceSet);
+    require(msg.sender == contractOwner);
+    require(notaryInfo[notary].accepted == true);
+    require(orderStatus == OrderStatus.PriceSet);
 
     sellerInfo[seller] = SellerInfo(
       notary,
@@ -152,7 +152,7 @@ contract DataOrder {
   }
 
   function dataResponsesAdded() public returns (bool) {
-    require (orderStatus == OrderStatus.PriceSet);
+    require(orderStatus == OrderStatus.PriceSet);
     orderStatus = OrderStatus.DataAdded;
     return true;
   }
@@ -163,9 +163,9 @@ contract DataOrder {
   }
 
   function closeDataResponse(address seller) public returns (bool) {
-    require (seller != 0x0);
-    require (msg.sender == contractOwner);
-    require (orderStatus == OrderStatus.DataAdded);
+    require(seller != 0x0);
+    require(msg.sender == contractOwner);
+    require(orderStatus == OrderStatus.DataAdded);
     if (sellerInfo[seller].status == DataResponseStatus.DataResponseAdded) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
       sellerInfo[seller].closedAt = now;
@@ -175,8 +175,8 @@ contract DataOrder {
   }
 
   function close() public returns (bool) {
-    require (msg.sender == contractOwner);
-    require (orderStatus == OrderStatus.DataAdded);
+    require(msg.sender == contractOwner);
+    require(orderStatus == OrderStatus.DataAdded);
 
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = now;
