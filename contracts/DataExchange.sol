@@ -90,11 +90,18 @@ contract DataExchange {
 
   SimpleDataToken sdt;
 
-  function DataExchange(address[] _allowedNotaries, address _tokenAddr) public {
-    allowedNotaries = _allowedNotaries;
+  function DataExchange(address _tokenAddr) public {
+    require(_tokenAddr != 0x0);
+
     contractOwner = msg.sender;
     orderSize = 0;
     sdt = SimpleDataToken(_tokenAddr);
+  }
+
+  function addNotary(address notary) public returns (bool) {
+    require(msg.sender == contractOwner);
+    allowedNotaries.push(notary);
+    return true;
   }
 
   // Step 1.
@@ -110,6 +117,7 @@ contract DataExchange {
     //uint serviceFee
   ) public returns (address) {
     require(notaries.length > 0);
+    require(allowedNotaries.length > 0);
     require(minimimBudgetForAudit > uint256(0));
     // require(serviceFee > uint256(0));
 
