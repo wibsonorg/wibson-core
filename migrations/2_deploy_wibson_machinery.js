@@ -14,7 +14,7 @@ module.exports = function(deployer, network, accounts) {
   }).then(function() {
     return SimpleDataToken.deployed()
   }).then(function(instance) {
-    instance.transfer(seller, 100000, {from: owner});
+    instance.transfer(seller, 1000, {from: owner});
     instance.transfer(buyer, 100000, {from: owner});
     instance.transfer(notary1, 100000, {from: owner});
     instance.transfer(notary2, 100000, {from: owner});

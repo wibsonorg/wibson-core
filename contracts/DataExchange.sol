@@ -190,8 +190,8 @@ contract DataExchange {
     string signature
   ) public returns (bool) {
     require(orderAddr != 0x0);
-    require(orderResponses[msg.sender][seller] == 0x0);
-    orderResponses[msg.sender][seller] = orderAddr;
+    // require(orderResponses[msg.sender][seller] == 0x0);
+    // orderResponses[msg.sender][seller] = orderAddr;
 
     var order = DataOrder(orderAddr);
     address buyer = order.buyer();
@@ -225,13 +225,14 @@ contract DataExchange {
   }
 
   // Step 7.
-  function closeDataResponse(address buyer, address seller) public returns (bool) {
-    require(orderResponses[buyer][seller] != 0x0);
+  function closeDataResponse(address orderAddr, address seller) public returns (bool) {
+    require(orderAddr != 0x0);
 
-    var order = DataOrder(orderResponses[buyer][seller]);
+    var order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
+    var buyer = order.buyer();
 
-    require(order.hasSellerBeenAccepted(seller) && order.buyer() == msg.sender);
+    require(order.hasSellerBeenAccepted(seller) && buyer == msg.sender);
 
     var okay = order.closeDataResponse(seller);
     if (okay) {
@@ -268,9 +269,11 @@ contract DataExchange {
     }
   }
 
+  /*
   function getOrderFor(address buyer, address seller) public constant returns (address) {
     return orderResponses[buyer][seller];
   }
+  */
 
   function getOpenOrdersForNotary(address notary) public constant returns (address[]) {
     return copyArrayToMemory(openOrdersByNotary[notary]);
@@ -296,6 +299,7 @@ contract DataExchange {
     return rs;
   }
 
+  /*
   function removeAndSwapAt(address buyer, address seller) internal returns (bool) {
     var deleteOrder = orderResponses[buyer][seller];
     var deleteOrderInfo = orderValues[deleteOrder];
@@ -314,6 +318,7 @@ contract DataExchange {
     orderSize--;
     return true;
   }
+  */
 
   function kill() public constant {
     if (msg.sender == contractOwner) {
