@@ -241,7 +241,7 @@ contract DataOrder {
     return bytes32("unknown");
   }
 
-  function kill() public constant {
+  function kill() public {
     if (msg.sender == contractOwner) {
       selfdestruct(contractOwner);
     }

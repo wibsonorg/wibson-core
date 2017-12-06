@@ -320,7 +320,7 @@ contract DataExchange {
   }
   */
 
-  function kill() public constant {
+  function kill() public {
     if (msg.sender == contractOwner) {
       selfdestruct(contractOwner);
     }
