@@ -60,7 +60,7 @@ deInstance.addNotary(notary3, {from: owner});
 ```
 
 ### Create a new Data Order
-```
+
 1. create data order:
     ```
     deInstance.newOrder([notary1], "age:20,gender:male", "data request", "this is the term.", "https://buyer.example.com/data", "public-key", 20, {from: buyer}).then(function(res) { console.log("New Order: " , res); }).catch(function(e) { console.log(e) });
