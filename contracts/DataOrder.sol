@@ -7,6 +7,7 @@ contract DataOrder {
 
   string public filters;
   string public dataRequest;
+  bool public notarizeDataFlag;
   string public terms;
   string public buyerURL;
   string public publicKey;
@@ -68,6 +69,7 @@ contract DataOrder {
     address[] _notaries,
     string _filters,
     string _dataRequest,
+    bool _notarizeDataFlag,
     string _terms,
     string _buyerURL,
     string _publicKey,
@@ -87,6 +89,7 @@ contract DataOrder {
     notaries = _notaries;
     filters = _filters;
     dataRequest = _dataRequest;
+    notarizeDataFlag = _notarizeDataFlag;
     terms = _terms;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
