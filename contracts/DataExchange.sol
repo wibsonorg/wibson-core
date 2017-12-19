@@ -13,11 +13,11 @@ contract DataExchange {
     address[] notaries,
     string filters,
     string dataRequest,
-    //bool notarizeDataFlag,
+    bool notarizeDataFlag,
     string terms,
     string buyerURL,
-    string publicKey,
-    uint minimimBudgetForAudit
+    string publicKey
+    // uint minimimBudgetForAudit
     // bool certificationFlag
     // uint serviceFee
     // uint timestamps
@@ -153,11 +153,11 @@ contract DataExchange {
       notaries,
       filters,
       dataRequest,
-      //notarizeDataFlag,
+      notarizeDataFlag,
       terms,
       buyerURL,
-      publicKey,
-      minimimBudgetForAudit
+      publicKey
+      // minimimBudgetForAudit
       // certificationFlag
       // serviceFee
     );
