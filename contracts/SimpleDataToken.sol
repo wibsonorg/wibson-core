@@ -9,7 +9,7 @@ contract SimpleDataToken is StandardToken {
   string public constant symbol = "SDT";
   uint8 public constant decimals = 10;
 
-  uint256 public constant INITIAL_SUPPLY = 10000000;
+  uint256 public constant INITIAL_SUPPLY = 10000000000;
   address public contractOwner;
 
   function SimpleDataToken() {

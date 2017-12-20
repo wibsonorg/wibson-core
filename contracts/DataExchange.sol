@@ -2,11 +2,13 @@ pragma solidity ^0.4.15;
 
 import './DataOrder.sol';
 import './SimpleDataToken.sol';
+import './lib/AddressMap.sol';
+import './lib/ExchangeUtils.sol';
+
 
 // ---( DataExchange )----------------------------------------------------------
 contract DataExchange {
 
-  // Events
   event NewOrder(
     address orderAddr,
     address buyer,
@@ -49,36 +51,20 @@ contract DataExchange {
     uint timestamps
   );
 
+  using AddressMap for AddressMap.MapStorage;
 
-  // NOTE: in both mappings first key is the buyer, second one is the seller.
-  // Mapping of contracts shares of the buyer-seller contract.
-  mapping(address => mapping(address => address)) public orderResponses;
-
-  // Order tracking.
-
-  struct OrderValue {
-    uint index;
-    uint createadAt;
-  }
-
-  struct OrderKey {
-    address buyer;
-    address seller;
-    address orderAddr;
-  }
-
-  // order -> index
-  mapping(address => OrderValue) internal orderValues;
-  // index -> order
-  mapping(uint => OrderKey) internal orderKeys;
-  // Open orders with notaries
-  address[] public openOrders;
-  uint public orderSize;
+  AddressMap.MapStorage openOrders;
 
   // Notaries tracking
-  mapping(address => address[]) public openOrdersByNotary;
-  address[] public allowedNotaries;
-  address public contractOwner;
+  struct NotaryInfo {
+    address addr;
+    string name;
+    string publicKey;
+  }
+
+  mapping(address => NotaryInfo) internal notaryInfo;
+  mapping(address => address[]) public ordersByNotary;
+  AddressMap.MapStorage allowedNotaries;
 
   // Seller Tracking
   mapping(address => address[]) public ordersBySeller;
@@ -89,19 +75,21 @@ contract DataExchange {
   // Buyer Balanace tracking
   mapping(address => uint256) public buyerBalance;
 
+  address public contractOwner;
+
   SimpleDataToken sdt;
 
   function DataExchange(address _tokenAddr) public {
     require(_tokenAddr != 0x0);
 
     contractOwner = msg.sender;
-    orderSize = 0;
     sdt = SimpleDataToken(_tokenAddr);
   }
 
-  function addNotary(address notary) public returns (bool) {
+  function addNotary(address notary, string name, string publicKey) public returns (bool) {
     require(msg.sender == contractOwner);
-    allowedNotaries.push(notary);
+    allowedNotaries.insert(notary);
+    notaryInfo[notary] = NotaryInfo(notary, name, publicKey);
     return true;
   }
 
@@ -119,7 +107,7 @@ contract DataExchange {
     //uint serviceFee
   ) public returns (address) {
     require(notaries.length > 0);
-    require(allowedNotaries.length > 0);
+    require(allowedNotaries.length() > 0);
     require(minimimBudgetForAudit > uint256(0));
     // require(serviceFee > uint256(0));
 
@@ -137,12 +125,8 @@ contract DataExchange {
       // serviceFee
     );
 
-    orderValues[newOrderAddr] = OrderValue(orderSize, now);
-    // orderKeys[] = OrderKey(msg.sender, seller, orderAddr;
-    orderSize++;
-
     for (uint i = 0; i < notaries.length; i++) {
-      openOrdersByNotary[notaries[i]].push(newOrderAddr);
+      ordersByNotary[notaries[i]].push(newOrderAddr);
     }
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
@@ -172,7 +156,7 @@ contract DataExchange {
 
     var okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
-      openOrders.push(orderAddr);
+      openOrders.insert(orderAddr);
       NotaryAccepted(order, order.buyer(), msg.sender);
     }
     return okay;
@@ -244,18 +228,23 @@ contract DataExchange {
       allowWithdraw(seller, orderPrice);
 
       buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
-
-      //removeAndSwapAt(buyer, seller);
       TransactionCompleted(order, buyer, seller, msg.sender, order.getOrderStatusAsString(), now);
     }
     return okay;
   }
 
-  /*/ Step 8.
-  function close() {
+  // Step 8.
+  function close(address orderAddr) public returns (bool) {
+    require(orderAddr != 0x0);
 
+    var order = DataOrder(orderAddr);
+    bool okay = order.close();
+    if (okay) {
+      openOrders.remove(orderAddr);
+    }
+
+    return okay;
   }
-  */
 
   function hasBalanceToBuy(address buyer, uint256 _price) internal returns (bool) {
     return sdt.allowance(buyer, this) >= _price;
@@ -273,56 +262,30 @@ contract DataExchange {
     }
   }
 
-  /*
-  function getOrderFor(address buyer, address seller) public constant returns (address) {
-    return orderResponses[buyer][seller];
-  }
-  */
-
-  function getOpenOrdersForNotary(address notary) public constant returns (address[]) {
-    return copyArrayToMemory(openOrdersByNotary[notary]);
+  function getOrdersForNotary(address notary) public constant returns (address[]) {
+    return ExchangeUtils.copyArrayToMemory(ordersByNotary[notary]);
   }
 
   function getOrdersForSeller(address seller) public constant returns (address[]) {
-    return copyArrayToMemory(ordersBySeller[seller]);
+    return ExchangeUtils.copyArrayToMemory(ordersBySeller[seller]);
   }
 
   function getOrdersForBuyer(address buyer) public constant returns (address[]) {
-    return copyArrayToMemory(ordersByBuyer[buyer]);
+    return ExchangeUtils.copyArrayToMemory(ordersByBuyer[buyer]);
   }
 
-  function getOpenOrders() public constant returns (address[]) {
-    return openOrders;
+  function getOpenOrders() public returns (address[]) {
+    return ExchangeUtils.addressMapToList(openOrders);
   }
 
-  function copyArrayToMemory(address[] xs) internal constant returns (address[]) {
-    address[] memory rs = new address[](xs.length);
-    for(uint i = 0; i < xs.length; i++) {
-        rs[i] = xs[i];
-    }
-    return rs;
+  function getAllowedNotaries() public returns (address[]) {
+    return ExchangeUtils.addressMapToList(allowedNotaries);
   }
 
-  /*
-  function removeAndSwapAt(address buyer, address seller) internal returns (bool) {
-    var deleteOrder = orderResponses[buyer][seller];
-    var deleteOrderInfo = orderValues[deleteOrder];
-    uint deleteIndex = deleteOrderInfo.index;
-
-    delete orderResponses[buyer][seller];
-    delete openOrders[openOrders.length-1];
-
-    var keyOrder = orderKeys[openOrders.length-1];
-    // var keyOrderValue = orderValues[keyOrder.orderAddr];
-
-    orderKeys[deleteIndex] = keyOrder;
-    delete orderKeys[openOrders.length-1];
-
-    openOrders[deleteIndex] = keyOrder.orderAddr;
-    orderSize--;
-    return true;
+  function getNotaryInfo(address notary) public constant returns (address, string, string) {
+    var info = notaryInfo[notary];
+    return (info.addr, info.name, info.publicKey);
   }
-  */
 
   function kill() public {
     if (msg.sender == contractOwner) {
