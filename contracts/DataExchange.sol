@@ -185,6 +185,7 @@ contract DataExchange {
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
 
+    require(buyer == msg.sender);
     require(order.hasNotaryAccepted(notary) == true);
     require(hasBalanceToBuy(buyer, orderPrice));
 
@@ -193,7 +194,7 @@ contract DataExchange {
       moveFundsTo(buyer, this, orderPrice);
       buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
-      DataAdded(order, order.buyer(), msg.sender, notary, hash, signature, now);
+      DataAdded(order, msg.sender, seller, notary, hash, signature, now);
     }
     return okay;
   }
