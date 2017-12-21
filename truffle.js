@@ -16,5 +16,11 @@ module.exports = {
       network_id: 3, // official id of the ropsten network
       gas: 4600000
     }
+  },
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
   }
 };
