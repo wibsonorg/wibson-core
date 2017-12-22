@@ -170,6 +170,10 @@ contract DataExchange {
     require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
 
+    if (order.hasNotaryAccepted(msg.sender)) {
+      return true;
+    }
+
     var okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
       openOrders.push(orderAddr);
