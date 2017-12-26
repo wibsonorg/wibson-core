@@ -36,6 +36,8 @@ contract DataOrder {
 
   enum DataResponseStatus {
     DataResponseAdded,
+    DataResponseApproved,
+    DataResponseRejected,
     RefundedToBuyer,
     TransactionCompleted,
     TransactionCompletedByNotary
@@ -169,7 +171,9 @@ contract DataOrder {
     require(seller != 0x0);
     require(msg.sender == contractOwner);
     require(orderStatus == OrderStatus.DataAdded);
-    if (sellerInfo[seller].status == DataResponseStatus.DataResponseAdded) {
+
+    var sellerStatus = sellerInfo[seller].status;
+    if (sellerStatus == DataResponseStatus.DataResponseAdded || sellerStatus == DataResponseStatus.DataResponseApproved) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
       sellerInfo[seller].closedAt = now;
       return true;
@@ -207,6 +211,14 @@ contract DataOrder {
   function getDataResponseStatusAsString(DataResponseStatus drs) internal constant returns (bytes32) {
     if (drs == DataResponseStatus.DataResponseAdded) {
       return bytes32("DataResponseAdded");
+    }
+
+    if (drs == DataResponseStatus.DataResponseApproved) {
+      return bytes32("DataResponseApproved");
+    }
+
+    if (drs == DataResponseStatus.DataResponseRejected) {
+      return bytes32("DataResponseRejected");
     }
 
     if (drs == DataResponseStatus.RefundedToBuyer) {
