@@ -3,7 +3,7 @@ pragma solidity ^0.4.15;
 import './DataOrder.sol';
 import './SimpleDataToken.sol';
 import './lib/AddressMap.sol';
-import './lib/ExchangeUtils.sol';
+import './lib/ArrayUtils.sol';
 
 
 // ---( DataExchange )----------------------------------------------------------
@@ -251,6 +251,37 @@ contract DataExchange {
     return okay;
   }
 
+  function getOrdersForNotary(address notary) public constant returns (address[]) {
+    return ArrayUtils.toMemory(ordersByNotary[notary]);
+  }
+
+  function getOrdersForSeller(address seller) public constant returns (address[]) {
+    return ArrayUtils.toMemory(ordersBySeller[seller]);
+  }
+
+  function getOrdersForBuyer(address buyer) public constant returns (address[]) {
+    return ArrayUtils.toMemory(ordersByBuyer[buyer]);
+  }
+
+  function getOpenOrders() public constant returns (address[]) {
+    return ArrayUtils.fromAddressMap(openOrders);
+  }
+
+  function getAllowedNotaries() public constant returns (address[]) {
+    return ArrayUtils.fromAddressMap(allowedNotaries);
+  }
+
+  function getNotaryInfo(address notary) public constant returns (address, string, string) {
+    var info = notaryInfo[notary];
+    return (info.addr, info.name, info.publicKey);
+  }
+
+  function kill() public {
+    if (msg.sender == contractOwner) {
+      selfdestruct(contractOwner);
+    }
+  }
+
   function hasBalanceToBuy(address buyer, uint256 _price) internal returns (bool) {
     return sdt.allowance(buyer, this) >= _price;
   }
@@ -264,37 +295,6 @@ contract DataExchange {
       return sdt.increaseApproval(to, amount);
     } else {
       return sdt.approve(to, amount);
-    }
-  }
-
-  function getOrdersForNotary(address notary) public constant returns (address[]) {
-    return ExchangeUtils.copyArrayToMemory(ordersByNotary[notary]);
-  }
-
-  function getOrdersForSeller(address seller) public constant returns (address[]) {
-    return ExchangeUtils.copyArrayToMemory(ordersBySeller[seller]);
-  }
-
-  function getOrdersForBuyer(address buyer) public constant returns (address[]) {
-    return ExchangeUtils.copyArrayToMemory(ordersByBuyer[buyer]);
-  }
-
-  function getOpenOrders() public returns (address[]) {
-    return ExchangeUtils.addressMapToList(openOrders);
-  }
-
-  function getAllowedNotaries() public returns (address[]) {
-    return ExchangeUtils.addressMapToList(allowedNotaries);
-  }
-
-  function getNotaryInfo(address notary) public constant returns (address, string, string) {
-    var info = notaryInfo[notary];
-    return (info.addr, info.name, info.publicKey);
-  }
-
-  function kill() public {
-    if (msg.sender == contractOwner) {
-      selfdestruct(contractOwner);
     }
   }
 }
