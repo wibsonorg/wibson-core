@@ -60,6 +60,7 @@ contract DataOrder {
     string signature;
     uint closedAt;
     uint createdAt;
+    uint notarizedAt;
     DataResponseStatus status;
   }
 
@@ -148,6 +149,7 @@ contract DataOrder {
       signature,
       0,
       now,
+      0,
       DataResponseStatus.DataResponseAdded
     );
 
@@ -167,13 +169,38 @@ contract DataOrder {
     return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
   }
 
+  function hasSellerBeenApproved(address seller) public constant returns (bool) {
+    require(seller != 0x0);
+    return sellerInfo[seller].status == DataResponseStatus.DataResponseApproved;
+  }
+
+  function hasSellerBeenRejected(address seller) public constant returns (bool) {
+    require(seller != 0x0);
+    return sellerInfo[seller].status == DataResponseStatus.DataResponseRejected;
+  }
+
+  function hasSellerBeenNotarized(address seller) public constant returns (bool) {
+    return hasSellerBeenApproved(seller) || hasSellerBeenRejected(seller);
+  }
+
+  function notarizeDataResponse(address notary, address seller, bool approved) public returns (bool) {
+    require(msg.sender == contractOwner);
+    require(notarizeDataFlag);
+    require(orderStatus == OrderStatus.DataAdded);
+    require(hasSellerBeenAccepted(seller));
+    require(notary == sellerInfo[seller].notary);
+
+    sellerInfo[seller].status = approved ? DataResponseStatus.DataResponseApproved : DataResponseStatus.DataResponseRejected;
+    sellerInfo[seller].notarizedAt = now;
+    return true;
+  }
+
   function closeDataResponse(address seller) public returns (bool) {
     require(seller != 0x0);
     require(msg.sender == contractOwner);
     require(orderStatus == OrderStatus.DataAdded);
 
-    var sellerStatus = sellerInfo[seller].status;
-    if (sellerStatus == DataResponseStatus.DataResponseAdded || sellerStatus == DataResponseStatus.DataResponseApproved) {
+    if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
       sellerInfo[seller].closedAt = now;
       return true;
@@ -194,7 +221,7 @@ contract DataOrder {
     return notaryInfo[notary].accepted == true;
   }
 
-  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, uint, bytes32) {
+  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, uint, uint, bytes32) {
     var info = sellerInfo[seller];
     return (
       seller,
@@ -204,8 +231,14 @@ contract DataOrder {
       info.signature,
       info.closedAt,
       info.createdAt,
+      info.notarizedAt,
       getDataResponseStatusAsString(info.status)
     );
+  }
+
+  function getNotaryForSeller(address seller) public constant returns (address) {
+    var (_seller, notary,) = getSellerInfo(seller);
+    return notary;
   }
 
   function getDataResponseStatusAsString(DataResponseStatus drs) internal constant returns (bytes32) {
