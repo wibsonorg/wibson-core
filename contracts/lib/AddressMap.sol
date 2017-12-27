@@ -9,34 +9,34 @@ library AddressMap {
   }
 
   function get(MapStorage storage self, uint index) constant returns (address) {
-    require(index >= 0);
-    return self.indexToAddress[index];
+    require(index >= 0 && index < self.size);
+    return self.indexToAddress[index + 1];
   }
 
   function exist(MapStorage storage self, address _key) constant returns (bool) {
-    return self.addressToIndex[_key] >= 0;
+    return self.addressToIndex[_key] > 0;
   }
 
   function insert(MapStorage storage self, address _key) returns (bool) {
-    // if (exist(self, _key)) {
-    //   return true;
-    // }
+    if (exist(self, _key)) {
+       return true;
+    }
 
+    self.size++;
     self.addressToIndex[_key] = self.size;
     self.indexToAddress[self.size] = _key;
-    self.size++;
 
     return true;
   }
 
   function removeAt(MapStorage storage self, uint index) returns (bool) {
-    return remove(self, self.indexToAddress[index]);
+    return remove(self, self.indexToAddress[index + 1]);
   }
 
   function remove(MapStorage storage self, address _key) returns (bool) {
     var currentIndex = self.addressToIndex[_key];
 
-    var lastIndex = self.size--;
+    var lastIndex = self.size - 1;
     var lastAddress = self.indexToAddress[lastIndex];
     self.addressToIndex[lastAddress] = currentIndex;
     self.indexToAddress[currentIndex] = lastAddress;
