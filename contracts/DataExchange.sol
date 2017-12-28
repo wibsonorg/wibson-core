@@ -299,7 +299,7 @@ contract DataExchange {
     return okay;
   }
 
-  /*/ Step 9.
+  /*/ Step 10.
   function close() {
 
   }
