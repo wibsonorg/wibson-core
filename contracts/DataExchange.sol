@@ -42,6 +42,15 @@ contract DataExchange {
     uint timestamps
   );
 
+  event DataResponseNotarized(
+    address orderAddr,
+    address buyer,
+    address seller,
+    address notary,
+    bool approved,
+    uint timestamps
+  );
+
   event TransactionCompleted(
     address orderAddr,
     address buyer,
@@ -170,6 +179,7 @@ contract DataExchange {
   function setOrderPrice(address orderAddr, uint256 _price) public returns (bool) {
     require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
+    require(msg.sender == order.buyer());
     return order.setPrice(_price);
   }
 
@@ -189,7 +199,11 @@ contract DataExchange {
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
 
+<<<<<<< HEAD
     require(buyer == msg.sender);
+=======
+    require(msg.sender == buyer);
+>>>>>>> develop
     require(order.hasNotaryAccepted(notary) == true);
     require(hasBalanceToBuy(buyer, orderPrice));
 
@@ -198,7 +212,11 @@ contract DataExchange {
       moveFundsTo(buyer, this, orderPrice);
       buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
+<<<<<<< HEAD
       DataAdded(order, msg.sender, seller, notary, hash, signature, now);
+=======
+      DataAdded(order, buyer, seller, notary, hash, signature, now);
+>>>>>>> develop
     }
     return okay;
   }
@@ -214,10 +232,41 @@ contract DataExchange {
   function hasDataResponseBeenAccepted(address orderAddr) public returns (bool) {
     require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender) == true;
+    return order.hasSellerBeenAccepted(msg.sender);
   }
 
-  // Step 7.
+  // Step 7 (optional).
+  function notarizeDataResponse(address orderAddr, address seller, bool approved) public returns (bool) {
+    require(orderAddr != 0x0);
+
+    var order = DataOrder(orderAddr);
+    var okay = order.notarizeDataResponse(msg.sender, seller, approved); // the Data Order will do all the needed validations for the operation
+    if (okay) {
+      DataResponseNotarized(order, order.buyer(), seller, msg.sender, approved, now);
+    }
+    return okay;
+  }
+
+  // Step 8 (optional).
+  function hasDataResponseBeenApproved(address orderAddr) public returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
+    return order.hasSellerBeenApproved(msg.sender);
+  }
+
+  function hasDataResponseBeenRejected(address orderAddr) public returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
+    return order.hasSellerBeenRejected(msg.sender);
+  }
+
+  function hasDataResponseBeenNotarized(address orderAddr) public returns (bool) {
+    require(orderAddr != 0x0);
+    var order = DataOrder(orderAddr);
+    return order.hasSellerBeenNotarized(msg.sender);
+  }
+
+  // Step 9.
   function closeDataResponse(address orderAddr, address seller) public returns (bool) {
     require(orderAddr != 0x0);
 
@@ -225,7 +274,8 @@ contract DataExchange {
     uint256 orderPrice = order.price();
     var buyer = order.buyer();
 
-    require(order.hasSellerBeenAccepted(seller) && buyer == msg.sender);
+    require(buyer == msg.sender);
+    require(order.hasSellerBeenAccepted(seller) || order.hasSellerBeenApproved(seller));
 
     var okay = order.closeDataResponse(seller);
     if (okay) {
@@ -233,14 +283,37 @@ contract DataExchange {
       allowWithdraw(seller, orderPrice);
 
       buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
+<<<<<<< HEAD
       TransactionCompleted(order, buyer, seller, msg.sender, order.getOrderStatusAsString(), now);
+=======
+
+      //removeAndSwapAt(buyer, seller);
+      var notary = order.getNotaryForSeller(seller);
+      TransactionCompleted(order, buyer, seller, notary, order.getOrderStatusAsString(), now);
+>>>>>>> develop
     }
     return okay;
   }
 
+<<<<<<< HEAD
   // Step 8.
   function close(address orderAddr) public returns (bool) {
     require(orderAddr != 0x0);
+=======
+  /*/ Step 10.
+  function close() {
+
+  }
+  */
+
+  function hasBalanceToBuy(address buyer, uint256 _price) internal returns (bool) {
+    return sdt.allowance(buyer, this) >= _price;
+  }
+
+  function moveFundsTo(address from, address to, uint256 _price) internal returns (bool) {
+    return sdt.transferFrom(from, to, _price);
+  }
+>>>>>>> develop
 
     var order = DataOrder(orderAddr);
     bool okay = order.close();
