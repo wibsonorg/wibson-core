@@ -1,3 +1,24 @@
+const forge = require('node-forge');
+
+const RSA_KEY_SIZE = 2048;
+
+const generateKeyPair = () =>
+  new Promise((resolve, reject) => {
+    forge.pki.rsa.generateKeyPair({
+      bits: RSA_KEY_SIZE,
+      workers: -1
+    }, (error, keypair) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve({
+          publicKey: forge.pki.publicKeyToPem(keypair.publicKey),
+          privateKey: forge.pki.privateKeyToPem(keypair.privateKey),
+        });
+      }
+    });
+  });
+
 var DataExchange = artifacts.require("./DataExchange.sol");
 var SimpleDataToken = artifacts.require("./SimpleDataToken.sol");
 var AddressMap = artifacts.require("./lib/AddressMap.sol");
@@ -35,11 +56,17 @@ module.exports = function(deployer, network, accounts) {
     }).then(function() {
       return deployer.deploy(DataExchange, SimpleDataToken.address, {from: owner});
     }).then(function() {
-      return DataExchange.deployed();
-    }).then(function(instance) {
-      instance.addNotary(notary1, "Notary A", "0x6bcdf2c4a649296045db14c4e41aa8a82a4f19", {from: owner});
-      instance.addNotary(notary2, "Notary B", "0x6bcdf2c4a649296045db14c4e41aa8a82a4f18", {from: owner});
-      instance.addNotary(notary3, "Notary C", "0x6bcdf2c4a649296045db14c4e41aa8a82a4f20", {from: owner});
+      return Promise.all([
+        DataExchange.deployed(),
+        generateKeyPair(),
+        generateKeyPair(),
+        generateKeyPair()
+      ]);
+    }).then(function(values) {
+      const instance = values[0]
+      instance.addNotary(notary1, "Notary A", values[1].publicKey, {from: owner});
+      instance.addNotary(notary2, "Notary B", values[2].publicKey, {from: owner});
+      instance.addNotary(notary3, "Notary C", values[3].publicKey, {from: owner});
     });
   }
 };
