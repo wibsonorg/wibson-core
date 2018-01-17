@@ -1,4 +1,58 @@
 
+# Development contracts on Ropsten
+
+### SimpleDataToken
+- Address: `0x736a75008f5e8efe9356f0003df53fb4122c37b6`
+- ABI:
+```
+[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"INITIAL_SUPPLY","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_subtractedValue","type":"uint256"}],"name":"decreaseApproval","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"contractOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_addedValue","type":"uint256"}],"name":"increaseApproval","outputs":[{"name":"success","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"owner","type":"address"},{"indexed":true,"name":"spender","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"}]
+```
+
+### DataExchange
+- Address: `0xf9101189f3793108f26c00cfad7f07d2a49f4102`
+- ABI:
+```
+[{"constant":true,"inputs":[{"name":"seller","type":"address"}],"name":"getOrdersForSeller","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"buyerBalance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"dataResponsesAdded","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"uint256"}],"name":"ordersByBuyer","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"kill","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"notary","type":"address"}],"name":"getNotaryInfo","outputs":[{"name":"","type":"address"},{"name":"","type":"string"},{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"notary","type":"address"}],"name":"getOrdersForNotary","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"notaries","type":"address[]"},{"name":"filters","type":"string"},{"name":"dataRequest","type":"string"},{"name":"notarizeDataFlag","type":"bool"},{"name":"terms","type":"string"},{"name":"buyerURL","type":"string"},{"name":"publicKey","type":"string"},{"name":"minimimBudgetForAudit","type":"uint256"}],"name":"newOrder","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"},{"name":"seller","type":"address"},{"name":"approved","type":"bool"}],"name":"notarizeDataResponse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"hasDataResponseBeenNotarized","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"},{"name":"_price","type":"uint256"}],"name":"setOrderPrice","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"hasDataResponseBeenApproved","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"buyer","type":"address"}],"name":"getOrdersForBuyer","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"},{"name":"seller","type":"address"}],"name":"closeDataResponse","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getAllowedNotaries","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"notary","type":"address"},{"name":"name","type":"string"},{"name":"publicKey","type":"string"}],"name":"addNotary","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"uint256"}],"name":"ordersByNotary","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"hasDataResponseBeenAccepted","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"close","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"contractOwner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"uint256"}],"name":"ordersBySeller","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"hasDataResponseBeenRejected","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getOpenOrders","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"},{"name":"seller","type":"address"},{"name":"notary","type":"address"},{"name":"hash","type":"string"},{"name":"signature","type":"string"}],"name":"addDataResponseToOrder","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"orderAddr","type":"address"}],"name":"acceptToBeNotary","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[{"name":"_tokenAddr","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]
+```
+
+### Notary A:
+- Address: `0xfe174860ad53e45047BABbcf4aff735d650D9284`
+- Private Key:
+```
+-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRU
+EHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2
+xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB
+AoGAJGY3amDqiNrjFq5WitNPa5N51gpY+jk+A2EFg+Eh9L6vy6ujSwSfm7iLmiIi
+KiOOlUJsajaUEYY94EeJNKYmjxlFKci4/6QDWsxyJOE47CEAOc0xYtI476S5fdP5
+a728hTNpffvqwYhVEYOEskplbYs+ze7xlY/dMvSyhxL4e4ECQQD49fjuD9H//ID3
+Uwz4sTrVjLEAUQIMq79mf8oKsifaeGKVwxe8F6D5tjdFi9cMHwDY+1wCTNustbmd
+BFvZTRLhAkEAzKatqinvdXvy7Dt3rhfvXiC1P1/r7NoDZGcDYJ5D1ubtV14lxkF2
+RJV9hyTRwyRGclGRxX6MJc1HyN/QSAII8wJBAJgWi6/C8mMTeiWdEruKaYqznB25
+XysmcJLJVkAafcY07OTYfdNmC+0Ap9tQhlrdRcNIKvkswrZLfcyyMPoa34ECQQC6
+tUp1l8LG7aloCq0aoO2ac77ILewhb5lurWjwahO8aXyZm+RcpvaOhdA7TsUtAthe
+jbqvcs/L4SgfxMnSGEEvAkB7EcaD65xFGcFa/5cBnMD+X1PDHAl1+KD/i1hbRMnm
+1w53qnDpkW2q2txVrskAYAiswqeOmlanFiWdSPMQNMA6
+-----END RSA PRIVATE KEY-----
+```
+- Publik Key:
+```
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA
+/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK
+9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7
+ovZuj0rO3LezGoHzkwIDAQAB
+-----END PUBLIC KEY-----
+```
+
+```
+var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB-----END PUBLIC KEY-----";
+
+deInstance.addNotary('0xfe174860ad53e45047BABbcf4aff735d650D9284', 'Grandata Notary', pk, {from: '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D'});
+```
+
+
+
 # Deployment with Truffle
 ### Local
 1. Deploy with truffle: `truffle migrate --reset --compile-all`
@@ -9,7 +63,6 @@
 1. Add etherbase account's Mnemonics in truffle.js file.
 2. Deploy with truffle: `truffle migrate --reset --compile-all --network ropsten`
 3. Test within the truffle console: `truffle console --network ropsten`
-
 
 # Test smart contract manually
 
