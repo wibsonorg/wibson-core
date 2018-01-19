@@ -48,7 +48,7 @@ ovZuj0rO3LezGoHzkwIDAQAB
 ```
 var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB-----END PUBLIC KEY-----";
 
-deInstance.addNotary('0xfe174860ad53e45047BABbcf4aff735d650D9284', 'Grandata Notary', pk, {from: '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D'});
+deInstance.addNotary("0xfe174860ad53e45047BABbcf4aff735d650D9284", "Grandata Notary", pk);
 ```
 
 
