@@ -8,7 +8,7 @@ import './lib/ArrayUtils.sol';
 
 // ---( DataExchange )----------------------------------------------------------
 contract DataExchange {
-
+  /*
   event NewOrder(
     address orderAddr,
     address buyer,
@@ -59,6 +59,7 @@ contract DataExchange {
     bytes32 status,
     uint timestamps
   );
+  */
 
   using AddressMap for AddressMap.MapStorage;
 
@@ -140,6 +141,7 @@ contract DataExchange {
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
 
+    /*
     NewOrder(
       newOrderAddr,
       msg.sender,
@@ -154,13 +156,13 @@ contract DataExchange {
       // certificationFlag
       // serviceFee
     );
-
+    */
     return newOrderAddr;
   }
 
   // Step 2.
   function acceptToBeNotary(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
 
     if (order.hasNotaryAccepted(msg.sender)) {
@@ -170,14 +172,14 @@ contract DataExchange {
     var okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
       openOrders.insert(orderAddr);
-      NotaryAccepted(order, order.buyer(), msg.sender);
+      // NotaryAccepted(order, order.buyer(), msg.sender);
     }
     return okay;
   }
 
   // Step 3.
   function setOrderPrice(address orderAddr, uint256 _price) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     require(msg.sender == order.buyer());
     return order.setPrice(_price);
@@ -191,7 +193,7 @@ contract DataExchange {
     string hash,
     string signature
   ) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     // require(orderResponses[msg.sender][seller] == 0x0);
     // orderResponses[msg.sender][seller] = orderAddr;
 
@@ -201,66 +203,71 @@ contract DataExchange {
 
     require(buyer == msg.sender);
     require(order.hasNotaryAccepted(notary) == true);
-    require(hasBalanceToBuy(buyer, orderPrice));
+    // require(hasBalanceToBuy(buyer, orderPrice));
+    require(sdt.allowance(buyer, this) >= orderPrice);
 
     var okay = order.addDataResponse(seller, notary, hash, signature);
     if (okay) {
-      moveFundsTo(buyer, this, orderPrice);
+      // moveFundsTo(buyer, this, orderPrice);
+      sdt.transferFrom(buyer, this, orderPrice);
       buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
-      DataAdded(order, buyer, seller, notary, hash, signature, now);
+      // DataAdded(order, buyer, seller, notary, hash, signature, now);
     }
     return okay;
   }
 
   // Step 5.
   function dataResponsesAdded(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.dataResponsesAdded();
   }
 
   // Step 6.
   function hasDataResponseBeenAccepted(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender);
   }
 
   // Step 7 (optional).
   function notarizeDataResponse(address orderAddr, address seller, bool approved) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
 
     var order = DataOrder(orderAddr);
+    return  order.notarizeDataResponse(msg.sender, seller, approved);
+    /*
     var okay = order.notarizeDataResponse(msg.sender, seller, approved); // the Data Order will do all the needed validations for the operation
     if (okay) {
       DataResponseNotarized(order, order.buyer(), seller, msg.sender, approved, now);
     }
     return okay;
+    */
   }
 
   // Step 8 (optional).
   function hasDataResponseBeenApproved(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.hasSellerBeenApproved(msg.sender);
   }
 
   function hasDataResponseBeenRejected(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.hasSellerBeenRejected(msg.sender);
   }
 
   function hasDataResponseBeenNotarized(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.hasSellerBeenNotarized(msg.sender);
   }
 
   // Step 9.
   function closeDataResponse(address orderAddr, address seller) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
 
     var order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
@@ -272,19 +279,24 @@ contract DataExchange {
     var okay = order.closeDataResponse(seller);
     if (okay) {
       require(buyerBalance[buyer] >= orderPrice);
-      allowWithdraw(seller, orderPrice);
+      // allowWithdraw(seller, orderPrice);
+      if (sdt.allowance(this, seller) > 0) {
+        return sdt.increaseApproval(seller, orderPrice);
+      } else {
+        return sdt.approve(seller, orderPrice);
+      }
 
       buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
 
       var notary = order.getNotaryForSeller(seller);
-      TransactionCompleted(order, buyer, seller, notary, order.getOrderStatusAsString(), now);
+      // TransactionCompleted(order, buyer, seller, notary, order.getOrderStatusAsString(), now);
     }
     return okay;
   }
 
   // Step 8.
   function close(address orderAddr) public returns (bool) {
-    require(orderAddr != 0x0);
+    // require(orderAddr != 0x0);
 
     var order = DataOrder(orderAddr);
     bool okay = order.close();
@@ -326,6 +338,7 @@ contract DataExchange {
     }
   }
 
+  /*
   function hasBalanceToBuy(address buyer, uint256 _price) internal returns (bool) {
     return sdt.allowance(buyer, this) >= _price;
   }
@@ -341,4 +354,5 @@ contract DataExchange {
       return sdt.approve(to, amount);
     }
   }
+  */
 }

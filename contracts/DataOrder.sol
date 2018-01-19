@@ -278,6 +278,10 @@ contract DataOrder {
       return bytes32("NotaryAccepted");
     }
 
+    if (orderStatus == OrderStatus.PriceSet) {
+      return bytes32("PriceSet");
+    }
+
     if (orderStatus == OrderStatus.DataAdded) {
       return bytes32("DataAdded");
     }

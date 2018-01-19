@@ -1,12 +1,6 @@
 var SimpleDataToken = artifacts.require("./SimpleDataToken.sol");
 
 module.exports = function(deployer, network, accounts) {
-  if (network == "ropsten") {
-    const owner = accounts[0];
-    deployer.deploy(SimpleDataToken, {from: owner});
-    return;
-  }
-
   const owner = accounts[0];
   const notary1 = accounts[1];
   const notary2 = accounts[2];
@@ -14,6 +8,11 @@ module.exports = function(deployer, network, accounts) {
   const buyer = accounts[4];
   const seller = accounts[5];
 
+  if (network == "ropsten") {
+    deployer.deploy(SimpleDataToken, {from: owner});
+    return;
+  }
+  
   deployer.deploy(SimpleDataToken, {from: owner}).then(function() {
     return SimpleDataToken.deployed();
   }).then(function(instance) {
