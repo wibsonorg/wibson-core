@@ -44,7 +44,7 @@ module.exports = function(deployer, network, accounts) {
     }).then(function() {
       return deployer.link(ArrayUtils, DataExchange);
     }).then(function() {
-      kSimpleDataTokenRopstenAddress = SimpleDataToken.address;
+      // kSimpleDataTokenRopstenAddress = SimpleDataToken.address;
       return deployer.deploy(DataExchange, kSimpleDataTokenRopstenAddress, {from: owner});
     });
   } else {
