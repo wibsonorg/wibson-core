@@ -8,9 +8,10 @@ import './lib/ArrayUtils.sol';
 
 // ---( DataExchange )----------------------------------------------------------
 contract DataExchange {
-  /*
+
   event NewOrder(
-    address orderAddr,
+    address orderAddr
+    /*
     address buyer,
     address[] notaries,
     string filters,
@@ -23,16 +24,20 @@ contract DataExchange {
     // bool certificationFlag
     // uint serviceFee
     // uint timestamps
+    */
   );
 
   event NotaryAccepted(
-    address orderAddr,
+    address orderAddr
+    /*
     address buyer,
     address notary
+    */
   );
 
   event DataAdded(
-    address orderAddr,
+    address orderAddr
+    /*
     address buyer,
     address seller,
     address notary,
@@ -40,26 +45,30 @@ contract DataExchange {
     string hash,
     string signature,
     uint timestamps
+    */
   );
 
   event DataResponseNotarized(
-    address orderAddr,
+    address orderAddr
+    /*
     address buyer,
     address seller,
     address notary,
     bool approved,
     uint timestamps
+    */
   );
 
   event TransactionCompleted(
-    address orderAddr,
+    address orderAddr
+    /*
     address buyer,
     address seller,
     address notary,
     bytes32 status,
     uint timestamps
+    */
   );
-  */
 
   using AddressMap for AddressMap.MapStorage;
 
@@ -141,6 +150,8 @@ contract DataExchange {
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
 
+    NewOrder(newOrderAddr);
+
     /*
     NewOrder(
       newOrderAddr,
@@ -172,6 +183,7 @@ contract DataExchange {
     var okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
       openOrders.insert(orderAddr);
+      NotaryAccepted(order);
       // NotaryAccepted(order, order.buyer(), msg.sender);
     }
     return okay;
@@ -212,6 +224,7 @@ contract DataExchange {
       sdt.transferFrom(buyer, this, orderPrice);
       buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
+      DataAdded(order);
       // DataAdded(order, buyer, seller, notary, hash, signature, now);
     }
     return okay;
@@ -236,14 +249,12 @@ contract DataExchange {
     // require(orderAddr != 0x0);
 
     var order = DataOrder(orderAddr);
-    return  order.notarizeDataResponse(msg.sender, seller, approved);
-    /*
     var okay = order.notarizeDataResponse(msg.sender, seller, approved); // the Data Order will do all the needed validations for the operation
     if (okay) {
-      DataResponseNotarized(order, order.buyer(), seller, msg.sender, approved, now);
+      DataResponseNotarized(order);
+      // DataResponseNotarized(order, order.buyer(), seller, msg.sender, approved, now);
     }
     return okay;
-    */
   }
 
   // Step 8 (optional).
@@ -289,6 +300,7 @@ contract DataExchange {
       buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
 
       var notary = order.getNotaryForSeller(seller);
+      TransactionCompleted(order);
       // TransactionCompleted(order, buyer, seller, notary, order.getOrderStatusAsString(), now);
     }
     return okay;
