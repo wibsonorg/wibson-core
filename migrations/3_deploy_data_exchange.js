@@ -30,6 +30,7 @@ var kSimpleDataTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6
 module.exports = function(deployer, network, accounts) {
 
   if (network == "ropsten") {
+    const owner = accounts[0];
     deployer.deploy(AddressMap, {from: owner}).then(function() {
       return deployer.link(AddressMap, DataExchange);
     }).then(function() {

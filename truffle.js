@@ -1,5 +1,5 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
-const mnemonic = ''
+const mnemonic = 'rebuild crumble peasant afford brown scissors rough circle caught dilemma elevator dumb'
 
 module.exports = {
   migrations_directory: "./migrations",
