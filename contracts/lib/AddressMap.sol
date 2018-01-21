@@ -10,7 +10,7 @@ library AddressMap {
 
   function get(MapStorage storage self, uint index) constant returns (address) {
     require(index >= 0 && index < self.size);
-    return self.indexToAddress[index + 1];
+    return self.indexToAddress[index];
   }
 
   function exist(MapStorage storage self, address _key) constant returns (bool) {
@@ -22,15 +22,15 @@ library AddressMap {
        return true;
     }
 
-    self.size++;
     self.addressToIndex[_key] = self.size;
     self.indexToAddress[self.size] = _key;
+    self.size++;
 
     return true;
   }
 
   function removeAt(MapStorage storage self, uint index) returns (bool) {
-    return remove(self, self.indexToAddress[index + 1]);
+    return remove(self, self.indexToAddress[index]);
   }
 
   function remove(MapStorage storage self, address _key) returns (bool) {
