@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-import 'zeppelin-solidity/contracts/token/StandardToken.sol';
+import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 
 
 contract SimpleDataToken is StandardToken {
@@ -13,7 +13,7 @@ contract SimpleDataToken is StandardToken {
   address public contractOwner;
 
   function SimpleDataToken() {
-    totalSupply = INITIAL_SUPPLY * (10 ** uint256(decimals));
+    totalSupply_ = INITIAL_SUPPLY * (10 ** uint256(decimals));
     balances[msg.sender] = INITIAL_SUPPLY;
     contractOwner = msg.sender;
   }
