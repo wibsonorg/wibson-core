@@ -9,6 +9,6 @@
     "buffer": "^5.0.8",
     "node-forge": "^0.7.1",
     "truffle-hdwallet-provider": "0.0.3",
-    "zeppelin-solidity": "^1.3.0"
+    "zeppelin-solidity": "^1.6.0"
   }
 }
