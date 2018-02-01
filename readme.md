@@ -10,12 +10,14 @@
 
 
 # Development contracts on Ropsten
+#### Release: _01/02/2018_
 
 ### SimpleDataToken
-- Address: `0x736a75008f5e8efe9356f0003df53fb4122c37b6`
+- Address: `0xc7c918a1e1e97fcb94eef63e64fb6db898d205e5`
 
 ### DataExchange
-- Address: `0xf9101189f3793108f26c00cfad7f07d2a49f4102`
+- Address: `0x4ae532d093152b8c7dc4c7d0c036ef72db579262`
+
 
 ## Notary A - Data:
 - Address: `0xfe174860ad53e45047BABbcf4aff735d650D9284`
@@ -109,9 +111,9 @@ DataExchange.deployed().then(function(instance) { deInstance = instance; }).catc
 
 2. Add the allowerd notary addresses:
 ```
-deInstance.addNotary(notary1, {from: owner});
-deInstance.addNotary(notary2, {from: owner});
-deInstance.addNotary(notary3, {from: owner});
+deInstance.addNotary(notary1, "Notary 1", "lkaf023hin9-fh29h30fin29-3fvn49n4", {from: owner});
+deInstance.addNotary(notary2, "Notary 2", "lkaf023hin9-fh29h30fin29-3fvn49n5", {from: owner});
+deInstance.addNotary(notary3, "Notary 3", "lkaf023hin9-fh29h30fin29-3fvn49n6", {from: owner});
 ```
 
 ### Create a new Data Order

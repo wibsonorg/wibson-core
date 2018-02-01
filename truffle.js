@@ -1,5 +1,5 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
-const mnemonic = 'rebuild crumble peasant afford brown scissors rough circle caught dilemma elevator dumb'
+// const mnemonic = ''
 
 module.exports = {
   migrations_directory: "./migrations",
@@ -10,9 +10,10 @@ module.exports = {
       network_id: "*" // Match any network id
     },
     ropsten: {
-      host: "localhost",
+      host: "66.165.226.146",
       port: 8545,
-      provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/'),
+      // provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io/'),
+      from: '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D',
       network_id: 3, // official id of the ropsten network
       gas: 4600000
     }
