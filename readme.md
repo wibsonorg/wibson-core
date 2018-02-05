@@ -9,7 +9,7 @@
 - Address: `0xe2f225047b26a06e19598db813b4a86d7903b5d9`
 
 
-# Development contracts on Ropsten
+# Development/Staging contracts on Ropsten
 #### Release: _01/02/2018_
 
 ### SimpleDataToken
