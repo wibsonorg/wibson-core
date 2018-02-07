@@ -36,10 +36,10 @@ contract DataExchange {
   );
 
   event DataAdded(
-    address orderAddr
+    address orderAddr,
+    address seller
     /*
     address buyer,
-    address seller,
     address notary,
     //uint256 price,
     string hash,
@@ -60,10 +60,10 @@ contract DataExchange {
   );
 
   event TransactionCompleted(
-    address orderAddr
+    address orderAddr,
+    address seller
     /*
     address buyer,
-    address seller,
     address notary,
     bytes32 status,
     uint timestamps
@@ -224,7 +224,7 @@ contract DataExchange {
       sdt.transferFrom(buyer, this, orderPrice);
       buyerBalance[buyer] += orderPrice;
       ordersBySeller[seller].push(orderAddr);
-      DataAdded(order);
+      DataAdded(order, seller);
       // DataAdded(order, buyer, seller, notary, hash, signature, now);
     }
     return okay;
@@ -291,16 +291,11 @@ contract DataExchange {
     if (okay) {
       require(buyerBalance[buyer] >= orderPrice);
       // allowWithdraw(seller, orderPrice);
-      if (sdt.allowance(this, seller) > 0) {
-        return sdt.increaseApproval(seller, orderPrice);
-      } else {
-        return sdt.approve(seller, orderPrice);
-      }
-
+      sdt.transfer(seller, orderPrice);
       buyerBalance[buyer] = buyerBalance[buyer] - orderPrice;
 
       var notary = order.getNotaryForSeller(seller);
-      TransactionCompleted(order);
+      TransactionCompleted(order, seller);
       // TransactionCompleted(order, buyer, seller, notary, order.getOrderStatusAsString(), now);
     }
     return okay;
