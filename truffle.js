@@ -1,5 +1,5 @@
 const HDWalletProvider = require("truffle-hdwallet-provider");
-// const mnemonic = ''
+const mnemonic = '';
 
 module.exports = {
   migrations_directory: "./migrations",
@@ -19,8 +19,11 @@ module.exports = {
     },
     staging: {
       host: "66.165.226.146",
-      port: 8545,
-      network_id: "*" // Match any network id
+      port: 8546,
+      provider: new HDWalletProvider(mnemonic, 'http://66.165.226.146:8546'),
+      //from: "0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D",
+      network_id: "*",
+      gas: 4600000
     }
   },
   solc: {

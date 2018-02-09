@@ -26,11 +26,13 @@ var ArrayUtils = artifacts.require("./lib/ArrayUtils.sol");
 
 
 var kSimpleDataTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
-
+var kSimpleDataTokenRopstenAddressDev = '0xc7c918a1e1e97fcb94eef63e64fb6db898d205e5';
+var kSimpleDataTokenPrivateNetAddress = SimpleDataToken.address;
 
 module.exports = function(deployer, network, accounts) {
-  if (network == "ropsten") {
-    const owner = accounts[1];
+  if (network == "ropsten" || network == "staging") {
+    const owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
+
     deployer.deploy(AddressMap, {from: owner}).then(function() {
       return deployer.link(AddressMap, DataExchange);
     }).then(function() {
@@ -38,8 +40,14 @@ module.exports = function(deployer, network, accounts) {
     }).then(function() {
       return deployer.link(ArrayUtils, DataExchange);
     }).then(function() {
-      // kSimpleDataTokenRopstenAddress = SimpleDataToken.address;
-      return deployer.deploy(DataExchange, kSimpleDataTokenRopstenAddress, {from: owner});
+      let dataTokenAddress;
+      if (network == "staging") {
+        dataTokenAddress = kSimpleDataTokenPrivateNetAddress;
+      } else {
+        dataTokenAddress = kSimpleDataTokenRopstenAddress;
+      }
+
+      return deployer.deploy(DataExchange, dataTokenAddress, {from: owner});
     });
   } else {
     const owner = accounts[0];

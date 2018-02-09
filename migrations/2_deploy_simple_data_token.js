@@ -1,8 +1,8 @@
 var SimpleDataToken = artifacts.require("./SimpleDataToken.sol");
 
 module.exports = function(deployer, network, accounts) {
-  if (network == "ropsten") {
-    const owner = accounts[1];
+  if (network == "ropsten" || network == "staging") {
+    const owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
     deployer.deploy(SimpleDataToken, {from: owner});
     return;
   }
