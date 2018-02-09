@@ -27,7 +27,7 @@ var ArrayUtils = artifacts.require("./lib/ArrayUtils.sol");
 
 var kSimpleDataTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
 var kSimpleDataTokenRopstenAddressDev = '0xc7c918a1e1e97fcb94eef63e64fb6db898d205e5';
-var kSimpleDataTokenStagingAddress = SimpleDataToken.address;
+var kSimpleDataTokenStagingAddress = '0x4f5ccd773c4336d004229d2e677112777873b4f1';
 
 module.exports = function(deployer, network, accounts) {
   if (network == "ropsten" || network == "staging") {

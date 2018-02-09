@@ -9,6 +9,16 @@
 - Address: `0xe2f225047b26a06e19598db813b4a86d7903b5d9`
 
 
+# Staging contracts on Private Net (GD)
+#### Release: _09/02/2018_
+
+### SimpleDataToken
+- Address: `0x4f5ccd773c4336d004229d2e677112777873b4f1`
+
+### DataExchange
+- Address: `0xcc1f90b905c64db3cd0e9c1df2996f17607982b2`
+
+
 # Development/Staging contracts on Ropsten
 #### Release: _01/02/2018_
 
@@ -48,14 +58,6 @@ MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA
 ovZuj0rO3LezGoHzkwIDAQAB
 -----END PUBLIC KEY-----
 ```
-
-```
-var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB-----END PUBLIC KEY-----";
-
-deInstance.addNotary("0xfe174860ad53e45047BABbcf4aff735d650D9284", "Grandata Notary", pk);
-```
-
-
 
 # Deployment with Truffle
 ### Local
@@ -181,4 +183,24 @@ deInstance.getOrderFor(buyer, seller);
 ```
 web3.personal.importRawKey("<private-key>", "<password>")
 web3.personal.unlockAccount("<address>", "<password>", 15000);
+```
+
+### Manual Setup
+```
+var owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
+var notary1 = '0xfe174860ad53e45047BABbcf4aff735d650D9284';
+var buyer = '0x2D419c641352e0Baa7f54328EcABF58C5E4A56F1';
+var seller = '0x0CA944Eb38dbC9EE157835C37C010Bd0E580e250';
+
+var deInstance = DataExchange.at('0xcc1f90b905c64db3cd0e9c1df2996f17607982b2');
+var dtInstance = SimpleDataToken.at('0x4f5ccd773c4336d004229d2e677112777873b4f1');
+
+dtInstance.transfer(buyer, 1000000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
+dtInstance.transfer(notary1, 100000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
+dtInstance.transfer(seller, 1000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
+
+var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB-----END PUBLIC KEY-----";
+
+deInstance.addNotary(notary1, "Grandata Notary", pk);
+
 ```
