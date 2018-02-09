@@ -11,6 +11,7 @@
 
 # Staging contracts on Private Net (GD)
 #### Release: _09/02/2018_
+#### RPC Address: `http://66.165.226.146:8546`
 
 ### SimpleDataToken
 - Address: `0x4f5ccd773c4336d004229d2e677112777873b4f1`
@@ -21,6 +22,7 @@
 
 # Development/Staging contracts on Ropsten
 #### Release: _01/02/2018_
+#### RPC Address: `http://66.165.226.146:8545`
 
 ### SimpleDataToken
 - Address: `0xc7c918a1e1e97fcb94eef63e64fb6db898d205e5`
