@@ -187,7 +187,7 @@ web3.personal.importRawKey("<private-key>", "<password>")
 web3.personal.unlockAccount("<address>", "<password>", 15000);
 ```
 
-### Manual Setup
+### Manual Configuration of the blockchain
 ```
 var owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
 var notary1 = '0xfe174860ad53e45047BABbcf4aff735d650D9284';
@@ -206,3 +206,52 @@ var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA
 deInstance.addNotary(notary1, "Grandata Notary", pk);
 
 ```
+
+
+## Start a peer node of our private-network
+
+### 1. Create an account for the new blockchain
+
+`geth --datadir /home/case/.ethereum-private-net-public account new`
+
+- Address: `0x9dda683a8a5f5562dba2ace4de4d59514568e40a`
+- Password: `Ii0Dn4s4S899ho4S8iB6zHacs5J9T41N0Rmv7F9xhfh7yN8IjbF1VNIATqbxCX2T`
+
+
+### 2. Create the new blockchain
+`geth --datadir /home/case/.ethereum-private-net-public init customGenesis.json`
+
+- Genesis block
+```
+{
+    "nonce": "0x0000000000000042",
+    "timestamp": "0x00",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "extraData": "0x00",
+    "gasLimit": "0x8000000",
+    "difficulty": "0x0400",
+    "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "coinbase": "0x3333333333333333333333333333333333333333",
+    "alloc": {
+        "0xdf80a51b879a33c1fada88a6de25f7c4af43ab8a": {
+                "balance": "10000000000000000000000000000000000000000000000000000000000000000000000000000"
+        }
+    },
+    "config": {
+        "chainId": 9697,
+        "homesteadBlock": 0,
+        "eip155Block": 0,
+        "eip158Block": 0
+    }
+}
+```
+
+### 3. Open a console for the network and add the main peer.
+`geth --networkid 9697 --nodiscover --maxpeers 1 --rpc --rpcapi "web3,db,net,eth" --rpcport 8545 --rpccorsdomain "*" --rpcaddr 0.0.0.0 --datadir /home/case/.ethereum-private-net-public console`
+
+
+`>admin.addPeer('enode://2a1ff214b4dcd5cdc961b5bf52a129e3f0761392db752f040c15f5cbdf9a304a1b35d5c5cf6475686c068471814cca3af3441ba543aadd0015a0175a8f8ae245@127.0.0.1:30304')`
+
+
+### 4. Start the node
+`geth --networkid 9697 --nodiscover --maxpeers 1 --rpc --rpcapi "web3,db,net,eth" --rpcport 8545 --rpccorsdomain "*" --rpcaddr 0.0.0.0 --datadir=/home/case/.ethereum-private-net-public`
