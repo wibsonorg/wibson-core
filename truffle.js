@@ -18,7 +18,8 @@ module.exports = {
       gas: 4600000
     },
     staging: {
-      host: "66.165.226.146",
+      //host: "66.165.226.146",
+      host: "localhost",
       port: 8546,
       // provider: new HDWalletProvider(mnemonic, 'http://66.165.226.146:8546'),
       from: "0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D",

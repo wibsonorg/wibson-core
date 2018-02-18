@@ -175,6 +175,7 @@ contract DataExchange {
   function acceptToBeNotary(address orderAddr) public returns (bool) {
     // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
+
     if (order.hasNotaryAccepted(msg.sender)) {
       return true;
     }
@@ -229,14 +230,12 @@ contract DataExchange {
     return okay;
   }
 
-  /*
   // Step 5.
   function dataResponsesAdded(address orderAddr) public returns (bool) {
     // require(orderAddr != 0x0);
     var order = DataOrder(orderAddr);
     return order.dataResponsesAdded();
   }
-  */
 
   // Step 6.
   function hasDataResponseBeenAccepted(address orderAddr) public returns (bool) {
@@ -305,6 +304,7 @@ contract DataExchange {
   // Step 8.
   function close(address orderAddr) public returns (bool) {
     // require(orderAddr != 0x0);
+
     var order = DataOrder(orderAddr);
     bool okay = order.close();
     if (okay) {

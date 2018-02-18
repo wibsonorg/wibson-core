@@ -30,7 +30,7 @@ contract DataOrder {
     OrderCreated,
     NotaryAccepted,
     PriceSet,
-    // DataAdded,
+    DataAdded,
     TransactionCompleted
   }
 
@@ -158,13 +158,11 @@ contract DataOrder {
     return true;
   }
 
-  /*
   function dataResponsesAdded() public returns (bool) {
     require(orderStatus == OrderStatus.PriceSet);
     orderStatus = OrderStatus.DataAdded;
     return true;
   }
-  */
 
   function hasSellerBeenAccepted(address seller) public constant returns (bool) {
     require(seller != 0x0);
@@ -188,7 +186,7 @@ contract DataOrder {
   function notarizeDataResponse(address notary, address seller, bool approved) public returns (bool) {
     require(msg.sender == contractOwner);
     require(notarizeDataFlag);
-    // require(orderStatus == OrderStatus.DataAdded);
+    require(orderStatus == OrderStatus.DataAdded);
     require(hasSellerBeenAccepted(seller));
     require(notary == sellerInfo[seller].notary);
 
@@ -200,7 +198,7 @@ contract DataOrder {
   function closeDataResponse(address seller) public returns (bool) {
     require(seller != 0x0);
     require(msg.sender == contractOwner);
-    // require(orderStatus == OrderStatus.DataAdded);
+    require(orderStatus == OrderStatus.DataAdded);
 
     if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
@@ -212,7 +210,7 @@ contract DataOrder {
 
   function close() public returns (bool) {
     require(msg.sender == contractOwner);
-    // require(orderStatus == OrderStatus.DataAdded);
+    require(orderStatus == OrderStatus.DataAdded);
 
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = now;
@@ -284,11 +282,9 @@ contract DataOrder {
       return bytes32("PriceSet");
     }
 
-    /*
     if (orderStatus == OrderStatus.DataAdded) {
       return bytes32("DataAdded");
     }
-    */
 
     if (orderStatus == OrderStatus.TransactionCompleted) {
       return bytes32("TransactionCompleted");

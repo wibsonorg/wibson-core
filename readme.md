@@ -16,6 +16,9 @@
 ### SimpleDataToken
 - Address: `0x4f5ccd773c4336d004229d2e677112777873b4f1`
 
+### DataExchange V2
+- Address: `0xe2c5defb46b34b108f831576642e4b05e6ec8a8a`
+
 ### DataExchange
 - Address: `0xcc1f90b905c64db3cd0e9c1df2996f17607982b2`
 
