@@ -29,7 +29,7 @@ contract DataOrder {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
-    PriceSet,
+    // PriceSet,
     // DataAdded,
     TransactionCompleted
   }
@@ -127,9 +127,10 @@ contract DataOrder {
   }
 
   function setPrice(uint256 value) public returns (bool) {
-    require(orderStatus == OrderStatus.NotaryAccepted);
+    // require(orderStatus == OrderStatus.NotaryAccepted);
+    require(value > 0);
     price = value;
-    orderStatus = OrderStatus.PriceSet;
+    // orderStatus = OrderStatus.PriceSet;
     return true;
   }
 
@@ -141,7 +142,10 @@ contract DataOrder {
   ) public returns (bool) {
     require(msg.sender == contractOwner);
     require(notaryInfo[notary].accepted == true);
-    require(orderStatus == OrderStatus.PriceSet);
+    require(orderStatus == OrderStatus.NotaryAccepted);
+    // require(orderStatus == OrderStatus.PriceSet);
+    require(price > 0);
+
 
     sellerInfo[seller] = SellerInfo(
       notary,
@@ -280,9 +284,11 @@ contract DataOrder {
       return bytes32("NotaryAccepted");
     }
 
+    /*
     if (orderStatus == OrderStatus.PriceSet) {
       return bytes32("PriceSet");
     }
+    */
 
     /*
     if (orderStatus == OrderStatus.DataAdded) {
