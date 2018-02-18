@@ -129,6 +129,7 @@ contract DataOrder {
   function setPrice(uint256 value) public returns (bool) {
     // require(orderStatus == OrderStatus.NotaryAccepted);
     require(value > 0);
+    require(price == 0);
     price = value;
     // orderStatus = OrderStatus.PriceSet;
     return true;
