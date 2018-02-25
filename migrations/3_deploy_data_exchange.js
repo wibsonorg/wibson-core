@@ -20,33 +20,33 @@ const generateKeyPair = () =>
   });
 
 var DataExchange = artifacts.require("./DataExchange.sol");
-var SimpleDataToken = artifacts.require("./SimpleDataToken.sol");
+var WibsonPointToken = artifacts.require("./WibsonPointToken.sol");
 var AddressMap = artifacts.require("./lib/AddressMap.sol");
 var ArrayUtils = artifacts.require("./lib/ArrayUtils.sol");
 
 
-var kSimpleDataTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
-var kSimpleDataTokenStagingAddress = '0x4f5ccd773c4336d004229d2e677112777873b4f1';
+// var kTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
+// var kTokenStagingAddress = '0x4f5ccd773c4336d004229d2e677112777873b4f1';
 
 module.exports = function(deployer, network, accounts) {
   if (network == "ropsten" || network == "staging") {
     const owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
 
-    deployer.deploy(AddressMap, {from: owner}).then(function() {
+    deployer.deploy(AddressMap, { from: owner }).then(function() {
       return deployer.link(AddressMap, DataExchange);
     }).then(function() {
-      return deployer.deploy(ArrayUtils, {from: owner})
+      return deployer.deploy(ArrayUtils, { from: owner })
     }).then(function() {
       return deployer.link(ArrayUtils, DataExchange);
     }).then(function() {
-      let dataTokenAddress;
+      let tokenAddress;
       if (network == "staging") {
-        dataTokenAddress = kSimpleDataTokenStagingAddress;
+        tokenAddress = kTokenStagingAddress;
       } else {
-        dataTokenAddress = kSimpleDataTokenRopstenAddress;
+        tokenAddress = kTokenRopstenAddress;
       }
 
-      return deployer.deploy(DataExchange, dataTokenAddress, {from: owner});
+      return deployer.deploy(DataExchange, WibsonPointToken.address, { from: owner });
     });
   } else {
     const owner = accounts[0];
@@ -56,14 +56,14 @@ module.exports = function(deployer, network, accounts) {
     const buyer = accounts[4];
     const seller = accounts[5];
 
-    deployer.deploy(AddressMap, {from: owner}).then(function() {
+    deployer.deploy(AddressMap, { from: owner }).then(function() {
       return deployer.link(AddressMap, DataExchange);
     }).then(function() {
-      return deployer.deploy(ArrayUtils, {from: owner})
+      return deployer.deploy(ArrayUtils, { from: owner })
     }).then(function() {
       return deployer.link(ArrayUtils, DataExchange);
     }).then(function() {
-      return deployer.deploy(DataExchange, SimpleDataToken.address, {from: owner});
+      return deployer.deploy(DataExchange, WibsonPointToken.address, { from: owner });
     }).then(function() {
       return Promise.all([
         DataExchange.deployed(),
@@ -73,9 +73,9 @@ module.exports = function(deployer, network, accounts) {
       ]);
     }).then(function(values) {
       const instance = values[0]
-      instance.addNotary(notary1, "Notary A", values[1].publicKey, {from: owner});
-      instance.addNotary(notary2, "Notary B", values[2].publicKey, {from: owner});
-      instance.addNotary(notary3, "Notary C", values[3].publicKey, {from: owner});
+      instance.addNotary(notary1, "Notary A", values[1].publicKey, { from: owner });
+      instance.addNotary(notary2, "Notary B", values[2].publicKey, { from: owner });
+      instance.addNotary(notary3, "Notary C", values[3].publicKey, { from: owner });
     });
   }
 };

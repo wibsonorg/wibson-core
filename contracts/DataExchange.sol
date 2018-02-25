@@ -1,7 +1,7 @@
 pragma solidity ^0.4.15;
 
 import './DataOrder.sol';
-import './SimpleDataToken.sol';
+import './WibsonPointToken.sol';
 import './lib/AddressMap.sol';
 import './lib/ArrayUtils.sol';
 
@@ -96,13 +96,13 @@ contract DataExchange {
 
   address public contractOwner;
 
-  SimpleDataToken sdt;
+  WibsonPointToken sdt;
 
   function DataExchange(address _tokenAddr) public {
     require(_tokenAddr != 0x0);
 
     contractOwner = msg.sender;
-    sdt = SimpleDataToken(_tokenAddr);
+    sdt = WibsonPointToken(_tokenAddr);
   }
 
   function addNotary(address notary, string name, string publicKey) public returns (bool) {
