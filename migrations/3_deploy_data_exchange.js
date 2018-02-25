@@ -25,8 +25,8 @@ var AddressMap = artifacts.require("./lib/AddressMap.sol");
 var ArrayUtils = artifacts.require("./lib/ArrayUtils.sol");
 
 
-// var kTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
-// var kTokenStagingAddress = '0x4f5ccd773c4336d004229d2e677112777873b4f1';
+var kTokenRopstenAddress = '0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6';
+var kTokenStagingAddress = '0xda3a84548b254282697afee1368fbec3aca85bf9'; //'0x4f5ccd773c4336d004229d2e677112777873b4f1';
 
 module.exports = function(deployer, network, accounts) {
   if (network == "ropsten" || network == "staging") {
@@ -45,8 +45,8 @@ module.exports = function(deployer, network, accounts) {
       } else {
         tokenAddress = kTokenRopstenAddress;
       }
-
-      return deployer.deploy(DataExchange, WibsonPointToken.address, { from: owner });
+      console.log("Using token @ " + tokenAddress);
+      return deployer.deploy(DataExchange, tokenAddress, { from: owner });
     });
   } else {
     const owner = accounts[0];

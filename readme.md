@@ -10,14 +10,19 @@
 
 
 # Staging contracts on Private Net (GD)
-#### Release: _09/02/2018_
+#### Release: _25/02/2018_
 #### RPC Address: `http://66.165.226.146:8546`
+
+### Wibson Points Token
+- Address: `0xda3a84548b254282697afee1368fbec3aca85bf9`
+
+### DataExchange V2
+- Address: `0x10f1b86f7d04fbdb81e52abb0be0ccb8a8c31c59`
+
+----
 
 ### SimpleDataToken
 - Address: `0x4f5ccd773c4336d004229d2e677112777873b4f1`
-
-### DataExchange V2
-- Address: `0xe892cccce119a5fae6d2c5c76b4e7969c626749f`
 
 ### DataExchange
 - Address: `0xcc1f90b905c64db3cd0e9c1df2996f17607982b2`

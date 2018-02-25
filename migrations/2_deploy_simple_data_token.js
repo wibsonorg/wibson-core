@@ -1,6 +1,12 @@
 var WibsonPointToken = artifacts.require("./WibsonPointToken.sol");
 
+var redeploy = false;
+
 module.exports = function(deployer, network, accounts) {
+  if (!redeploy) {
+    return;
+  }
+  
   if (network == "ropsten" || network == "staging") {
     const owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
     deployer.deploy(WibsonPointToken, { from: owner });
