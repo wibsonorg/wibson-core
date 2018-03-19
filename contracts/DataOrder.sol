@@ -70,12 +70,11 @@ contract DataOrder {
     bool _notarizeDataFlag,
     string _terms,
     string _buyerURL,
-    string _publicKey,
+    string _publicKey
   ) public {
     require(_buyer != 0x0);
     require(msg.sender != _buyer);
     // @todo(cristian): add notary unique validation.
-    require(_minimimBudgetForAudit > uint256(0));
 
     contractOwner = msg.sender;
 
