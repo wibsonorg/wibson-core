@@ -11,6 +11,9 @@ contract DataOrder {
   string public terms;
   string public buyerURL;
   string public publicKey;
+  uint public minimimBudgetForAudit;
+  bool public certificationFlag;
+  uint public serviceFee;
 
   uint256 public price;
 
@@ -26,6 +29,8 @@ contract DataOrder {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
+    // PriceSet,
+    // DataAdded,
     TransactionCompleted
   }
 
@@ -71,11 +76,15 @@ contract DataOrder {
     string _terms,
     string _buyerURL,
     string _publicKey,
+    uint _minimimBudgetForAudit
+    // bool _certificationFlag
+    // uint _serviceFee
   ) public {
     require(_buyer != 0x0);
     require(msg.sender != _buyer);
     // @todo(cristian): add notary unique validation.
     require(_minimimBudgetForAudit > uint256(0));
+    // require(_serviceFee > uint256(0));
 
     contractOwner = msg.sender;
 
@@ -87,6 +96,9 @@ contract DataOrder {
     terms = _terms;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
+    minimimBudgetForAudit = _minimimBudgetForAudit;
+    certificationFlag = false; // _certificationFlag;
+    serviceFee = 0; //_serviceFee;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = now;
   }
@@ -115,9 +127,11 @@ contract DataOrder {
   }
 
   function setPrice(uint256 value) public returns (bool) {
+    // require(orderStatus == OrderStatus.NotaryAccepted);
     require(value > 0);
     require(price == 0);
     price = value;
+    // orderStatus = OrderStatus.PriceSet;
     return true;
   }
 
@@ -130,7 +144,9 @@ contract DataOrder {
     require(msg.sender == contractOwner);
     require(notaryInfo[notary].accepted == true);
     require(orderStatus == OrderStatus.NotaryAccepted);
+    // require(orderStatus == OrderStatus.PriceSet);
     require(price > 0);
+
 
     sellerInfo[seller] = SellerInfo(
       notary,
@@ -147,47 +163,41 @@ contract DataOrder {
     return true;
   }
 
-  function hasSellerBeenAccepted(
-    address seller
-  ) public constant returns (bool) {
+  /*
+  function dataResponsesAdded() public returns (bool) {
+    require(orderStatus == OrderStatus.PriceSet);
+    orderStatus = OrderStatus.DataAdded;
+    return true;
+  }
+  */
+
+  function hasSellerBeenAccepted(address seller) public constant returns (bool) {
     require(seller != 0x0);
     return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
   }
 
-  function hasSellerBeenApproved(
-    address seller
-  ) public constant returns (bool) {
+  function hasSellerBeenApproved(address seller) public constant returns (bool) {
     require(seller != 0x0);
     return sellerInfo[seller].status == DataResponseStatus.DataResponseApproved;
   }
 
-  function hasSellerBeenRejected(
-    address seller
-  ) public constant returns (bool) {
+  function hasSellerBeenRejected(address seller) public constant returns (bool) {
     require(seller != 0x0);
     return sellerInfo[seller].status == DataResponseStatus.DataResponseRejected;
   }
 
-  function hasSellerBeenNotarized(
-    address seller
-  ) public constant returns (bool) {
+  function hasSellerBeenNotarized(address seller) public constant returns (bool) {
     return hasSellerBeenApproved(seller) || hasSellerBeenRejected(seller);
   }
 
-  function notarizeDataResponse(
-    address notary,
-    address seller,
-    bool approved
-  ) public returns (bool) {
+  function notarizeDataResponse(address notary, address seller, bool approved) public returns (bool) {
     require(msg.sender == contractOwner);
     require(notarizeDataFlag);
+    // require(orderStatus == OrderStatus.DataAdded);
     require(hasSellerBeenAccepted(seller));
     require(notary == sellerInfo[seller].notary);
 
-    sellerInfo[seller].status = (
-      approved ? DataResponseStatus.DataResponseApproved
-               : DataResponseStatus.DataResponseRejected
-    );
+    sellerInfo[seller].status = approved ? DataResponseStatus.DataResponseApproved : DataResponseStatus.DataResponseRejected;
     sellerInfo[seller].notarizedAt = now;
     return true;
   }
@@ -195,6 +205,7 @@ contract DataOrder {
   function closeDataResponse(address seller) public returns (bool) {
     require(seller != 0x0);
     require(msg.sender == contractOwner);
+    // require(orderStatus == OrderStatus.DataAdded);
 
     if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
@@ -206,6 +217,7 @@ contract DataOrder {
 
   function close() public returns (bool) {
     require(msg.sender == contractOwner);
+    // require(orderStatus == OrderStatus.DataAdded);
 
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = now;
@@ -216,19 +228,7 @@ contract DataOrder {
     return notaryInfo[notary].accepted == true;
   }
 
-  function getSellerInfo(
-    address seller
-  ) public constant returns (
-    address,
-    address,
-    uint256,
-    string,
-    string,
-    uint,
-    uint,
-    uint,
-    bytes32
-  ) {
+  function getSellerInfo(address seller) public constant returns (address, address, uint256, string, string, uint, uint, uint, bytes32) {
     var info = sellerInfo[seller];
     return (
       seller,
@@ -243,16 +243,12 @@ contract DataOrder {
     );
   }
 
-  function getNotaryForSeller(
-    address seller
-  ) public constant returns (address) {
+  function getNotaryForSeller(address seller) public constant returns (address) {
     var (_seller, notary,) = getSellerInfo(seller);
     return notary;
   }
 
-  function getDataResponseStatusAsString(
-    DataResponseStatus drs
-  ) internal constant returns (bytes32) {
+  function getDataResponseStatusAsString(DataResponseStatus drs) internal constant returns (bytes32) {
     if (drs == DataResponseStatus.DataResponseAdded) {
       return bytes32("DataResponseAdded");
     }
@@ -288,6 +284,18 @@ contract DataOrder {
     if (orderStatus == OrderStatus.NotaryAccepted) {
       return bytes32("NotaryAccepted");
     }
+
+    /*
+    if (orderStatus == OrderStatus.PriceSet) {
+      return bytes32("PriceSet");
+    }
+    */
+
+    /*
+    if (orderStatus == OrderStatus.DataAdded) {
+      return bytes32("DataAdded");
+    }
+    */
 
     if (orderStatus == OrderStatus.TransactionCompleted) {
       return bytes32("TransactionCompleted");
