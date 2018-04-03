@@ -1,6 +1,6 @@
 pragma solidity ^0.4.15;
 
-library AddressMap {
+library MultiMap {
 
   struct MapStorage {
     mapping(address => uint) addressToIndex;
