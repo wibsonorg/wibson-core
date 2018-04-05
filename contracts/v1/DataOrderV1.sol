@@ -8,7 +8,7 @@ import '../lib/ModifierUtils.sol';
 
 // ---( DataOrder )-------------------------------------------------------------
 
-contract DataOrder is Ownable, Destructible, ModifierUtils {
+contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
@@ -61,7 +61,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   address[] public acceptedNotaries;
   address[] public notaries;
 
-  function DataOrder(
+  function DataOrderV1(
     address _buyer,
     address[] _notaries,
     string _filters,

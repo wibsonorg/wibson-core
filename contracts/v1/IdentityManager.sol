@@ -7,7 +7,7 @@ import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import './Wibcoin.sol';
 import '../lib/ModifierUtils.sol';
 
-// ---( DataOrder )-------------------------------------------------------------
+// ---( IdentityManager )-------------------------------------------------------------
 
 contract IdentityManager is Ownable, Destructible, ModifierUtils {
   using SafeMath for uint256;

@@ -75,7 +75,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     require(idManager != address(0));
     require(allowedNotaries.length() > 0);
 
-    address newOrderAddr = new DataOrder(
+    address newOrderAddr = new DataOrderV1(
       msg.sender,
       notaries,
       filters,
@@ -97,7 +97,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   }
 
   function acceptToBeNotary(address orderAddr) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     if (order.hasNotaryAccepted(msg.sender)) {
       return true;
     }
@@ -114,7 +114,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     address orderAddr,
     uint256 price
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     require(msg.sender == order.buyer());
     return order.setPrice(price);
   }
@@ -126,7 +126,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     string hash,
     string signature
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
 
@@ -147,7 +147,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   function hasDataResponseBeenAccepted(
     address orderAddr
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender);
   }
 
@@ -157,7 +157,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     bool approved
   ) public validAddress(orderAddr) returns (bool) {
 
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     // the Data Order will do all the needed validations for the operation
     bool okay = order.notarizeDataResponse(msg.sender, seller, approved);
     if (okay) {
@@ -169,21 +169,21 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   function hasDataResponseBeenApproved(
     address orderAddr
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenApproved(msg.sender);
   }
 
   function hasDataResponseBeenRejected(
     address orderAddr
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenRejected(msg.sender);
   }
 
   function hasDataResponseBeenNotarized(
     address orderAddr
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenNotarized(msg.sender);
   }
 
@@ -192,7 +192,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     address orderAddr,
     address seller
   ) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
 
@@ -220,7 +220,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   }
 
   function close(address orderAddr) public validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
+    DataOrderV1 order = DataOrderV1(orderAddr);
     bool okay = order.close();
     if (okay) {
       openOrders.remove(orderAddr);
