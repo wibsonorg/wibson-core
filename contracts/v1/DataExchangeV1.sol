@@ -4,15 +4,16 @@ import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 
-import './DataOrderV2.sol';
+import './DataOrderV1.sol';
 import './Wibcoin.sol';
+import './IdentityManager.sol';
 import '../lib/MultiMap.sol';
 import '../lib/ArrayUtils.sol';
 import '../lib/ModifierUtils.sol';
 
 
 // ---( DataExchange )----------------------------------------------------------
-contract DataExchangeV1 is Ownable, Destructible, ModifiersUtils {
+contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
@@ -56,8 +57,8 @@ contract DataExchangeV1 is Ownable, Destructible, ModifiersUtils {
     return true;
   }
 
-  function setIdentityManager(address identityManager) public onlyOwner returns (bool) {
-    idManager = identityManager;
+  function setIdentityManager(address identityManagerAddr) public onlyOwner returns (bool) {
+    idManager = IdentityManager(identityManagerAddr);
     return true;
   }
 

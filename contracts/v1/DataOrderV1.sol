@@ -8,7 +8,7 @@ import '../lib/ModifierUtils.sol';
 
 // ---( DataOrder )-------------------------------------------------------------
 
-contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
+contract DataOrder is Ownable, Destructible, ModifierUtils {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
@@ -61,7 +61,7 @@ contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
   address[] public acceptedNotaries;
   address[] public notaries;
 
-  function DataOrderV1(
+  function DataOrder(
     address _buyer,
     address[] _notaries,
     string _filters,
@@ -267,7 +267,7 @@ contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
     return bytes32("unknown");
   }
 
-  function getOrderStatusAsString() public pure returns (bytes32) {
+  function getOrderStatusAsString() public view returns (bytes32) {
     if (orderStatus == OrderStatus.OrderCreated) {
       return bytes32("OrderCreated");
     }

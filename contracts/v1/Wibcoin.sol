@@ -13,7 +13,7 @@ contract Wibcoin is StandardToken, Ownable, Destructible {
 
   uint256 public constant INITIAL_SUPPLY = 9000000000;
 
-  function WibsonPointToken() {
+  function Wibcoin() {
     totalSupply_ = INITIAL_SUPPLY * (10 ** uint256(decimals));
     balances[msg.sender] = INITIAL_SUPPLY;
     owner = msg.sender;

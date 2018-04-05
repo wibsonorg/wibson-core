@@ -14,7 +14,7 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
 
   struct Certification {
     bool certified;
-    uint certitiedAt;
+    uint certifiedAt;
   }
 
   mapping(address => Certification) public certsByIdentity;
@@ -39,7 +39,7 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
   function transferFunds(address to) public onlyOwner returns (bool) {
     uint balance = identityBalance[to];
     delete identityBalance[to];
-    token.transfer(this, to, balance);
+    token.transfer(to, balance);
     return true;
   }
 
@@ -58,7 +58,8 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
   }
 
   function getCertificationInfo(address identity) public view returns (bool, uint) {
-    return certsByIdentity[identity];
+    Certification cert = certsByIdentity[identity];
+    return (cert.certified, cert.certifiedAt);
   }
 
   function () payable {
