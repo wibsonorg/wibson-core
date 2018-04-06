@@ -3,6 +3,7 @@ pragma solidity ^0.4.15;
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
+import 'zeppelin-solidity/contracts/ECRecovery.sol';
 
 import './DataOrderV1.sol';
 import './Wibcoin.sol';
@@ -130,8 +131,8 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
 
-    require(buyer == msg.sender);
-    require(order.hasNotaryAccepted(notary) == true);
+    require(msg.sender == buyer) ;
+    require(order.hasNotaryAccepted(notary));
     require(token.allowance(buyer, this) >= orderPrice);
 
     bool okay = order.addDataResponse(seller, notary, hash, signature);
@@ -142,13 +143,6 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
       DataAdded(order, seller);
     }
     return okay;
-  }
-
-  function hasDataResponseBeenAccepted(
-    address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
-    DataOrderV1 order = DataOrderV1(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender);
   }
 
   function notarizeDataResponse(
@@ -166,52 +160,41 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return okay;
   }
 
-  function hasDataResponseBeenApproved(
-    address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
-    DataOrderV1 order = DataOrderV1(orderAddr);
-    return order.hasSellerBeenApproved(msg.sender);
-  }
-
-  function hasDataResponseBeenRejected(
-    address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
-    DataOrderV1 order = DataOrderV1(orderAddr);
-    return order.hasSellerBeenRejected(msg.sender);
-  }
-
-  function hasDataResponseBeenNotarized(
-    address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
-    DataOrderV1 order = DataOrderV1(orderAddr);
-    return order.hasSellerBeenNotarized(msg.sender);
-  }
-
-  // Step 8.
   function closeDataResponse(
     address orderAddr,
-    address seller
+    address seller,
+    bool isOrderVerified,
+    bytes notarySignature
   ) public validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
 
-    require(buyer == msg.sender);
+    require(msg.sender == buyer);
     require(
       order.hasSellerBeenAccepted(seller) ||
       order.hasSellerBeenApproved(seller)
     );
+
+    address notary = order.getNotaryForSeller(seller);
+    bytes32 hash = Crypto.hashData(orderAddr, seller, msg.sender, isOrderVerified);
+    require(Crypto.verify(hash, notary, notarySignature));
 
     bool okay = order.closeDataResponse(seller);
     if (okay) {
       require(buyerBalance[buyer][orderAddr] >= orderPrice);
       buyerBalance[buyer][orderAddr] = buyerBalance[buyer][orderAddr].sub(orderPrice);
 
-      if (idManager.isCertified(seller)) {
-        token.transfer(seller, orderPrice);
+      address dest = seller;
+      if (!isOrderVerified) {
+        dest = buyer;
+      }
+
+      if ((idManager.isCertified(seller) && dest == seller) || dest == buyer) {
+        token.transfer(dest, orderPrice);
       } else {
         token.approve(idManager, orderPrice);
-        idManager.addFunds(seller, orderPrice);
+        idManager.addFunds(dest, orderPrice);
       }
 
       TransactionCompleted(order, seller);
@@ -263,6 +246,33 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return (info.addr, info.name, info.publicKey);
   }
 
+  function hasDataResponseBeenAccepted(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
+    DataOrderV1 order = DataOrderV1(orderAddr);
+    return order.hasSellerBeenAccepted(msg.sender);
+  }
+
+  function hasDataResponseBeenApproved(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
+    DataOrderV1 order = DataOrderV1(orderAddr);
+    return order.hasSellerBeenApproved(msg.sender);
+  }
+
+  function hasDataResponseBeenRejected(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
+    DataOrderV1 order = DataOrderV1(orderAddr);
+    return order.hasSellerBeenRejected(msg.sender);
+  }
+
+  function hasDataResponseBeenNotarized(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
+    DataOrderV1 order = DataOrderV1(orderAddr);
+    return order.hasSellerBeenNotarized(msg.sender);
+  }
   function () payable {
     throw;
   }
