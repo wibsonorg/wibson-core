@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
+    "bluebird": "^3.5.1",
+    "lodash": "^4.17.5",
     "truffle-solidity-loader": "0.0.8"
   },
   "dependencies": {
