@@ -116,7 +116,6 @@ contract('DataExchange', (accounts) => {
       utils.assertEvent(meta["dx"], { event: "OrderClosed" });
       assert.ok(res, "Buyer could not close Data Order");
     })
-
   });
 
 });
