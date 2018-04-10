@@ -11,6 +11,7 @@ import './IdentityManager.sol';
 import '../lib/MultiMap.sol';
 import '../lib/ArrayUtils.sol';
 import '../lib/ModifierUtils.sol';
+import '../lib/Crypto.sol';
 
 
 // ---( DataExchange )----------------------------------------------------------
@@ -180,8 +181,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     bytes32 hash = Crypto.hashData(orderAddr, seller, msg.sender, isOrderVerified);
     require(Crypto.verify(hash, notary, notarySignature));
 
-    bool okay = order.closeDataResponse(seller);
-    if (okay) {
+    if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr] >= orderPrice);
       buyerBalance[buyer][orderAddr] = buyerBalance[buyer][orderAddr].sub(orderPrice);
 
@@ -198,8 +198,9 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
       }
 
       TransactionCompleted(order, seller);
+      return true;
     }
-    return okay;
+    return false;
   }
 
   function close(address orderAddr) public validAddress(orderAddr) returns (bool) {

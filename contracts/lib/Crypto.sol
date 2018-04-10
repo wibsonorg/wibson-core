@@ -13,7 +13,7 @@ library Crypto {
     require(order != 0x0);
     require(seller != 0x0);
     require(sender != 0x0);
-    return sha256(bytes(order), bytes(seller), bytes(sender), bytes(isValid));
+    return sha256(order, seller, sender, isValid);
   }
 
   function isSignedBy(
@@ -23,7 +23,7 @@ library Crypto {
   ) public view returns (bool) {
     require(signer != 0x0);
     address recovered = ECRecovery.recover(hash, signature);
-    return recovered == notary;
+    return recovered == signer;
   }
 
   function verify(
@@ -31,7 +31,6 @@ library Crypto {
     address signer,
     bytes signature
   ) public view returns (bool) {
-    address recoveredAddr = isSignedBy(hash, signer, signature);
-    return recovered == recoveredAddr;
+    return isSignedBy(hash, signer, signature);
   }
 }
