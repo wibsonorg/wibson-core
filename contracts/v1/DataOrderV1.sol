@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.20;
 
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
@@ -218,7 +218,7 @@ contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
     uint,
     bytes32
   ) {
-    SellerInfo info = sellerInfo[seller];
+    SellerInfo memory info = sellerInfo[seller];
     return (
       seller,
       info.notary,
@@ -233,8 +233,8 @@ contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
   }
 
   function getNotaryForSeller(address seller) public view returns (address) {
-    var (_seller, notary,) = getSellerInfo(seller);
-    return notary;
+    SellerInfo memory info = sellerInfo[seller];
+    return info.notary;
   }
 
   function getDataResponseStatusAsString(
@@ -283,8 +283,8 @@ contract DataOrderV1 is Ownable, Destructible, ModifierUtils {
     return bytes32("unknown");
   }
 
-  function () payable {
-    throw;
+  function () public payable {
+    revert();
   }
 
 }

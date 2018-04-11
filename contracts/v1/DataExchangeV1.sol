@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.20;
 
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
@@ -11,7 +11,7 @@ import './IdentityManager.sol';
 import '../lib/MultiMap.sol';
 import '../lib/ArrayUtils.sol';
 import '../lib/ModifierUtils.sol';
-import '../lib/Crypto.sol';
+import '../lib/CryptoUtils.sol';
 
 
 // ---( DataExchange )----------------------------------------------------------
@@ -94,7 +94,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
 
-    NewOrder(newOrderAddr);
+    emit NewOrder(newOrderAddr);
     return newOrderAddr;
   }
 
@@ -107,7 +107,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     bool okay = order.acceptToBeNotary(msg.sender);
     if (okay) {
       openOrders.insert(orderAddr);
-      NotaryAccepted(order);
+      emit NotaryAccepted(order);
     }
     return okay;
   }
@@ -141,7 +141,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
       buyerBalance[buyer][orderAddr].add(orderPrice);
       ordersBySeller[seller].push(orderAddr);
       token.transferFrom(buyer, this, orderPrice);
-      DataAdded(order, seller);
+      emit DataAdded(order, seller);
     }
     return okay;
   }
@@ -151,12 +151,11 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     address seller,
     bool approved
   ) public validAddress(orderAddr) returns (bool) {
-
     DataOrderV1 order = DataOrderV1(orderAddr);
     // the Data Order will do all the needed validations for the operation
     bool okay = order.notarizeDataResponse(msg.sender, seller, approved);
     if (okay) {
-      DataResponseNotarized(order);
+      emit DataResponseNotarized(order);
     }
     return okay;
   }
@@ -178,8 +177,8 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     );
 
     address notary = order.getNotaryForSeller(seller);
-    bytes32 hash = Crypto.hashData(orderAddr, seller, msg.sender, isOrderVerified);
-    require(Crypto.verify(hash, notary, notarySignature));
+    bytes32 hash = CryptoUtils.hashData(orderAddr, seller, msg.sender, isOrderVerified);
+    require(CryptoUtils.isSignedBy(hash, notary, notarySignature));
 
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr] >= orderPrice);
@@ -197,7 +196,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
         idManager.addFunds(dest, orderPrice);
       }
 
-      TransactionCompleted(order, seller);
+      emit TransactionCompleted(order, seller);
       return true;
     }
     return false;
@@ -208,7 +207,7 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     bool okay = order.close();
     if (okay) {
       openOrders.remove(orderAddr);
-      OrderClosed(orderAddr);
+      emit OrderClosed(orderAddr);
     }
 
     return okay;
@@ -243,39 +242,40 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   function getNotaryInfo(
     address notary
   ) public view returns (address, string, string) {
-    NotaryInfo info = notaryInfo[notary];
+    NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.publicKey);
   }
 
   function hasDataResponseBeenAccepted(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public view validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender);
   }
 
   function hasDataResponseBeenApproved(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public view validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenApproved(msg.sender);
   }
 
   function hasDataResponseBeenRejected(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public view validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenRejected(msg.sender);
   }
 
   function hasDataResponseBeenNotarized(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public view validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     return order.hasSellerBeenNotarized(msg.sender);
   }
-  function () payable {
-    throw;
+
+  function () public payable {
+    revert();
   }
 
 }

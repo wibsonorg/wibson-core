@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.20;
 
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
@@ -58,11 +58,11 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
   }
 
   function getCertificationInfo(address identity) public view returns (bool, uint) {
-    Certification cert = certsByIdentity[identity];
+    Certification storage cert = certsByIdentity[identity];
     return (cert.certified, cert.certifiedAt);
   }
 
-  function () payable {
-    throw;
+  function () public payable {
+    revert();
   }
 }

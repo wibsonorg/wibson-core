@@ -1,0 +1,14 @@
+{
+  "network": {
+    "ropsten": {
+      "ownerAddress": "0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D",
+      "deployedTokenAddress": "0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6"
+    },
+    "staging": {
+      "ownerAddress": "0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D",
+      "deployedTokenAddress": "0xda3a84548b254282697afee1368fbec3aca85bf9"
+    }
+  },
+  "shouldRedeployToken": true,
+  "useProtocolV1": true
+}
