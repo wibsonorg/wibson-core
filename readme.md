@@ -16,16 +16,8 @@
 ### Wibson Points Token
 - Address: `0xda3a84548b254282697afee1368fbec3aca85bf9`
 
-### DataExchange V2
-- Address: `0x10f1b86f7d04fbdb81e52abb0be0ccb8a8c31c59`
-
-----
-
-### SimpleDataToken
-- Address: `0x4f5ccd773c4336d004229d2e677112777873b4f1`
-
 ### DataExchange
-- Address: `0xcc1f90b905c64db3cd0e9c1df2996f17607982b2`
+- Address: `0x10f1b86f7d04fbdb81e52abb0be0ccb8a8c31c59`
 
 
 # Development/Staging contracts on Ropsten
@@ -79,6 +71,7 @@ ovZuj0rO3LezGoHzkwIDAQAB
 1. Add etherbase account's Mnemonics in truffle.js file.
 2. Deploy with truffle: `truffle migrate --reset --compile-all --network ropsten`
 3. Test within the truffle console: `truffle console --network ropsten`
+
 
 # Test smart contract manually
 
@@ -190,34 +183,6 @@ deInstance.getOrderFor(buyer, seller);
 web3.personal.importRawKey("<private-key>", "<password>")
 web3.personal.unlockAccount("<address>", "<password>", 15000);
 ```
-
-### Manual Configuration of the blockchain
-```
-var owner = '0xC6cb7cA2470C44FDA47fac925fE59A25c0A9798D';
-var notary1 = '0xfe174860ad53e45047BABbcf4aff735d650D9284';
-var buyer = '0x2D419c641352e0Baa7f54328EcABF58C5E4A56F1';
-var seller = '0x0CA944Eb38dbC9EE157835C37C010Bd0E580e250';
-
-### Wibson Points Token
-- Address: ``
-
-### DataExchange V2
-- Address: ``
-
-var deInstance = DataExchange.at('0xcc1f90b905c64db3cd0e9c1df2996f17607982b2');
-var dtInstance = WibsonPointToken.at('0x10f1b86f7d04fbdb81e52abb0be0ccb8a8c31c59');
-
-dtInstance.transfer(buyer, 5000000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
-
-dtInstance.transfer(notary1, 10000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
-dtInstance.transfer(seller, 1000, {from: owner}).then(function(res) { console.log("Transfer Result" , res); }).catch(function(e) { console.log(e) });
-
-var pk = "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHBhrA1FINsxvtZ/STqvTporzA/0C6SpaL1U122eSzmAohpgRUEHWQK+XqKo1P37jELPk4v6zKWs1vToB+xNIdBXqK9GG/AL9hIdCWEPmMfat+isT2xBQ3s0234PB5LFvUWJOfRk3uFn8tJP1U2jE1SDt7ovZuj0rO3LezGoHzkwIDAQAB-----END PUBLIC KEY-----";
-
-deInstance.addNotary(notary1, "Grandata Notary", pk);
-
-```
-
 
 ## Start a peer node of our private-network
 

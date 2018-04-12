@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.21;
 
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
@@ -6,15 +6,19 @@ import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ECRecovery.sol';
 
 import './DataOrderV1.sol';
-import './Wibcoin.sol';
 import './IdentityManager.sol';
+import './Wibcoin.sol';
 import '../lib/MultiMap.sol';
 import '../lib/ArrayUtils.sol';
 import '../lib/ModifierUtils.sol';
 import '../lib/CryptoUtils.sol';
 
 
-// ---( DataExchange )----------------------------------------------------------
+/**
+ * @title DataExchange
+ * @author Cristian Adamo <cristian@wibson.org>
+ * @dev
+ */
 contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
@@ -39,16 +43,37 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
   mapping(address => address[]) public ordersByNotary;
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
+
+  // @dev buyerBalance Keeps track of the buyer's balance per order.
   mapping(address => mapping(address => uint256)) public buyerBalance;
 
+  // @dev idManager Handles the users that are not yet certified by a
+  //      Identity Notary, in which case, the funds that such user receive
+  //      will be held by the `IdentityManager` until he pass the KYC process
+  //      and ultimately receive the certification.
   IdentityManager idManager;
+
+  // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
 
-  function DataExchangeV1(address tokenAddress) public validAddress(tokenAddress) {
+  /**
+   * @dev Contract costructor.
+   * @param tokenAddress Address of the Wibcoin token address (ERC20).
+   */
+  function DataExchangeV1(
+    address tokenAddress
+  ) public validAddress(tokenAddress) {
     owner = msg.sender;
     token = Wibcoin(tokenAddress);
   }
 
+  /**
+   * @dev
+   * @param notary
+   * @param name
+   * @param publicKey
+   * @return
+   */
   function addNotary(
     address notary,
     string name,
@@ -59,17 +84,35 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return true;
   }
 
-  function setIdentityManager(address identityManagerAddr) public onlyOwner returns (bool) {
+  /**
+   * @dev
+   * @param identityManagerAddr
+   * @return
+   */
+  function setIdentityManager(
+    address identityManagerAddr
+  ) public onlyOwner returns (bool) {
     idManager = IdentityManager(identityManagerAddr);
     return true;
   }
 
+  /**
+   * @dev
+   * @param notaries
+   * @param filters
+   * @param dataRequest
+   * @param notarizeDataUpfront
+   * @param termsAndConditions
+   * @param buyerURL
+   * @param publicKey
+   * @return
+   */
   function newOrder(
     address[] notaries,
     string filters,
     string dataRequest,
-    bool requireNotarizedData,
-    string terms,
+    bool notarizeDataUpfront,
+    string termsAndConditions,
     string buyerURL,
     string publicKey
   ) public returns (address) {
@@ -82,8 +125,8 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
       notaries,
       filters,
       dataRequest,
-      requireNotarizedData,
-      terms,
+      notarizeDataUpfront,
+      termsAndConditions,
       buyerURL,
       publicKey
     );
@@ -98,7 +141,14 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return newOrderAddr;
   }
 
-  function acceptToBeNotary(address orderAddr) public validAddress(orderAddr) returns (bool) {
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
+  function acceptToBeNotary(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     if (order.hasNotaryAccepted(msg.sender)) {
       return true;
@@ -112,6 +162,12 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return okay;
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @param price
+   * @return
+   */
   function setOrderPrice(
     address orderAddr,
     uint256 price
@@ -121,6 +177,15 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return order.setPrice(price);
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @param seller
+   * @param notary
+   * @param hash
+   * @param signature
+   * @return
+   */
   function addDataResponseToOrder(
     address orderAddr,
     address seller,
@@ -146,6 +211,13 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return okay;
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @param seller
+   * @param approved
+   * @return
+   */
   function notarizeDataResponse(
     address orderAddr,
     address seller,
@@ -160,6 +232,14 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return okay;
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @param seller
+   * @param isOrderVerified
+   * @param notarySignature
+   * @return
+   */
   function closeDataResponse(
     address orderAddr,
     address seller,
@@ -177,12 +257,18 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     );
 
     address notary = order.getNotaryForSeller(seller);
-    bytes32 hash = CryptoUtils.hashData(orderAddr, seller, msg.sender, isOrderVerified);
+    bytes32 hash = CryptoUtils.hashData(
+      orderAddr,
+      seller,
+      msg.sender,
+      isOrderVerified
+    );
     require(CryptoUtils.isSignedBy(hash, notary, notarySignature));
 
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr] >= orderPrice);
-      buyerBalance[buyer][orderAddr] = buyerBalance[buyer][orderAddr].sub(orderPrice);
+      buyerBalance[buyer][orderAddr] =
+        buyerBalance[buyer][orderAddr].sub(orderPrice);
 
       address dest = seller;
       if (!isOrderVerified) {
@@ -202,7 +288,14 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return false;
   }
 
-  function close(address orderAddr) public validAddress(orderAddr) returns (bool) {
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
+  function close(
+    address orderAddr
+  ) public validAddress(orderAddr) returns (bool) {
     DataOrderV1 order = DataOrderV1(orderAddr);
     bool okay = order.close();
     if (okay) {
@@ -213,32 +306,60 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return okay;
   }
 
+  /**
+   * @dev
+   * @param notary
+   * @return
+   */
   function getOrdersForNotary(
     address notary
   ) public view returns (address[]) {
     return ArrayUtils.toMemory(ordersByNotary[notary]);
   }
 
+  /**
+   * @dev
+   * @param seller
+   * @return
+   */
   function getOrdersForSeller(
     address seller
   ) public view returns (address[]) {
     return ArrayUtils.toMemory(ordersBySeller[seller]);
   }
 
+  /**
+   * @dev
+   * @param buyer
+   * @return
+   */
   function getOrdersForBuyer(
     address buyer
   ) public view returns (address[]) {
     return ArrayUtils.toMemory(ordersByBuyer[buyer]);
   }
 
+  /**
+   * @dev
+   * @return
+   */
   function getOpenOrders() public view returns (address[]) {
     return ArrayUtils.fromMultiMap(openOrders);
   }
 
+  /**
+   * @dev
+   * @return
+   */
   function getAllowedNotaries() public view returns (address[]) {
     return ArrayUtils.fromMultiMap(allowedNotaries);
   }
 
+  /**
+   * @dev
+   * @param notary
+   * @return
+   */
   function getNotaryInfo(
     address notary
   ) public view returns (address, string, string) {
@@ -246,6 +367,11 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return (info.addr, info.name, info.publicKey);
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
   function hasDataResponseBeenAccepted(
     address orderAddr
   ) public view validAddress(orderAddr) returns (bool) {
@@ -253,6 +379,11 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return order.hasSellerBeenAccepted(msg.sender);
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
   function hasDataResponseBeenApproved(
     address orderAddr
   ) public view validAddress(orderAddr) returns (bool) {
@@ -260,6 +391,11 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return order.hasSellerBeenApproved(msg.sender);
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
   function hasDataResponseBeenRejected(
     address orderAddr
   ) public view validAddress(orderAddr) returns (bool) {
@@ -267,6 +403,11 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return order.hasSellerBeenRejected(msg.sender);
   }
 
+  /**
+   * @dev
+   * @param orderAddr
+   * @return
+   */
   function hasDataResponseBeenNotarized(
     address orderAddr
   ) public view validAddress(orderAddr) returns (bool) {
@@ -274,6 +415,10 @@ contract DataExchangeV1 is Ownable, Destructible, ModifierUtils {
     return order.hasSellerBeenNotarized(msg.sender);
   }
 
+  /**
+   * @dev
+   * @return
+   */
   function () public payable {
     revert();
   }

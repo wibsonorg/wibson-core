@@ -1,10 +1,15 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.21;
 
 import 'zeppelin-solidity/contracts/token/ERC20/StandardToken.sol';
 import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
 
+/**
+ * @title Wibcoin
+ * @author Cristian Adamo <cristian@wibson.org>
+ * @dev
+ */
 contract Wibcoin is StandardToken, Ownable, Destructible {
 
   string public constant name = "Wibcoin";

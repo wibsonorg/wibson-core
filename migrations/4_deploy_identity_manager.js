@@ -21,8 +21,7 @@ module.exports = function(deployer, network, accounts) {
     .deploy(IdentityManager, Wibcoin.address, { from: addresses.owner })
     .then(function() {
       return DataExchangeV1.deployed();
-    })
-    .then(function(instance) {
-      instance.setIdentityManager(instance.address, { from: addresses.owner });
+    }).then(function(instance) {
+      instance.setIdentityManager(IdentityManager.address, { from: addresses.owner });
     });
 };

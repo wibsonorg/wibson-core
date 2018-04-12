@@ -1,7 +1,13 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.21;
 
 import 'zeppelin-solidity/contracts/ECRecovery.sol';
 
+
+/**
+ * @title CryptoUtils
+ * @author Cristian Adamo <cristian@wibson.org>
+ * @dev
+ */
 library CryptoUtils {
 
   // order -> '0x992fe9dc1feb42d9a1d67bc050aad84c8187608c'
@@ -38,7 +44,7 @@ library CryptoUtils {
     require(order != 0x0);
     require(seller != 0x0);
     require(sender != 0x0);
-    return sha3(order, seller, sender, isValid);
+    return keccak256(order, seller, sender, isValid);
   }
 
   function isSignedBy(
@@ -47,9 +53,9 @@ library CryptoUtils {
     bytes signature
   ) public pure returns (bool) {
     require(signer != 0x0);
-    // TODO(cristian): FIXME! This is a hack to satisfy geth I guess.
+    // TODO(cristian): FIXME! This is a hack to satisfy geth.
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 prefixedHash = sha3(prefix, hash);
+    bytes32 prefixedHash = keccak256(prefix, hash);
     address recovered = ECRecovery.recover(prefixedHash, signature);
     return recovered == signer;
   }

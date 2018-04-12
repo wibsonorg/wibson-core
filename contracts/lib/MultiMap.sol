@@ -1,5 +1,11 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.21;
 
+
+/**
+ * @title MultiMap
+ * @author Cristian Adamo <cristian@wibson.org>
+ * @dev
+ */
 library MultiMap {
 
   struct MapStorage {
@@ -8,16 +14,43 @@ library MultiMap {
     uint size;
   }
 
-  function get(MapStorage storage self, uint index) public view returns (address) {
+  /**
+   * @dev
+   * @param self
+   * @param index
+   * @return
+   */
+  function get(
+    MapStorage storage self,
+    uint index
+  ) public view returns (address) {
     require(index >= 0 && index < self.size);
     return self.indexToAddress[index];
   }
 
-  function exist(MapStorage storage self, address _key) public view returns (bool) {
+  /**
+   * @dev
+   * @param self
+   * @param _key
+   * @return
+   */
+  function exist(
+    MapStorage storage self,
+    address _key
+  ) public view returns (bool) {
     return self.addressToIndex[_key] > 0;
   }
 
-  function insert(MapStorage storage self, address _key) public returns (bool) {
+  /**
+   * @dev
+   * @param self
+   * @param _key
+   * @return
+   */
+  function insert(
+    MapStorage storage self,
+    address _key
+  ) public returns (bool) {
     if (exist(self, _key)) {
        return true;
     }
@@ -29,10 +62,22 @@ library MultiMap {
     return true;
   }
 
+  /**
+   * @dev
+   * @param self
+   * @param index
+   * @return
+   */
   function removeAt(MapStorage storage self, uint index) public returns (bool) {
     return remove(self, self.indexToAddress[index]);
   }
 
+  /**
+   * @dev
+   * @param self
+   * @param _key
+   * @return
+   */
   function remove(MapStorage storage self, address _key) public returns (bool) {
     uint currentIndex = self.addressToIndex[_key];
 
@@ -48,6 +93,11 @@ library MultiMap {
     return true;
   }
 
+  /**
+   * @dev
+   * @param self
+   * @return
+   */
   function length(MapStorage storage self) public view returns (uint) {
     return self.size;
   }
