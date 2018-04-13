@@ -102,7 +102,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     buyerURL = _buyerURL;
     publicKey = _publicKey;
     orderStatus = OrderStatus.OrderCreated;
-    createdAt = now;
+    createdAt = block.timestamp;
   }
 
   /**
@@ -124,7 +124,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     }
 
     if (notaryInfo[notary].accepted != true) {
-      notaryInfo[notary] = NotaryInfo(true, now);
+      notaryInfo[notary] = NotaryInfo(true, block.timestamp);
       acceptedNotaries.push(notary);
       orderStatus = OrderStatus.NotaryAccepted;
     }
@@ -168,7 +168,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       hash,
       signature,
       0,
-      now,
+      block.timestamp,
       0,
       DataResponseStatus.DataResponseAdded
     );
@@ -199,7 +199,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       approved ? DataResponseStatus.DataResponseApproved
                : DataResponseStatus.DataResponseRejected
     );
-    sellerInfo[seller].notarizedAt = now;
+    sellerInfo[seller].notarizedAt = block.timestamp;
     return true;
   }
 
@@ -215,7 +215,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
 
     if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
-      sellerInfo[seller].closedAt = now;
+      sellerInfo[seller].closedAt = block.timestamp;
       return true;
     }
     return false;
@@ -229,7 +229,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    */
   function close() public onlyOwner returns (bool) {
     orderStatus = OrderStatus.TransactionCompleted;
-    transactionCompletedAt = now;
+    transactionCompletedAt = block.timestamp;
     return true;
   }
 

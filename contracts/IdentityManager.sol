@@ -75,7 +75,7 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
    * @return Whether the user was successfully certified or not.
    */
   function certify(address identity) public onlyOwner returns (bool) {
-    certsByIdentity[identity] = Certification(true, now);
+    certsByIdentity[identity] = Certification(true, block.timestamp);
     return true;
   }
 
@@ -85,7 +85,7 @@ contract IdentityManager is Ownable, Destructible, ModifierUtils {
    * @return Whether the user certification was successfully revoked or not.
    */
   function revoke(address identity) public onlyOwner returns (bool) {
-    certsByIdentity[identity] = Certification(false, now);
+    certsByIdentity[identity] = Certification(false, block.timestamp);
     return true;
   }
 

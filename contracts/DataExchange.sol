@@ -217,7 +217,13 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     require(order.hasNotaryAccepted(notary));
     require(token.allowance(buyer, this) >= orderPrice);
 
-    bool okay = order.addDataResponse(seller, notary, hash, signature);
+    bool okay = order.addDataResponse(
+      seller,
+      notary,
+      hash,
+      signature
+    );
+
     if (okay) {
       buyerBalance[buyer][orderAddr].add(orderPrice);
       ordersBySeller[seller].push(orderAddr);
