@@ -2,9 +2,15 @@
   "name": "wibson-blockchain",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "lint:sol": "solium -d .",
+    "lint:sol:fix": "solium -d . --fix"
+  },
   "devDependencies": {
     "bluebird": "^3.5.1",
     "lodash": "^4.17.5",
+    "solium": "^1.1.6",
+    "solium-plugin-zeppelin": "0.0.2",
     "truffle-solidity-loader": "0.0.8"
   },
   "dependencies": {
