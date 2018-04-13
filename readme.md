@@ -16,6 +16,16 @@
 2. Deploy with truffle: `truffle migrate --reset --compile-all --network ropsten`
 3. Test within the truffle console: `truffle console --network ropsten`
 
+## Testing
+
+### Run tests
+
+```bash
+ganache-cli & # (Only once)
+truffle migrate --reset --compile-all (Only once)
+truffle test
+```
+
 ## Deployment status
 
 #### Release Data: 
