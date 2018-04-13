@@ -1,5 +1,7 @@
 pragma solidity ^0.4.21;
 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 /**
  * @title MultiMap
@@ -83,7 +85,7 @@ library MultiMap {
   function remove(MapStorage storage self, address _key) public returns (bool) {
     uint currentIndex = self.addressToIndex[_key];
 
-    uint lastIndex = self.size - 1;
+    uint lastIndex = SafeMath.sub(self.size, 1);
     address lastAddress = self.indexToAddress[lastIndex];
     self.addressToIndex[lastAddress] = currentIndex;
     self.indexToAddress[currentIndex] = lastAddress;
