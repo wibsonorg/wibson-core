@@ -1,17 +1,17 @@
 pragma solidity ^0.4.21;
 
-import 'zeppelin-solidity/contracts/lifecycle/Destructible.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-import 'zeppelin-solidity/contracts/math/SafeMath.sol';
-import 'zeppelin-solidity/contracts/ECRecovery.sol';
+import "zeppelin-solidity/contracts/lifecycle/Destructible.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/ECRecovery.sol";
 
-import './DataOrder.sol';
-import './IdentityManager.sol';
-import './Wibcoin.sol';
-import './lib/MultiMap.sol';
-import './lib/ArrayUtils.sol';
-import './lib/ModifierUtils.sol';
-import './lib/CryptoUtils.sol';
+import "./DataOrder.sol";
+import "./IdentityManager.sol";
+import "./Wibcoin.sol";
+import "./lib/MultiMap.sol";
+import "./lib/ArrayUtils.sol";
+import "./lib/ModifierUtils.sol";
+import "./lib/CryptoUtils.sol";
 
 
 /**
@@ -213,7 +213,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
 
-    require(msg.sender == buyer) ;
+    require(msg.sender == buyer);
     require(order.hasNotaryAccepted(notary));
     require(token.allowance(buyer, this) >= orderPrice);
 
@@ -305,8 +305,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
 
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr] >= orderPrice);
-      buyerBalance[buyer][orderAddr] =
-        buyerBalance[buyer][orderAddr].sub(orderPrice);
+      buyerBalance[buyer][orderAddr] = buyerBalance[buyer][orderAddr].sub(orderPrice);
 
       address dest = seller;
       if (!isOrderVerified) {

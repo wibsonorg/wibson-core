@@ -2,6 +2,7 @@
   "extends": "solium:all",
   "plugins": ["security"],
   "rules": {
+    "lbrace": "off",
     "quotes": ["error", "double"],
     "indentation": ["error", 2],
     "arg-overflow": ["warning", 3],

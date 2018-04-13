@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import 'zeppelin-solidity/contracts/ECRecovery.sol';
+import "zeppelin-solidity/contracts/ECRecovery.sol";
 
 
 /**
@@ -39,7 +39,12 @@ library CryptoUtils {
     require(order != 0x0);
     require(seller != 0x0);
     require(sender != 0x0);
-    return keccak256(order, seller, sender, isValid);
+    return keccak256(
+      order,
+      seller,
+      sender,
+      isValid
+    );
   }
 
   /**
