@@ -33,7 +33,17 @@
 3. Test within the truffle console: `truffle console --network ropsten`
 
 
-# Test smart contract manually
+# Testing
+
+## Run tests
+
+```bash
+ganache-cli & # (Only once)
+truffle migrate --reset --compile-all (Only once)
+truffle test
+```
+
+## Test smart contract manually
 
 ### Setup accounts alias
 Use web3 default accounts or set your own addresses to use with ropsten.
