@@ -27,20 +27,6 @@ contract TestWibcoin {
   // - approve(address spender, uint tokens) -> bool
   // - allowance(address tokenOwner, address spender) -> uint
 
-  function testName() public {
-    string memory expected = "Wibcoin";
-
-    Assert.equal(keccak256(deployedWibcoin.name()), keccak256(expected), "Deployed Wibcoin should be named 'Wibcoin'");
-    Assert.equal(keccak256(newWibcoin.name()), keccak256(expected), "New Wibcoin owner should be named 'Wibcoin'");
-  }
-
-  function testSymbol() public {
-    string memory expected = "WIB";
-
-    Assert.equal(keccak256(deployedWibcoin.symbol()), keccak256(expected), "Deployed Wibcoin symbol should be 'WIB'");
-    Assert.equal(keccak256(newWibcoin.symbol()), keccak256(expected), "New Wibcoin symbol should be 'WIB'");
-  }
-
   function testDecimals() public {
     uint expected = 9;
 
