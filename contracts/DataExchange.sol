@@ -190,7 +190,9 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
 
   /**
    * @dev Adds a new DataResponse to the given order.
-   * @notice The `msg.sender` must be the buyer of the order.
+   * @notice 1. The `msg.sender` must be the buyer of the order.
+   *         2. The buyer must allow the `DataExchange` to withdraw the price of
+   *            the order.
    * @param orderAddr Order address where the DataResponse must be added.
    * @param seller Address of the Seller.
    * @param notary Notary address that the Seller chose to use as notarizer,
