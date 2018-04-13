@@ -7,8 +7,10 @@
     "lint:sol:fix": "solium -d . --fix"
   },
   "devDependencies": {
+    "ganache-cli": "^6.1.0",
     "solium": "^1.1.6",
     "solium-plugin-zeppelin": "0.0.2",
+    "truffle": "^4.1.5",
     "truffle-solidity-loader": "0.0.8"
   },
   "dependencies": {
