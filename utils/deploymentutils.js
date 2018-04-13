@@ -31,7 +31,7 @@ exports.getDevelopmentAccounts = function(accounts) {
 exports.isProduction = function(network) { return network == "mainnet" };
 exports.isRopsten = function(network) { return network == "ropsten" };
 exports.isPrivateNet = function(network) { return network == "staging" };
-exports.isStaging = function(network) { return isRopsten || isStaging };
+exports.isStaging = function(network) { return network == "ropsten" || network == "staging" };
 exports.isDevelop = function(network) { return network == "development" };
 
 exports.generateKeyPair = function() {

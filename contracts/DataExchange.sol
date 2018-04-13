@@ -317,7 +317,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
         token.transfer(dest, orderPrice);
       } else {
         // TODO(cristian): Check possible attack/race-condition surface.
-        if (token.allowance(this, idManager) == 0)) {
+        if (token.allowance(this, idManager) == 0) {
           token.approve(idManager, orderPrice);
         } else {
           token.increaseApproval(idManager, orderPrice);
