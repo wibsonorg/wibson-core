@@ -1,6 +1,6 @@
 pragma solidity ^0.4.21;
 
-import './MultiMap.sol';
+import "./MultiMap.sol";
 
 
 /**
@@ -19,8 +19,8 @@ library ArrayUtils {
     MultiMap.MapStorage storage store
   ) internal view returns (address[]) {
     address[] memory rs = new address[](MultiMap.length(store));
-    for(uint i = 0; i < MultiMap.length(store); i++) {
-        rs[i] = MultiMap.get(store, i);
+    for (uint i = 0; i < MultiMap.length(store); i++) {
+      rs[i] = MultiMap.get(store, i);
     }
     return rs;
   }
@@ -32,8 +32,8 @@ library ArrayUtils {
    */
   function toMemory(address[] xs) internal pure returns (address[]) {
     address[] memory rs = new address[](xs.length);
-    for(uint i = 0; i < xs.length; i++) {
-        rs[i] = xs[i];
+    for (uint i = 0; i < xs.length; i++) {
+      rs[i] = xs[i];
     }
     return rs;
   }

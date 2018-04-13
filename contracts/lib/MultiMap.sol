@@ -54,7 +54,7 @@ library MultiMap {
     address _key
   ) public returns (bool) {
     if (exist(self, _key)) {
-       return true;
+      return true;
     }
 
     self.addressToIndex[_key] = self.size;
