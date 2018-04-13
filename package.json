@@ -1,0 +1,20 @@
+{
+  "name": "wibson-core",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint:sol": "solium -d .",
+    "lint:sol:fix": "solium -d . --fix"
+  },
+  "devDependencies": {
+    "solium": "^1.1.6",
+    "solium-plugin-zeppelin": "0.0.2",
+    "truffle-solidity-loader": "0.0.8"
+  },
+  "dependencies": {
+    "buffer": "^5.0.8",
+    "node-forge": "^0.7.1",
+    "truffle-hdwallet-provider": "0.0.3",
+    "zeppelin-solidity": "^1.8.0"
+  }
+}
