@@ -2,7 +2,7 @@
   "extends": "solium:all",
   "plugins": ["security"],
   "rules": {
-    "lbrace": "off",
+    "lbrace": ["off"],
     "quotes": ["error", "double"],
     "indentation": ["error", 2],
     "arg-overflow": ["warning", 3],
@@ -10,9 +10,9 @@
     "security/no-block-members": ["warning"],
     "security/no-inline-assembly": ["warning"],
     "zeppelin/constant-candidates": ["warning"],
-    "zeppelin/highlight-comments": ["warning"],
-    "zeppelin/missing-natspec-comments": ["warning"],
-    "zeppelin/no-arithmetic-operations": ["warning"],
+    "zeppelin/highlight-comments": ["off"],
+    "zeppelin/missing-natspec-comments": ["off"],
+    "zeppelin/no-arithmetic-operations": ["error"],
     "zeppelin/no-state-variable-shadowing": ["warning"],
     "zeppelin/no-unchecked-send": ["warning"],
     "zeppelin/no-unused-imports": ["warning"]
