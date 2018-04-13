@@ -316,7 +316,13 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
       if ((idManager.isCertified(seller) && dest == seller) || dest == buyer) {
         token.transfer(dest, orderPrice);
       } else {
-        token.approve(idManager, orderPrice);
+        // TODO(cristian): Check possible attack/race-condition surface.
+        if (token.allowance(this, idManager) == 0)) {
+          token.approve(idManager, orderPrice);
+        } else {
+          token.increaseApproval(idManager, orderPrice);
+        }
+
         idManager.addFunds(dest, orderPrice);
       }
 
