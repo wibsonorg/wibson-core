@@ -160,7 +160,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     string signature
   ) public onlyOwner returns (bool) {
     require(notaryInfo[notary].accepted == true);
-    require(sellerInfo[seller] == 0x0);
+    require(sellerInfo[seller].notary == 0x0);
     require(orderStatus == OrderStatus.NotaryAccepted);
     require(price > 0);
 

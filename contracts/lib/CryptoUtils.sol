@@ -28,7 +28,7 @@ library CryptoUtils {
    * @param seller Seller address.
    * @param sender Sender address (usually will be se buyer address)
    * @param isValid Whether the notary beredict over the data was Ok or not.
-   * @return
+   * @return Keccak265 hash of the order + seller + sender + isValid.
    */
   function hashData(
     address order,
