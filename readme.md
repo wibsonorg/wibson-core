@@ -28,7 +28,7 @@ truffle test
 
 ## Deployment status
 
-#### Release Data: 
+#### Release Data:
 #### Deployed Addresses:
 
 -   Wibcoin: `0x`
@@ -39,5 +39,5 @@ truffle test
 -   ArrayUtils `0x`
 -   ECRecovery `0x`
 -   CryptoUtils `0x`
-    
+
 #### Notes:
