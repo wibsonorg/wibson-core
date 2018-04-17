@@ -75,7 +75,6 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "Buyer could not set order price");
     })
     .then(() => {
-      console.log("1")
       return meta.dx.addDataResponseToOrder(
         meta.newOrderAddress,
         SELLER,
@@ -86,7 +85,6 @@ contract('DataExchange', (accounts) => {
       );
     })
     .then((res) => {
-      console.log("2")
       utils.assertEvent(meta.dx, { event: "DataAdded" });
       assert.ok(res, "Buyer could not add data response to order");
     })
@@ -94,7 +92,6 @@ contract('DataExchange', (accounts) => {
       return meta.dx.notarizeDataResponse(
         meta.newOrderAddress,
         SELLER,
-        NOTARY_A,
         true, // approved
         { from: NOTARY_A }
       );
@@ -123,7 +120,7 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "Buyer could not close Data Response");
     })
     .then(() => {
-      return meta.dx.close(meta.newOrderAddress, { from: BUYER }).call();
+      return meta.dx.close(meta.newOrderAddress, { from: BUYER });
     })
     .then((res) => {
       utils.assertEvent(meta.dx, { event: "OrderClosed" });
