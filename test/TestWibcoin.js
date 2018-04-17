@@ -30,12 +30,12 @@ contract('Wibcoin', (accounts) => {
       });
   });
 
-  it("should set totalSupply to 9e9 WIB", () => {
+  it("should set totalSupply to 9e18 WIB", () => {
     return Wibcoin.deployed().then((instance) => {
       return instance.totalSupply.call();
     })
       .then((supply) => {
-        assert.equal(supply, 9e9, "totalSupply is not 9e9");
+        assert.equal(supply, 9e18, "totalSupply is not 9e18");
       });
   });
 
@@ -87,13 +87,13 @@ contract('Wibcoin', (accounts) => {
         from: accounts[2]
       });
     })
-      .then(assert.fail)
-      .catch((error) => {
-        assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "non-owner accounts trying to transferOwnership() should throw an invalid opcode exception."
-        );
-      });
+    .then(assert.fail)
+    .catch((error) => {
+      assert(
+        error.message.indexOf("revert") >= 0,
+        "non-owner accounts trying to transferOwnership() should throw a revert exception."
+      );
+    });
   });
 
   it("should allow transfer() of WIB by address owner", () => {
@@ -248,8 +248,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transfer() when to is null should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transfer() when to is null should throw a revert exception."
         );
       });
   });
@@ -267,8 +267,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transfer() when to is 0x0000000000000000000000000000000000000000 should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transfer() when to is 0x0000000000000000000000000000000000000000 should throw a revert exception."
         );
       });
   });
@@ -286,8 +286,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transfer() when to is the contract address should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transfer() when to is the contract address should throw a revert exception."
         );
       });
   });
@@ -315,8 +315,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transferFrom() when to is null should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transferFrom() when to is null should throw a revert exception."
         );
       })
       .then(() => {
@@ -350,8 +350,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transferFrom() when to is 0x0000000000000000000000000000000000000000 should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transferFrom() when to is 0x0000000000000000000000000000000000000000 should throw a revert exception."
         );
       })
       .then(() => {
@@ -385,8 +385,8 @@ contract('Wibcoin', (accounts) => {
       .then(assert.fail)
       .catch((error) => {
         assert(
-          error.message.indexOf("invalid opcode") >= 0,
-          "accounts trying to transferFrom() when to is the contract address should throw an invalid opcode exception."
+          error.message.indexOf("revert") >= 0,
+          "accounts trying to transferFrom() when to is the contract address should throw a revert exception."
         );
       })
       .then(() => {
@@ -403,7 +403,7 @@ contract('Wibcoin', (accounts) => {
     })
       .then(assert.fail)
       .catch((error) => {
-        assert(error.message.indexOf("invalid opcode") >= 0,
+        assert(error.message.indexOf("revert") >= 0,
           "account cannot send ETH to this contract"
         );
       });
