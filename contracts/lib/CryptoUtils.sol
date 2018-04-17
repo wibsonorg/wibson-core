@@ -61,7 +61,6 @@ library CryptoUtils {
     bytes signature
   ) public pure returns (bool) {
     require(signer != 0x0);
-    // TODO(cristian): FIXME! This is a hack to satisfy geth.
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
     bytes32 prefixedHash = keccak256(prefix, hash);
     address recovered = ECRecovery.recover(prefixedHash, signature);
