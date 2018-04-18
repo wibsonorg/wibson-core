@@ -23,13 +23,7 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "couldn't add Notary");
     })
     .then(() => {
-      return meta.dx.setIdentityManager(ID_MANAGER);
-    })
-    .then((res) => {
-      assert.ok(res, "couldn't add Identity Manager");
-    })
-    .then(() => {
-      return meta.dx.newOrder(
+      return meta["dx"].newOrder(
         [NOTARY_A],
         "age:20,gender:male",
         "data request",

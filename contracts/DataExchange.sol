@@ -6,7 +6,6 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/ECRecovery.sol";
 
 import "./DataOrder.sol";
-import "./IdentityManager.sol";
 import "./Wibcoin.sol";
 import "./lib/MultiMap.sol";
 import "./lib/ArrayUtils.sol";
@@ -44,14 +43,11 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
 
-  // @dev buyerBalance Keeps track of the buyer's balance per order.
-  mapping(address => mapping(address => uint256)) public buyerBalance;
-
-  // @dev idManager Handles the users that are not yet certified by a
-  //      Identity Notary, in which case, the funds that such user receive
-  //      will be held by the `IdentityManager` until he pass the KYC process
-  //      and ultimately receive the certification.
-  IdentityManager idManager;
+  // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
+  // TODO(cristian): Is there any batter way to do this?
+  mapping(
+    address => mapping(address => mapping(address => uint256))
+  ) public buyerBalance;
 
   // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
@@ -86,19 +82,6 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   }
 
   /**
-   * @dev Set a Identity Manager.
-   * @notice This is needed in order to allow new orders on the `DataExchange`.
-   * @param identityManagerAddr Address of the given Identity Manager.
-   * @return Whether the IdManager was successfully added or not.
-   */
-  function setIdentityManager(
-    address identityManagerAddr
-  ) public onlyOwner returns (bool) {
-    idManager = IdentityManager(identityManagerAddr);
-    return true;
-  }
-
-  /**
    * @dev Creates a New Order.
    * @notice The `msg.sender` will become the buyer of the order.
    * @param notaries List of notaries that will be able to notarize the order,
@@ -124,7 +107,6 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     string publicKey
   ) public returns (address) {
     require(notaries.length > 0);
-    require(idManager != address(0));
     require(allowedNotaries.length() > 0);
     // TODO(cristian): validate that notaries are within the allowed notaries
     //                 and that are unique. This must be done here or in the
@@ -141,6 +123,10 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     );
 
     for (uint i = 0; i < notaries.length; i++) {
+      if (ordersByNotary[notaries[i]].length > 0 ||
+          !allowedNotaries.exist(notaries[i])) {
+        continue;
+      }
       ordersByNotary[notaries[i]].push(newOrderAddr);
     }
 
@@ -225,7 +211,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     );
 
     if (okay) {
-      buyerBalance[buyer][orderAddr].add(orderPrice);
+      buyerBalance[buyer][orderAddr][seller].add(orderPrice);
       ordersBySeller[seller].push(orderAddr);
       token.transferFrom(buyer, this, orderPrice);
       emit DataAdded(order, seller);
@@ -293,14 +279,14 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     DataOrder order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
+    address notary = order.getNotaryForSeller(seller);
 
-    require(msg.sender == buyer);
+    require(msg.sender == buyer || msg.sender == notary);
     require(
       order.hasSellerBeenAccepted(seller) ||
       order.hasSellerBeenApproved(seller)
     );
 
-    address notary = order.getNotaryForSeller(seller);
     bytes32 hash = CryptoUtils.hashData(
       orderAddr,
       seller,
@@ -310,26 +296,15 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     require(CryptoUtils.isSignedBy(hash, notary, notarySignature));
 
     if (order.closeDataResponse(seller)) {
-      require(buyerBalance[buyer][orderAddr] >= orderPrice);
-      buyerBalance[buyer][orderAddr] = buyerBalance[buyer][orderAddr].sub(orderPrice);
+      require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
 
       address dest = seller;
       if (!isOrderVerified) {
         dest = buyer;
       }
-
-      if ((idManager.isCertified(seller) && dest == seller) || dest == buyer) {
-        token.transfer(dest, orderPrice);
-      } else {
-        // TODO(cristian): Check possible attack/race-condition surface.
-        if (token.allowance(this, idManager) == 0) {
-          token.approve(idManager, orderPrice);
-        } else {
-          token.increaseApproval(idManager, orderPrice);
-        }
-
-        idManager.addFunds(dest, orderPrice);
-      }
+      buyerBalance[buyer][orderAddr][seller] =
+        buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
+      token.transfer(dest, orderPrice);
 
       emit TransactionCompleted(order, seller);
       return true;
