@@ -30,7 +30,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   // --- Notary Information ---
   struct NotaryInfo {
     bool accepted;
-    uint acceptedAt;
+    uint32 acceptedAt;
   }
 
   // --- Seller Information ---
@@ -38,9 +38,9 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     address notary;
     string hash;
     string signature;
-    uint closedAt;
-    uint createdAt;
-    uint notarizedAt;
+    uint32 closedAt;
+    uint32 createdAt;
+    uint32 notarizedAt;
     DataResponseStatus status;
   }
 
@@ -52,9 +52,9 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   string public buyerURL;
   string public publicKey;
   uint256 public price;
-  uint public createdAt;
-  uint public dataAddedAt;
-  uint public transactionCompletedAt;
+  uint32 public createdAt;
+  uint32 public dataAddedAt;
+  uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
@@ -102,7 +102,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     buyerURL = _buyerURL;
     publicKey = _publicKey;
     orderStatus = OrderStatus.OrderCreated;
-    createdAt = block.timestamp;
+    createdAt = uint32(block.timestamp);
   }
 
   /**
@@ -124,7 +124,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     }
 
     if (notaryInfo[notary].accepted != true) {
-      notaryInfo[notary] = NotaryInfo(true, block.timestamp);
+      notaryInfo[notary] = NotaryInfo(true, uint32(block.timestamp));
       acceptedNotaries.push(notary);
       orderStatus = OrderStatus.NotaryAccepted;
     }
@@ -169,7 +169,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       hash,
       signature,
       0,
-      block.timestamp,
+      uint32(block.timestamp),
       0,
       DataResponseStatus.DataResponseAdded
     );
@@ -200,7 +200,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       approved ? DataResponseStatus.DataResponseApproved
                : DataResponseStatus.DataResponseRejected
     );
-    sellerInfo[seller].notarizedAt = block.timestamp;
+    sellerInfo[seller].notarizedAt = uint32(block.timestamp);
     return true;
   }
 
@@ -216,7 +216,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
 
     if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
-      sellerInfo[seller].closedAt = block.timestamp;
+      sellerInfo[seller].closedAt = uint32(block.timestamp);
       return true;
     }
     return false;
@@ -230,7 +230,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    */
   function close() public onlyOwner returns (bool) {
     orderStatus = OrderStatus.TransactionCompleted;
-    transactionCompletedAt = block.timestamp;
+    transactionCompletedAt = uint32(block.timestamp);
     return true;
   }
 
@@ -308,9 +308,9 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     uint256,
     string,
     string,
-    uint,
-    uint,
-    uint,
+    uint32,
+    uint32,
+    uint32,
     bytes32
   ) {
     SellerInfo memory info = sellerInfo[seller];
@@ -320,9 +320,9 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       price,
       info.hash,
       info.signature,
-      info.closedAt,
-      info.createdAt,
-      info.notarizedAt,
+      uint32(info.closedAt),
+      uint32(info.createdAt),
+      uint32(info.notarizedAt),
       getDataResponseStatusAsString(info.status)
     );
   }
@@ -333,8 +333,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    * @return Address of the notary assigned to the given seller.
    */
   function getNotaryForSeller(address seller) public view returns (address) {
-    SellerInfo memory info = sellerInfo[seller];
-    return info.notary;
+    return sellerInfo[seller].notary;
   }
 
   /**
