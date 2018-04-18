@@ -1,5 +1,5 @@
 var utils = require("./utils.js")
-var DataExchangeV1 = artifacts.require("./DataExchange.sol");
+var DataExchange = artifacts.require("./DataExchange.sol");
 
 contract('DataExchange', (accounts) => {
 
@@ -15,9 +15,9 @@ contract('DataExchange', (accounts) => {
 
   it("should do complete flow", () => {
     var meta = {};
-    return DataExchangeV1.deployed().then((dx) => {
+    return DataExchange.deployed().then((dx) => {
       meta["dx"] = dx;
-      return meta["dx"].addNotary(NOTARY_A, "Notary A", NOTARY_A_PK, { from: OWNER }).call();
+      return meta.dx.addNotary(NOTARY_A, "Notary A", NOTARY_A_PK, { from: OWNER });
     })
     .then((res) => {
       assert.ok(res, "couldn't add Notary");
@@ -32,82 +32,92 @@ contract('DataExchange', (accounts) => {
         "public-key",
         20,
         { from: BUYER }
-      ).call();
+      );
     })
     .then((newOrder) => {
       meta["order"] = newOrder;
-      utils.assertEvent(meta["dx"], { event: "NewOrder" });
+      utils.assertEvent(meta.dx, { event: "NewOrder" });
     })
     .then(() => {
-      return meta["dx"].acceptToBeNotary(meta["order"], { from: NOTARY_A }).call();
+      var newOrderAddress;
+      for (var i = 0; i < meta.order.logs.length; i++) {
+        var log = meta.order.logs[i];
+
+        if (log.event == "NewOrder") {
+          newOrderAddress = log.args.orderAddr;
+          break;
+        }
+      }
+
+      meta["newOrderAddress"] = newOrderAddress;
+      return meta.dx.acceptToBeNotary(newOrderAddress, { from: NOTARY_A });
     })
     .then((res) => {
-      utils.assertEvent(meta["dx"], { event: "NotaryAccepted" });
+      utils.assertEvent(meta.dx, { event: "NotaryAccepted" });
       assert.ok(res, "Notary did not accept");
     })
     .then(() => {
-      return meta["dx"].getOpenOrders().call();
+      return meta.dx.getOpenOrders();
     })
     .then((openOrders) => {
-      assert.ok((openOrders.indexOf(meta["order"]) >= 0), "Order not in Open Orders");
+      assert.ok((openOrders.indexOf(meta.newOrderAddress) >= 0), "Order not in Open Orders");
     })
     .then(() => {
-      return meta["dx"].setOrderPrice(meta["order"], 10, { from: BUYER }).call();
+      return meta.dx.setOrderPrice(meta.newOrderAddress, 10, { from: BUYER });
     })
     .then((res) => {
       assert.ok(res, "Buyer could not set order price");
     })
     .then(() => {
-      return meta["dx"].addDataResponseToOrder(
-        meta["order"],
+      return meta.dx.addDataResponseToOrder(
+        meta.newOrderAddress,
         SELLER,
         NOTARY_A,
         "TODO: hash",
         "TODO: signature",
         { from: BUYER }
-      ).call();
+      );
     })
     .then((res) => {
-      utils.assertEvent(meta["dx"], { event: "DataAdded" });
+      utils.assertEvent(meta.dx, { event: "DataAdded" });
       assert.ok(res, "Buyer could not add data response to order");
     })
     .then(() => {
-      return meta["dx"].notarizeDataResponse(
-        meta["order"],
+      return meta.dx.notarizeDataResponse(
+        meta.newOrderAddress,
         SELLER,
-        NOTARY_A,
         true, // approved
         { from: NOTARY_A }
-      ).call();
+      );
     })
     .then((res) => {
-      utils.assertEvent(meta["dx"], { event: "DataResponseNotarized" });
+      utils.assertEvent(meta.dx, { event: "DataResponseNotarized" });
       assert.ok(res, "Notary couldn't notarize DataResponse");
     })
     .then(() => {
-      return meta["dx"].hasDataResponseBeenAccepted(meta["order"], { from: SELLER }).call();
+      return meta.dx.hasDataResponseBeenAccepted(meta.newOrderAddress, { from: SELLER });
     })
     .then((res) => {
       assert.ok(res, "Data response has not been accepted");
     })
     .then(() => {
-      return meta["dx"].closeDataResponse(
-        meta["order"],
+      return meta.dx.closeDataResponse(
+        meta.newOrderAddress,
         SELLER,
         true, // isValidData
         "TODO: signature",
         { from: BUYER }
-      ).call();
+      );
     })
     .then((res) => {
-      utils.assertEvent(meta["dx"], { event: "TransactionCompleted" });
+      utils.assertEvent(meta.dx, { event: "TransactionCompleted" });
       assert.ok(res, "Buyer could not close Data Response");
     })
     .then(() => {
-      return meta["dx"].close(meta["order"], { from: BUYER }).call();
+      return meta.dx.close(meta.newOrderAddress, { from: BUYER });
     })
     .then((res) => {
-      utils.assertEvent(meta["dx"], { event: "OrderClosed" });
+      utils.assertEvent(meta.dx, { event: "OrderClosed" });
       assert.ok(res, "Buyer could not close Data Order");
     })
   });
