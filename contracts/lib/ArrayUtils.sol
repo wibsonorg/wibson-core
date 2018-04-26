@@ -25,17 +25,4 @@ library ArrayUtils {
     return rs;
   }
 
-  /**
-   * @dev Converts a storage array of addresses into a memory array of addresses
-   * @param xs Storage array to convert.
-   * @return A memory array of addresses.
-   */
-  function toMemory(address[] xs) internal pure returns (address[]) {
-    address[] memory rs = new address[](xs.length);
-    for (uint i = 0; i < xs.length; i++) {
-      rs[i] = xs[i];
-    }
-    return rs;
-  }
-
 }

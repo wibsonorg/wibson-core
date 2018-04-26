@@ -302,8 +302,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
       if (!isOrderVerified) {
         dest = buyer;
       }
-      buyerBalance[buyer][orderAddr][seller] =
-        buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
+      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
       token.transfer(dest, orderPrice);
 
       emit TransactionCompleted(order, seller);
@@ -341,7 +340,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForNotary(
     address notary
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersByNotary[notary]);
+    return ordersByNotary[notary];
   }
 
   /**
@@ -352,7 +351,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForSeller(
     address seller
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersBySeller[seller]);
+    return ordersBySeller[seller];
   }
 
   /**
@@ -363,7 +362,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForBuyer(
     address buyer
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersByBuyer[buyer]);
+    return ordersByBuyer[buyer];
   }
 
   /**
