@@ -23,7 +23,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   event NewOrder(address indexed orderAddr);
   event NotaryAccepted(address indexed orderAddr);
   event DataAdded(address indexed orderAddr, address indexed seller);
-  event DataResponseNotarized(address indexed orderAddr);
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
   event OrderClosed(address indexed orderAddr);
 
@@ -91,9 +90,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
    *        at least one must be provided
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
    * @param termsAndConditions Copy of the terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
@@ -104,7 +100,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     address[] notaries,
     string filters,
     string dataRequest,
-    bool notarizeDataUpfront,
     string termsAndConditions,
     string buyerURL,
     string publicKey
@@ -119,7 +114,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
       notaries,
       filters,
       dataRequest,
-      notarizeDataUpfront,
       termsAndConditions,
       buyerURL,
       publicKey
@@ -223,28 +217,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   /**
-   * @dev Adds a data validation when the flag `notarizeDataUpfront` is set.
-   * @notice The `msg.sender` must be the notary.
-   * @param orderAddr Order Address that DataResponse belongs to.
-   * @param seller Seller address that sent DataResponse.
-   * @param approved Sets wheater the DataResponse was valid or not.
-   * @return Whether the DataResponse was set successfully or not.
-   */
-  function notarizeDataResponse(
-    address orderAddr,
-    address seller,
-    bool approved
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    // the Data Order will do all the needed validations for the operation
-    bool okay = order.notarizeDataResponse(msg.sender, seller, approved);
-    if (okay) {
-      emit DataResponseNotarized(order);
-    }
-    return okay;
-  }
-
-  /**
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must signal
    *      DataResponse as completed, either the data was OK or not.
@@ -282,10 +254,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     // address notary = order.getNotaryForSeller(seller);
 
     require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
-    require(
-      order.hasSellerBeenAccepted(seller) ||
-      order.hasSellerBeenApproved(seller)
-    );
+    require(order.hasSellerBeenAccepted(seller));
 
     bytes32 hash = CryptoUtils.hashData(
       orderAddr,
@@ -416,55 +385,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   ) public view validAddress(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender);
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller (the caller of
-   *      this function) has been approved or not by the notary.
-   * @notice This is needed when the `DataResponse`'s notarize data upfront flag
-   *         was set.
-   *         The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was approved or not.
-   */
-  function hasDataResponseBeenApproved(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenApproved(msg.sender);
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller (the caller of
-   *      this function) has been rejected or not by the notary
-   * @notice This is needed when the `DataResponse`'s notarize data upfront flag
-   *         was set.
-   *         The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was rejected or not.
-   */
-  function hasDataResponseBeenRejected(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenRejected(msg.sender);
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller (the caller of
-   *      this function) has been notarized or not, that is if the notary
-   *      already checked if the data was OK.
-   * @notice This is needed when the `DataResponse`'s notarize data upfront flag
-   *         was set.
-   *         The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was notarized or not.
-   */
-  function hasDataResponseBeenNotarized(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenNotarized(msg.sender);
   }
 
 }

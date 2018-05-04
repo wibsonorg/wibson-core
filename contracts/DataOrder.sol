@@ -46,7 +46,6 @@ contract DataOrder is Ownable, ModifierUtils {
   address public buyer;
   string public filters;
   string public dataRequest;
-  bool public notarizeDataUpfront;
   string public termsAndConditions;
   string public buyerURL;
   string public publicKey;
@@ -70,9 +69,6 @@ contract DataOrder is Ownable, ModifierUtils {
    *        at least one must be provided.
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param _notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _publicKey Public Key of the buyer, which will be used to encrypt the
@@ -84,7 +80,6 @@ contract DataOrder is Ownable, ModifierUtils {
     address[] _notaries,
     string _filters,
     string _dataRequest,
-    bool _notarizeDataUpfront,
     string _termsAndConditions,
     string _buyerURL,
     string _publicKey
@@ -95,7 +90,6 @@ contract DataOrder is Ownable, ModifierUtils {
     notaries = _notaries;
     filters = _filters;
     dataRequest = _dataRequest;
-    notarizeDataUpfront = _notarizeDataUpfront;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
@@ -177,31 +171,6 @@ contract DataOrder is Ownable, ModifierUtils {
     return true;
   }
 
-
-  /**
-   * @dev Adds a data validation when the flag `notarizeDataUpfront` is set.
-   * @param notary Notary address that notarized the `DataResponse`.
-   * @param seller Seller address that sent DataResponse.
-   * @param approved Sets wheater the DataResponse was valid or not.
-   * @return Whether the DataResponse was set successfully or not.
-   */
-  function notarizeDataResponse(
-    address notary,
-    address seller,
-    bool approved
-  ) public onlyOwner returns (bool) {
-    require(notarizeDataUpfront);
-    require(hasSellerBeenAccepted(seller));
-    require(notary == sellerInfo[seller].notary);
-
-    sellerInfo[seller].status = (
-      approved ? DataResponseStatus.DataResponseApproved
-               : DataResponseStatus.DataResponseRejected
-    );
-    sellerInfo[seller].notarizedAt = uint32(block.timestamp);
-    return true;
-  }
-
   /**
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must signal
@@ -212,7 +181,7 @@ contract DataOrder is Ownable, ModifierUtils {
   function closeDataResponse(
     address seller
   ) public onlyOwner validAddress(seller) returns (bool) {
-    if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
+    if (hasSellerBeenAccepted(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
       sellerInfo[seller].closedAt = uint32(block.timestamp);
       return true;
@@ -243,43 +212,6 @@ contract DataOrder is Ownable, ModifierUtils {
     address seller
   ) public view validAddress(seller) returns (bool) {
     return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller has been approved
-   *      or not by the notary.
-   * @param seller Seller address.
-   * @return Whether the `DataResponse` was approved or not.
-   */
-  function hasSellerBeenApproved(
-    address seller
-  ) public view validAddress(seller) returns (bool) {
-    return sellerInfo[seller].status == DataResponseStatus.DataResponseApproved;
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller has been rejected
-   *      or not by the notary
-   * @param seller Seller address.
-   * @return Whether the `DataResponse` was rejected or not.
-   */
-  function hasSellerBeenRejected(
-    address seller
-  ) public view validAddress(seller) returns (bool) {
-    return sellerInfo[seller].status == DataResponseStatus.DataResponseRejected;
-  }
-
-  /**
-   * @dev Gets wheater a `DataResponse` for a given the seller has been
-   *      notarized or not, that is if the notary already checked if the data
-   *      was OK.
-   * @param seller Seller address.
-   * @return Whether the `DataResponse` was notarized or not.
-   */
-  function hasSellerBeenNotarized(
-    address seller
-  ) public view returns (bool) {
-    return hasSellerBeenApproved(seller) || hasSellerBeenRejected(seller);
   }
 
   /**
@@ -337,14 +269,6 @@ contract DataOrder is Ownable, ModifierUtils {
   ) internal pure returns (bytes32) {
     if (drs == DataResponseStatus.DataResponseAdded) {
       return bytes32("DataResponseAdded");
-    }
-
-    if (drs == DataResponseStatus.DataResponseApproved) {
-      return bytes32("DataResponseApproved");
-    }
-
-    if (drs == DataResponseStatus.DataResponseRejected) {
-      return bytes32("DataResponseRejected");
     }
 
     if (drs == DataResponseStatus.RefundedToBuyer) {
