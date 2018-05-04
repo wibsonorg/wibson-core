@@ -90,6 +90,9 @@ contract DataExchange is TokenDestructible, ModifierUtils {
    *        at least one must be provided
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
+   * @param notarizeDataUpfront Sets wheater the DataResponses must be notarized
+   *        upfront, if not the system will audit `DataResponses` in a "random"
+   *        fashion to guarantee data truthiness within the system.
    * @param termsAndConditions Copy of the terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
@@ -100,6 +103,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     address[] notaries,
     string filters,
     string dataRequest,
+    bool notarizeDataUpfront,
     string termsAndConditions,
     string buyerURL,
     string publicKey
@@ -114,6 +118,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
       notaries,
       filters,
       dataRequest,
+      notarizeDataUpfront,
       termsAndConditions,
       buyerURL,
       publicKey
