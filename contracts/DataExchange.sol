@@ -1,14 +1,12 @@
 pragma solidity ^0.4.21;
 
-import "zeppelin-solidity/contracts/lifecycle/Destructible.sol";
+import "zeppelin-solidity/contracts/lifecycle/TokenDestructible.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/ECRecovery.sol";
 
 import "./DataOrder.sol";
 import "./Wibcoin.sol";
 import "./lib/MultiMap.sol";
-import "./lib/ArrayUtils.sol";
 import "./lib/ModifierUtils.sol";
 import "./lib/CryptoUtils.sol";
 
@@ -18,7 +16,7 @@ import "./lib/CryptoUtils.sol";
  * @author Cristian Adamo <cristian@wibson.org>
  * @dev <add-info>
  */
-contract DataExchange is Ownable, Destructible, ModifierUtils {
+contract DataExchange is TokenDestructible, ModifierUtils {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
@@ -42,12 +40,18 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   mapping(address => address[]) public ordersByNotary;
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
+  mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
   // TODO(cristian): Is there any batter way to do this?
   mapping(
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;
+
+  modifier isOrderLegit(address order) {
+    require(orders[order]);
+    _;
+  }
 
   // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
@@ -59,7 +63,6 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function DataExchange(
     address tokenAddress
   ) public validAddress(tokenAddress) {
-    owner = msg.sender;
     token = Wibcoin(tokenAddress);
   }
 
@@ -75,7 +78,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     address notary,
     string name,
     string publicKey
-  ) public onlyOwner returns (bool) {
+  ) public onlyOwner validAddress(notary) returns (bool) {
     allowedNotaries.insert(notary);
     notaryInfo[notary] = NotaryInfo(notary, name, publicKey);
     return true;
@@ -123,14 +126,14 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     );
 
     for (uint i = 0; i < notaries.length; i++) {
-      if (ordersByNotary[notaries[i]].length > 0 ||
-          !allowedNotaries.exist(notaries[i])) {
+      if (!allowedNotaries.exist(notaries[i])) {
         continue;
       }
       ordersByNotary[notaries[i]].push(newOrderAddr);
     }
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
+    orders[newOrderAddr] = true;
 
     emit NewOrder(newOrderAddr);
     return newOrderAddr;
@@ -144,7 +147,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
    */
   function acceptToBeNotary(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     if (order.hasNotaryAccepted(msg.sender)) {
       return true;
@@ -168,7 +171,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function setOrderPrice(
     address orderAddr,
     uint256 price
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     require(msg.sender == order.buyer());
     return order.setPrice(price);
@@ -194,7 +197,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     address notary,
     string hash,
     string signature
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
@@ -231,7 +234,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     address orderAddr,
     address seller,
     bool approved
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     // the Data Order will do all the needed validations for the operation
     bool okay = order.notarizeDataResponse(msg.sender, seller, approved);
@@ -245,25 +248,21 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must signal
    *      DataResponse as completed, either the data was OK or not.
-   * @notice 1. In order to allow the Seller to receive their tokens he must be
-   *         verified by the `IdentityManager`, otherwise, the funds (if data is
-   *         ok) will be handed to the `IdentityManager` until he verifies his
-   *         Identity. Once that's done the `IdentityManager` will release the
-   *         funds to him.
-   *         2. This method requires an offline signature of the DataResponse's
+   * @notice 1. This method requires an offline signature of the DataResponse's
    *         notary, such will decides wheater the data was Ok or not.
    *           - If the notary verify that the data was OK funds will be sent to
-   *             the Seller or the `IdentityManager` depending on the
-   *             circumstances detailed above.
+   *             the Seller.
    *           - If notary signals the data as wrong, funds will be handed back
    *             to the Buyer.
    *           - Otherwise funds will be locked at the `DataExchange` contract
    *             until the issue is solved.
-   *         3. This also works as a pause mechanism in case the system is
+   *         2. This also works as a pause mechanism in case the system is
    *         working under abnormal scenarios while allowing the parties to keep
    *         exchanging information without losing their funds until the system
    *         is back up.
-   *         4. The `msg.sender` must be the buyer of the order.
+   *         3. The `msg.sender` must be the buyer or in case the buyer do not
+   *         show up, a notary can call this method in order to resolve the
+   *         transaction, and decides who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
    * @param isOrderVerified Set wheater the order's data was OK or not.
@@ -275,13 +274,14 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
     address seller,
     bool isOrderVerified,
     bytes notarySignature
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
-    address notary = order.getNotaryForSeller(seller);
+    // Note: Commented out since the method throw `Stack too deep` error.
+    // address notary = order.getNotaryForSeller(seller);
 
-    require(msg.sender == buyer || msg.sender == notary);
+    require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
     require(
       order.hasSellerBeenAccepted(seller) ||
       order.hasSellerBeenApproved(seller)
@@ -293,7 +293,14 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
       msg.sender,
       isOrderVerified
     );
-    require(CryptoUtils.isSignedBy(hash, notary, notarySignature));
+
+    require(
+      CryptoUtils.isSignedBy(
+        hash,
+        order.getNotaryForSeller(seller),
+        notarySignature
+      )
+    );
 
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
@@ -302,8 +309,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
       if (!isOrderVerified) {
         dest = buyer;
       }
-      buyerBalance[buyer][orderAddr][seller] =
-        buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
+      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
       token.transfer(dest, orderPrice);
 
       emit TransactionCompleted(order, seller);
@@ -316,14 +322,17 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
    * @dev Closes the Data order.
    * @notice Onces the data is closed it will no longer accepts new
    *         DataResponse anymore.
-   *         The `msg.sender` must be the buyer of the order.
+   *         The `msg.sender` must be the buyer of the order or the owner of the
+   *         contract in a emergency case.
    * @param orderAddr Order address to close.
    * @return Whether the DataOrder was successfully closed or not.
    */
   function close(
     address orderAddr
-  ) public validAddress(orderAddr) returns (bool) {
+  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
+    require(msg.sender == order.buyer() || msg.sender == owner);
+
     bool okay = order.close();
     if (okay) {
       openOrders.remove(orderAddr);
@@ -341,7 +350,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForNotary(
     address notary
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersByNotary[notary]);
+    return ordersByNotary[notary];
   }
 
   /**
@@ -352,7 +361,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForSeller(
     address seller
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersBySeller[seller]);
+    return ordersBySeller[seller];
   }
 
   /**
@@ -363,7 +372,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   function getOrdersForBuyer(
     address buyer
   ) public view returns (address[]) {
-    return ArrayUtils.toMemory(ordersByBuyer[buyer]);
+    return ordersByBuyer[buyer];
   }
 
   /**
@@ -372,7 +381,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
    * @return A list of `DataOrder` addresses.
    */
   function getOpenOrders() public view returns (address[]) {
-    return ArrayUtils.fromMultiMap(openOrders);
+    return openOrders.toArray();
   }
 
   /**
@@ -380,7 +389,7 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
    * @return List of notary addresses.
    */
   function getAllowedNotaries() public view returns (address[]) {
-    return ArrayUtils.fromMultiMap(allowedNotaries);
+    return allowedNotaries.toArray();
   }
 
   /**
@@ -456,14 +465,6 @@ contract DataExchange is Ownable, Destructible, ModifierUtils {
   ) public view validAddress(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     return order.hasSellerBeenNotarized(msg.sender);
-  }
-
-  /**
-   * @dev Fallback function that always reverts the transaction in case someone
-   * send some funds or call a wrong function.
-   */
-  function () public payable {
-    revert();
   }
 
 }

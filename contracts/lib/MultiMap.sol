@@ -42,7 +42,8 @@ library MultiMap {
     MapStorage storage self,
     address _key
   ) public view returns (bool) {
-    return self.addressToIndex[_key] > 0;
+    uint targetIndex = self.addressToIndex[_key];
+    return self.indexToAddress[targetIndex] == _key;
   }
 
   /**
@@ -83,6 +84,10 @@ library MultiMap {
    * @return Whether the address was removed or not.
    */
   function remove(MapStorage storage self, address _key) public returns (bool) {
+    if (!exist(self, _key)) {
+      return false;
+    }
+
     uint currentIndex = self.addressToIndex[_key];
 
     uint lastIndex = SafeMath.sub(self.size, 1);
@@ -104,5 +109,20 @@ library MultiMap {
    */
   function length(MapStorage storage self) public view returns (uint) {
     return self.size;
+  }
+
+  /**
+   * @dev Converts a `MultiMap` of addresses into a memory array of addresses.
+   * @param self `MultiMap` storage to convert.
+   * @return A memory array of addresses.
+   */
+  function toArray(
+    MapStorage storage self
+  ) internal view returns (address[]) {
+    address[] memory rs = new address[](length(self));
+    for (uint i = 0; i < length(self); i++) {
+      rs[i] = get(self, i);
+    }
+    return rs;
   }
 }

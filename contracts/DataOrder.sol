@@ -1,6 +1,5 @@
 pragma solidity ^0.4.21;
 
-import "zeppelin-solidity/contracts/lifecycle/Destructible.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 import "./lib/ModifierUtils.sol";
@@ -11,7 +10,7 @@ import "./lib/ModifierUtils.sol";
  * @author Cristian Adamo <cristian@wibson.org>
  * @dev <add-info>
  */
-contract DataOrder is Ownable, Destructible, ModifierUtils {
+contract DataOrder is Ownable, ModifierUtils {
   enum OrderStatus {
     OrderCreated,
     NotaryAccepted,
@@ -28,7 +27,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   }
 
   // --- Notary Information ---
-  struct NotaryInfo {
+  struct NotaryStatus {
     bool accepted;
     uint32 acceptedAt;
   }
@@ -58,7 +57,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
-  mapping(address => NotaryInfo) internal notaryInfo;
+  mapping(address => NotaryStatus) internal notaryStatus;
 
   address[] public sellers;
   address[] public acceptedNotaries;
@@ -92,7 +91,6 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
   ) public validAddress(_buyer) {
     require(msg.sender != _buyer);
 
-    owner = msg.sender;
     buyer = _buyer;
     notaries = _notaries;
     filters = _filters;
@@ -123,8 +121,8 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
       return false;
     }
 
-    if (notaryInfo[notary].accepted != true) {
-      notaryInfo[notary] = NotaryInfo(true, uint32(block.timestamp));
+    if (notaryStatus[notary].accepted != true) {
+      notaryStatus[notary] = NotaryStatus(true, uint32(block.timestamp));
       acceptedNotaries.push(notary);
       orderStatus = OrderStatus.NotaryAccepted;
     }
@@ -159,7 +157,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     string hash,
     string signature
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
-    require(notaryInfo[notary].accepted == true);
+    require(notaryStatus[notary].accepted == true);
     require(sellerInfo[seller].createdAt == 0);
     require(orderStatus == OrderStatus.NotaryAccepted);
     require(price > 0);
@@ -211,9 +209,9 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    * @param seller Seller address.
    * @return Whether the DataResponse was successfully closed or not.
    */
-  function closeDataResponse(address seller) public onlyOwner returns (bool) {
-    require(seller != 0x0);
-
+  function closeDataResponse(
+    address seller
+  ) public onlyOwner validAddress(seller) returns (bool) {
     if (hasSellerBeenAccepted(seller) || hasSellerBeenApproved(seller)) {
       sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
       sellerInfo[seller].closedAt = uint32(block.timestamp);
@@ -229,6 +227,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    * @return Whether the DataOrder was successfully closed or not.
    */
   function close() public onlyOwner returns (bool) {
+    require(orderStatus != OrderStatus.TransactionCompleted);
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = uint32(block.timestamp);
     return true;
@@ -242,8 +241,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    */
   function hasSellerBeenAccepted(
     address seller
-  ) public view returns (bool) {
-    require(seller != 0x0);
+  ) public view validAddress(seller) returns (bool) {
     return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
   }
 
@@ -255,8 +253,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    */
   function hasSellerBeenApproved(
     address seller
-  ) public view returns (bool) {
-    require(seller != 0x0);
+  ) public view validAddress(seller) returns (bool) {
     return sellerInfo[seller].status == DataResponseStatus.DataResponseApproved;
   }
 
@@ -268,8 +265,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    */
   function hasSellerBeenRejected(
     address seller
-  ) public view returns (bool) {
-    require(seller != 0x0);
+  ) public view validAddress(seller) returns (bool) {
     return sellerInfo[seller].status == DataResponseStatus.DataResponseRejected;
   }
 
@@ -292,7 +288,7 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
    * @return Whether the notary accepted or not.
    */
   function hasNotaryAccepted(address notary) public view returns (bool) {
-    return notaryInfo[notary].accepted == true;
+    return notaryStatus[notary].accepted == true;
   }
 
   /**
@@ -336,9 +332,6 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     return sellerInfo[seller].notary;
   }
 
-  /**
-   * TODO(cristian): remove
-   */
   function getDataResponseStatusAsString(
     DataResponseStatus drs
   ) internal pure returns (bytes32) {
@@ -367,33 +360,6 @@ contract DataOrder is Ownable, Destructible, ModifierUtils {
     }
 
     return bytes32("unknown");
-  }
-
-  /**
-   * TODO(cristian): remove
-   */
-  function getOrderStatusAsString() public view returns (bytes32) {
-    if (orderStatus == OrderStatus.OrderCreated) {
-      return bytes32("OrderCreated");
-    }
-
-    if (orderStatus == OrderStatus.NotaryAccepted) {
-      return bytes32("NotaryAccepted");
-    }
-
-    if (orderStatus == OrderStatus.TransactionCompleted) {
-      return bytes32("TransactionCompleted");
-    }
-
-    return bytes32("unknown");
-  }
-
-  /**
-   * @dev Fallback function that always reverts the transaction in case someone
-   * send some funds or call a wrong function.
-   */
-  function () public payable {
-    revert();
   }
 
 }
