@@ -1,14 +1,15 @@
 pragma solidity ^0.4.21;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-
 import "./lib/ModifierUtils.sol";
 
 
 /**
  * @title DataOrder
  * @author Cristian Adamo <cristian@wibson.org>
- * @dev <add-info>
+ * @dev `DataOrder` is the contract between a given buyer and a set of sellers.
+ *      This holds the information about the "deal" between them and how the
+ *      transaction has evolved.
  */
 contract DataOrder is Ownable, ModifierUtils {
   enum OrderStatus {

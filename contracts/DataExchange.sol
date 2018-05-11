@@ -14,7 +14,10 @@ import "./lib/CryptoUtils.sol";
 /**
  * @title DataExchange
  * @author Cristian Adamo <cristian@wibson.org>
- * @dev <add-info>
+ * @dev `DataExchange` is the core contract of the Wibson's Protocol. This
+ *      allows the creation, management, and tracking of `DataOrder`s. Also,
+ *      such has some helper methods to access the data needed by the different
+ *      parties involved in the Protocol.
  */
 contract DataExchange is TokenDestructible, ModifierUtils {
   using SafeMath for uint256;
@@ -39,6 +42,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   mapping(address => address[]) public ordersByNotary;
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
+  // Tracks the orders created by this contract.
   mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
@@ -84,6 +88,21 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   /**
+   * @dev Removes an existing notary.
+   * @notice At least one notary is needed to enable `DataExchange` operation.
+   * @param notary Address of a Notary to be removed.
+   * @return Whether the notary was successfully removed or not.
+   */
+  function removeNotary(
+    address notary
+  ) public onlyOwner validAddress(notary) returns (bool) {
+    require(allowedNotaries.length() > 0);
+    allowedNotaries.remove(notary);
+    delete notaryInfo[notary];
+    return true;
+  }
+
+  /**
    * @dev Creates a New Order.
    * @notice The `msg.sender` will become the buyer of the order.
    * @param notaries List of notaries that will be able to notarize the order,
@@ -110,12 +129,22 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   ) public returns (address) {
     require(notaries.length > 0);
     require(allowedNotaries.length() > 0);
-    // TODO(cristian): validate that notaries are within the allowed notaries
-    //                 and that are unique. This must be done here or in the
-    //                 `DataOrder` contract.
+
+    MultiMap.MapStorage storage validNotaries;
+    for (uint i = 0; i < notaries.length; i++) {
+      if (!allowedNotaries.exist(notaries[i]) ||
+          MultiMap.exist(validNotaries, notaries[i])) {
+        continue;
+      }
+      MultiMap.insert(validNotaries, notaries[i]);
+    }
+
+    address[] memory validNotariesList = MultiMap.toArray(validNotaries);
+    require(validNotariesList.length > 0);
+
     address newOrderAddr = new DataOrder(
       msg.sender,
-      notaries,
+      validNotariesList,
       filters,
       dataRequest,
       notarizeDataUpfront,
@@ -124,11 +153,8 @@ contract DataExchange is TokenDestructible, ModifierUtils {
       publicKey
     );
 
-    for (uint i = 0; i < notaries.length; i++) {
-      if (!allowedNotaries.exist(notaries[i])) {
-        continue;
-      }
-      ordersByNotary[notaries[i]].push(newOrderAddr);
+    for (uint vi = 0; vi < validNotariesList.length; vi++) {
+      ordersByNotary[validNotariesList[vi]].push(newOrderAddr);
     }
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
