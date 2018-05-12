@@ -88,21 +88,6 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   /**
-   * @dev Removes an existing notary.
-   * @notice At least one notary is needed to enable `DataExchange` operation.
-   * @param notary Address of a Notary to be removed.
-   * @return Whether the notary was successfully removed or not.
-   */
-  function removeNotary(
-    address notary
-  ) public onlyOwner validAddress(notary) returns (bool) {
-    require(allowedNotaries.length() > 0);
-    allowedNotaries.remove(notary);
-    delete notaryInfo[notary];
-    return true;
-  }
-
-  /**
    * @dev Creates a New Order.
    * @notice The `msg.sender` will become the buyer of the order.
    * @param notaries List of notaries that will be able to notarize the order,
