@@ -21,9 +21,8 @@
 ### Run tests
 
 ```bash
-ganache-cli & # (Only once)
-truffle migrate --reset --compile-all (Only once)
-truffle test
+npm run ganache & # (Only once)
+npm run test
 ```
 
 ## Deployment status

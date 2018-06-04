@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "lint:sol": "solium -d .",
-    "lint:sol:fix": "solium -d . --fix"
+    "lint:sol:fix": "solium -d . --fix",
+    "truffle": "truffle",
+    "ganache": "ganache-cli",
+    "test": "truffle test"
   },
   "devDependencies": {
     "ganache-cli": "^6.1.0",
