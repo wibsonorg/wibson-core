@@ -96,26 +96,4 @@ contract TestWibcoin {
     Assert.equal(newWibcoin.allowance(owner, spender), expectedRemaining, "New Wibcoin should return remaining allowance");
   }
 
-  // Ownable functions
-  // (https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/ownership/Ownable.sol)
-  //
-  // - transferOwnership(address newOwner) [onlyOwner]
-
-  function testTransferOwnership() public {
-  }
-
-  // Destructible functions
-  // (https://github.com/OpenZeppelin/zeppelin-solidity/blob/master/contracts/lifecycle/Destructible.sol)
-  //
-  // - destroy() [onlyOwner]
-  // - destroyAndSend(address recipient) [onlyOwner]
-
-  function testDestroy() public {
-    // TODO
-  }
-
-  function testDestroyAndSend() public {
-    // TODO
-  }
-
 }
