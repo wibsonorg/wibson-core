@@ -36,6 +36,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   MultiMap.MapStorage openOrders;
+  MultiMap.MapStorage validNotaries;
   MultiMap.MapStorage allowedNotaries;
 
   mapping(address => address[]) public ordersBySeller;
@@ -127,7 +128,6 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     require(notaries.length > 0);
     require(allowedNotaries.length() > 0);
 
-    MultiMap.MapStorage storage validNotaries;
     for (uint i = 0; i < notaries.length; i++) {
       if (!allowedNotaries.exist(notaries[i]) ||
           MultiMap.exist(validNotaries, notaries[i])) {
