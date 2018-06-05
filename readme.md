@@ -23,6 +23,8 @@
 ```bash
 npm run ganache & # (Only once)
 npm run test
+# Or run with coverage
+npm run test:coverage
 ```
 
 ## Deployment status

@@ -7,10 +7,12 @@
     "lint:sol:fix": "solium -d . --fix",
     "truffle": "truffle",
     "ganache": "ganache-cli",
-    "test": "truffle test"
+    "test": "truffle test",
+    "test:coverage": "solidity-coverage"
   },
   "devDependencies": {
     "ganache-cli": "^6.1.0",
+    "solidity-coverage": "^0.5.4",
     "solium": "^1.1.6",
     "solium-plugin-zeppelin": "0.0.2",
     "truffle": "^4.1.5",
