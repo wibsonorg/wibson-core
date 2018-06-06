@@ -45,7 +45,7 @@ contract DataOrder is Ownable, ModifierUtils {
   address public buyer;
   string public filters;
   string public dataRequest;
-  bool public notarizeDataUpfront;
+  bool public notarizeAllResponses;
   string public termsAndConditions;
   string public buyerURL;
   string public publicKey;
@@ -69,9 +69,10 @@ contract DataOrder is Ownable, ModifierUtils {
    *        at least one must be provided.
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param _notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
+   * @param _notarizeAllResponses Sets whether the notaries must notarize all
+   *        `DataResponses` or not. If not, in order to guarantee data
+   *        truthiness notaries will audit only the percentage indicated when
+   *        they were added to the system.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _publicKey Public Key of the buyer, which will be used to encrypt the
@@ -83,7 +84,7 @@ contract DataOrder is Ownable, ModifierUtils {
     address[] _notaries,
     string _filters,
     string _dataRequest,
-    bool _notarizeDataUpfront,
+    bool _notarizeAllResponses,
     string _termsAndConditions,
     string _buyerURL,
     string _publicKey
@@ -94,7 +95,7 @@ contract DataOrder is Ownable, ModifierUtils {
     notaries = _notaries;
     filters = _filters;
     dataRequest = _dataRequest;
-    notarizeDataUpfront = _notarizeDataUpfront;
+    notarizeAllResponses = _notarizeAllResponses;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
@@ -143,7 +144,7 @@ contract DataOrder is Ownable, ModifierUtils {
    /**
     * @dev Adds a new DataResponse.
     * @param seller Address of the Seller.
-    * @param notary Notary address that the Seller chose to use as notarizer,
+    * @param notary Notary address that the Seller chooses to use as notary,
     *        this must be one within the allowed notaries and within the
     *        `DataOrder`'s notaries.
     * @param hash Hash of the data that must be sent, this is a SHA256.
@@ -196,8 +197,8 @@ contract DataOrder is Ownable, ModifierUtils {
 
   /**
    * @dev Closes the Data order.
-   * @notice Onces the data is closed it will no longer accepts new
-   *         DataResponse anymore.
+   * @notice Once the `DataOrder` is closed it will no longer accepts new
+   *         `DataResponses` anymore.
    * @return Whether the DataOrder was successfully closed or not.
    */
   function close() public onlyOwner returns (bool) {

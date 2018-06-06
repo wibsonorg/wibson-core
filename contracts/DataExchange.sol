@@ -107,9 +107,10 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    *        at least one must be provided
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
+   * @param notarizeAllResponses Sets whether the notaries must notarize all
+   *        `DataResponses` or not. If not, in order to guarantee data
+   *        truthiness notaries will audit only the percentage indicated when
+   *        they were added to the system.
    * @param termsAndConditions Copy of the terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
@@ -120,7 +121,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address[] notaries,
     string filters,
     string dataRequest,
-    bool notarizeDataUpfront,
+    bool notarizeAllResponses,
     string termsAndConditions,
     string buyerURL,
     string publicKey
@@ -144,7 +145,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       validNotariesList,
       filters,
       dataRequest,
-      notarizeDataUpfront,
+      notarizeAllResponses,
       termsAndConditions,
       buyerURL,
       publicKey
@@ -248,13 +249,13 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must signal
    *      DataResponse as completed, either the data was OK or not.
-   * @notice 1. This method requires an offline signature of the DataResponse's
-   *         notary, such will decides wheater the data was Ok or not.
-   *           - If the notary verify that the data was OK funds will be sent to
-   *             the Seller.
-   *           - If notary signals the data as wrong, funds will be handed back
-   *             to the Buyer.
-   *           - Otherwise funds will be locked at the `DataExchange` contract
+   * @notice 1. This method requires an offline signature from the notary set in
+   *         the DataResponse, who will decide whether the data was OK or not.
+   *           - If the notary verifies that the data was OK, funds will be sent
+   *             to the Seller.
+   *           - If the notary signals that the data as wrong, funds will be
+   *             handed back to the Buyer.
+   *           - Otherwise, funds will be locked at the `DataExchange` contract
    *             until the issue is solved.
    *         2. This also works as a pause mechanism in case the system is
    *         working under abnormal scenarios while allowing the parties to keep
@@ -265,7 +266,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    *         transaction, and decides who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
-   * @param isOrderVerified Set wheater the order's data was OK or not.
+   * @param isOrderVerified Set whether the order's data was OK or not.
    * @param notarySignature Off-chain Notary signature
    * @return Whether the DataResponse was successfully closed or not.
    */
@@ -402,7 +403,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   /**
-   * @dev Gets wheater a `DataResponse` for a given the seller (the caller of
+   * @dev Gets whether a `DataResponse` for a given the seller (the caller of
    *      this function) has been accepted or not.
    * @notice The `msg.sender` must be the seller of the order.
    * @param orderAddr Order address where the DataResponse had been sent.
