@@ -14,7 +14,7 @@ import "./lib/ModifierUtils.sol";
 contract DataOrder is Ownable, ModifierUtils {
   enum OrderStatus {
     OrderCreated,
-    NotaryAccepted,
+    NotaryAdded,
     TransactionCompleted
   }
 
@@ -26,9 +26,10 @@ contract DataOrder is Ownable, ModifierUtils {
   }
 
   // --- Notary Information ---
-  struct NotaryStatus {
-    bool accepted;
-    uint32 acceptedAt;
+  struct NotaryInfo {
+    uint256 responsesPercentage;
+    uint256 notarizationFee;
+    uint32 addedAt;
   }
 
   // --- Seller Information ---
@@ -45,21 +46,21 @@ contract DataOrder is Ownable, ModifierUtils {
   address public buyer;
   string public filters;
   string public dataRequest;
+  uint256 public price;
+  uint256 public minimumBudgetForAudit;
   bool public notarizeAllResponses;
   string public termsAndConditions;
   string public buyerURL;
   string public publicKey;
-  uint256 public price;
   uint32 public createdAt;
   uint32 public dataAddedAt;
   uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
-  mapping(address => NotaryStatus) internal notaryStatus;
+  mapping(address => NotaryInfo) internal notaryInfo;
 
   address[] public sellers;
-  address[] public acceptedNotaries;
   address[] public notaries;
 
   /**
@@ -69,6 +70,7 @@ contract DataOrder is Ownable, ModifierUtils {
    *        at least one must be provided.
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
+   * @param price Price per added Data Response.
    * @param _notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness notaries will audit only the percentage indicated when
@@ -81,20 +83,23 @@ contract DataOrder is Ownable, ModifierUtils {
    */
   function DataOrder(
     address _buyer,
-    address[] _notaries,
     string _filters,
     string _dataRequest,
+    uint256 _price,
+    uint256 _minimumBudgetForAudit,
     bool _notarizeAllResponses,
     string _termsAndConditions,
     string _buyerURL,
     string _publicKey
   ) public validAddress(_buyer) {
     require(msg.sender != _buyer);
+    require(_price > 0);
 
     buyer = _buyer;
-    notaries = _notaries;
     filters = _filters;
     dataRequest = _dataRequest;
+    price = _price;
+    minimumBudgetForAudit = _minimumBudgetForAudit;
     notarizeAllResponses = _notarizeAllResponses;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
@@ -104,40 +109,34 @@ contract DataOrder is Ownable, ModifierUtils {
   }
 
   /**
-   * @dev A notary accepts to notarize the given order.
-   * @param notary Address of the notary.
-   * @return Whether the Notary was set successfully or not.
+   * @dev The buyer adds a notary to the Data Order with the percentage of
+   * responses to audit, the notarization fee and the notary's signature
+   * over these arguments.
+   * @param notary Notary's address.
+   * @param responsesPercentage Percentage of `DataResponses` to audit per
+   * `DataOrder`. Value must be between 0 and 100.
+   * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarySignature Notary's signature over the other arguments.
+   * @return Whether the Notary was added successfully or not.
    */
-  function acceptToBeNotary(address notary) public onlyOwner returns (bool) {
-    bool allowed = false;
-    for (uint i = 0; i < notaries.length; i++) {
-      if (notaries[i] == notary) {
-        allowed = true;
-        break;
-      }
-    }
+  function addNotary(
+    address notary,
+    uint256 responsesPercentage,
+    uint256 notarizationFee,
+    bytes notarySignature
+  ) public onlyOwner returns (bool) {
+    require(orderStatus != OrderStatus.TransactionCompleted);
+    require(responsesPercentage >= 0);
+    require(responsesPercentage <= 100);
+    require(!hasNotaryBeenAdded(notary));
 
-    if (!allowed) {
-      return false;
-    }
-
-    if (notaryStatus[notary].accepted != true) {
-      notaryStatus[notary] = NotaryStatus(true, uint32(block.timestamp));
-      acceptedNotaries.push(notary);
-      orderStatus = OrderStatus.NotaryAccepted;
-    }
-    return true;
-  }
-
-   /**
-    * @dev Sets the price of the given order, once set this can't be changed.
-    * @param value Price amount.
-    * @return Whether the Price was set successfully or not.
-    */
-  function setPrice(uint256 value) public onlyOwner returns (bool) {
-    require(value > 0);
-    require(price == 0);
-    price = value;
+    notaryInfo[notary] = NotaryInfo(
+      responsesPercentage,
+      notarizationFee,
+      uint32(block.timestamp)
+    );
+    notaries.push(notary);
+    orderStatus = OrderStatus.NotaryAdded;
     return true;
   }
 
@@ -157,10 +156,9 @@ contract DataOrder is Ownable, ModifierUtils {
     string hash,
     string signature
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
-    require(notaryStatus[notary].accepted == true);
-    require(sellerInfo[seller].createdAt == 0);
+    require(!hasSellerBeenAccepted(seller));
+    require(hasNotaryBeenAdded(notary));
     require(orderStatus == OrderStatus.NotaryAccepted);
-    require(price > 0);
 
     sellerInfo[seller] = SellerInfo(
       notary,
@@ -217,16 +215,16 @@ contract DataOrder is Ownable, ModifierUtils {
   function hasSellerBeenAccepted(
     address seller
   ) public view validAddress(seller) returns (bool) {
-    return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
+    return sellerInfo[seller].createdAt != 0;
   }
 
   /**
-   * @dev Checks if the given notary accepted to notarize this `DataOrder`.
+   * @dev Checks if the given notary was added to notarize this `DataOrder`.
    * @param notary Notary address to check.
-   * @return Whether the notary accepted or not.
+   * @return Whether the notary was added or not.
    */
-  function hasNotaryAccepted(address notary) public view returns (bool) {
-    return notaryStatus[notary].accepted == true;
+  function hasNotaryBeenAdded(address notary) public view returns (bool) {
+    return notaryStatus[notary].addedAt != 0;
   }
 
   /**
