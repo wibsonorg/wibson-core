@@ -36,6 +36,12 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     string publicKey;
   }
 
+  enum NotaryAudit {
+    DataNotAudited,
+    ValidData,
+    InvalidData
+  }
+
   MultiMap.MapStorage openOrders;
   MultiMap.MapStorage allowedNotaries;
 
@@ -181,7 +187,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       return false;
     }
 
-    bool okay = order.addNotary(notary);
+    bool okay = order.addNotary(notary, responsesPercentage, notarizationFee);
     if (okay) {
       openOrders.insert(orderAddr);
       ordersByNotary[notary].push(orderAddr);
@@ -240,13 +246,14 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
 
   /**
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
-   *      the seller's data and checks that it is valid or not, he must signal
-   *      DataResponse as completed, either the data was OK or not.
+   *      the seller's data and checks that it is valid or not, he must close
+   *      the DataResponse signaling the result.
    * @notice 1. This method requires an offline signature from the notary set in
-   *         the DataResponse, who will decide whether the data was OK or not.
-   *           - If the notary verifies that the data was OK, funds will be sent
-   *             to the Seller.
-   *           - If the notary signals that the data as wrong, funds will be
+   *         the DataResponse, which will indicate the audit result or if
+   *         the data was not audited at all.
+   *           - If the notary did not audit the data or it verifies that it was
+   *             valid, funds will be sent to the Seller.
+   *           - If the notary signals the data as invalid, funds will be
    *             handed back to the Buyer.
    *           - Otherwise, funds will be locked at the `DataExchange` contract
    *             until the issue is solved.
@@ -254,19 +261,20 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    *         working under abnormal scenarios while allowing the parties to keep
    *         exchanging information without losing their funds until the system
    *         is back up.
-   *         3. The `msg.sender` must be the buyer or in case the buyer do not
-   *         show up, a notary can call this method in order to resolve the
-   *         transaction, and decides who must receive the funds.
+   *         3. The `msg.sender` must be the buyer or the notary in case the
+   *         former does not show up. Only through the notary's signature it is
+   *         decided who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
-   * @param isOrderVerified Set whether the order's data was OK or not.
+   * @param audit Indicates whether the data was audited or not and with
+   * which result.
    * @param notarySignature Off-chain Notary signature
    * @return Whether the DataResponse was successfully closed or not.
    */
   function closeDataResponse(
     address orderAddr,
     address seller,
-    bool isOrderVerified,
+    NotaryAudit audit,
     bytes notarySignature
   ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
@@ -282,7 +290,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       orderAddr,
       seller,
       msg.sender,
-      isOrderVerified
+      uint8(audit)
     );
 
     require(
@@ -297,7 +305,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
 
       address dest = seller;
-      if (!isOrderVerified) {
+      if (audit == NotaryAudit.InvalidData) {
         dest = buyer;
       }
       buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
@@ -386,11 +394,11 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   /**
    * @dev Gets information about a give notary.
    * @param notary Notary address to get info for.
-   * @return Notary information (address, name, publicKey).
+   * @return Notary information (address, name, notaryUrl, publicKey).
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (address, string, string) {
+  ) public view returns (address, string, string, string) {
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
   }

@@ -66,11 +66,9 @@ contract DataOrder is Ownable, ModifierUtils {
   /**
    * @dev Contract's constructor.
    * @param _buyer Buyer address
-   * @param _notaries List of notaries that will be able to notarize the order,
-   *        at least one must be provided.
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param price Price per added Data Response.
+   * @param _price Price per added Data Response.
    * @param _notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness notaries will audit only the percentage indicated when
@@ -110,20 +108,17 @@ contract DataOrder is Ownable, ModifierUtils {
 
   /**
    * @dev The buyer adds a notary to the Data Order with the percentage of
-   * responses to audit, the notarization fee and the notary's signature
-   * over these arguments.
+   * responses to audit and the notarization fee.
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
    * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
-   * @param notarySignature Notary's signature over the other arguments.
    * @return Whether the Notary was added successfully or not.
    */
   function addNotary(
     address notary,
     uint256 responsesPercentage,
-    uint256 notarizationFee,
-    bytes notarySignature
+    uint256 notarizationFee
   ) public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
     require(responsesPercentage >= 0);
@@ -158,7 +153,7 @@ contract DataOrder is Ownable, ModifierUtils {
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
     require(!hasSellerBeenAccepted(seller));
     require(hasNotaryBeenAdded(notary));
-    require(orderStatus == OrderStatus.NotaryAccepted);
+    require(orderStatus == OrderStatus.NotaryAdded);
 
     sellerInfo[seller] = SellerInfo(
       notary,
@@ -224,7 +219,7 @@ contract DataOrder is Ownable, ModifierUtils {
    * @return Whether the notary was added or not.
    */
   function hasNotaryBeenAdded(address notary) public view returns (bool) {
-    return notaryStatus[notary].addedAt != 0;
+    return notaryInfo[notary].addedAt != 0;
   }
 
   /**

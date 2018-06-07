@@ -2,7 +2,6 @@ pragma solidity ^0.4.21;
 
 import "zeppelin-solidity/contracts/ECRecovery.sol";
 
-
 /**
  * @title CryptoUtils
  * @author Cristian Adamo <cristian@wibson.org>
@@ -18,23 +17,25 @@ library CryptoUtils {
    *            <order address without leading 0x> +
    *            <seller address without leading 0x> +
    *            <seller/buyer (sender) address without leading 0x> +
-   *            <notary beredict (data is ok or not) encoded as:
-   *              '01' as true
-   *              '00' as false
+   *            <notary's veredict (data not audited, valid or invalid) encoded
+   *             as an uint8:
+   *              0 for data not audited
+   *              1 for valid data
+   *              2 for invalid data
    *            >
    *
    *         And set the encoding option as `hex`.
    * @param order Order address.
    * @param seller Seller address.
    * @param sender Sender address (usually will be se buyer address)
-   * @param isValid Whether the notary beredict over the data was Ok or not.
-   * @return Keccak265 hash of the order + seller + sender + isValid.
+   * @param audit Notary's veredict (data not audited, valid or invalid).
+   * @return Keccak265 hash of (the order + seller + sender + audit).
    */
   function hashData(
     address order,
     address seller,
     address sender,
-    bool isValid
+    uint8 audit
   ) public pure returns (bytes32) {
     require(order != 0x0);
     require(seller != 0x0);
@@ -43,13 +44,12 @@ library CryptoUtils {
       order,
       seller,
       sender,
-      isValid
+      audit
     );
   }
 
   /**
-   * @dev Checks if the signer and signature for the give nhas came from the
-   *      same address.
+   * @dev Checks if the signature was created by the signer.
    * @param hash Hash of the data using the `keccak256` algorithm.
    * @param signer Signer address.
    * @param signature Signature over the hash.
