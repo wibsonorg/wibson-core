@@ -36,12 +36,6 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     string publicKey;
   }
 
-  enum NotaryAudit {
-    DataNotAudited,
-    ValidData,
-    InvalidData
-  }
-
   MultiMap.MapStorage openOrders;
   MultiMap.MapStorage allowedNotaries;
 
@@ -218,7 +212,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address seller,
     address notary,
     string hash,
-    string signature
+    bytes signature
   ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
@@ -245,6 +239,43 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   /**
+   * @dev Private method to validate the notary's signature to close the
+   * `DataResponse`.
+   * @param orderAddr Order address where the DataResponse belongs to.
+   * @param seller Seller address.
+   * @param notary Notary address.
+   * @param sender Caller address.
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
+   * @param notarySignature Off-chain Notary signature.
+   */
+  function validateNotarySignature(
+    address orderAddr,
+    address seller,
+    address notary,
+    address sender,
+    bool wasAudited,
+    bool isDataValid,
+    bytes notarySignature
+  ) private pure {
+    bytes32 hash = CryptoUtils.hashData(
+      orderAddr,
+      seller,
+      sender,
+      wasAudited,
+      isDataValid
+    );
+
+    require(
+      CryptoUtils.isSignedBy(
+        hash,
+        notary,
+        notarySignature
+      )
+    );
+  }
+
+  /**
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must close
    *      the DataResponse signaling the result.
@@ -266,15 +297,16 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    *         decided who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
-   * @param audit Indicates whether the data was audited or not and with
-   * which result.
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
    * @param notarySignature Off-chain Notary signature
    * @return Whether the DataResponse was successfully closed or not.
    */
   function closeDataResponse(
     address orderAddr,
     address seller,
-    NotaryAudit audit,
+    bool wasAudited,
+    bool isDataValid,
     bytes notarySignature
   ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
@@ -286,26 +318,21 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
     require(order.hasSellerBeenAccepted(seller));
 
-    bytes32 hash = CryptoUtils.hashData(
+    validateNotarySignature(
       orderAddr,
       seller,
+      order.getNotaryForSeller(seller),
       msg.sender,
-      uint8(audit)
-    );
-
-    require(
-      CryptoUtils.isSignedBy(
-        hash,
-        order.getNotaryForSeller(seller),
-        notarySignature
-      )
+      wasAudited,
+      isDataValid,
+      notarySignature
     );
 
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
 
       address dest = seller;
-      if (audit == NotaryAudit.InvalidData) {
+      if (wasAudited && !isDataValid) {
         dest = buyer;
       }
       buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);

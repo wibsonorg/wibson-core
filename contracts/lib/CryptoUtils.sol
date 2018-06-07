@@ -16,26 +16,30 @@ library CryptoUtils {
    *            ('0x' +
    *            <order address without leading 0x> +
    *            <seller address without leading 0x> +
-   *            <seller/buyer (sender) address without leading 0x> +
-   *            <notary's veredict (data not audited, valid or invalid) encoded
-   *             as an uint8:
-   *              0 for data not audited
-   *              1 for valid data
-   *              2 for invalid data
+   *            <sender address without leading 0x> +
+   *            <notary's action:
+   *              '01' if the seller was audited
+   *              '00' if the seller was not audited
+   *            > +
+   *            <notary's veredict if seller was audited encoded as:
+   *              '01' if data is valid
+   *              '00' if data is invalid
    *            >
    *
    *         And set the encoding option as `hex`.
    * @param order Order address.
    * @param seller Seller address.
    * @param sender Sender address (usually will be se buyer address)
-   * @param audit Notary's veredict (data not audited, valid or invalid).
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
    * @return Keccak265 hash of (the order + seller + sender + audit).
    */
   function hashData(
     address order,
     address seller,
     address sender,
-    uint8 audit
+    bool wasAudited,
+    bool isDataValid
   ) public pure returns (bytes32) {
     require(order != 0x0);
     require(seller != 0x0);
@@ -44,7 +48,8 @@ library CryptoUtils {
       order,
       seller,
       sender,
-      audit
+      wasAudited,
+      isDataValid
     );
   }
 

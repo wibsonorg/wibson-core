@@ -19,6 +19,7 @@
     "truffle-solidity-loader": "0.0.8"
   },
   "dependencies": {
+    "abi-decoder": "^1.1.0",
     "buffer": "^5.0.8",
     "node-forge": "^0.7.1",
     "truffle-hdwallet-provider": "0.0.3",

@@ -36,7 +36,7 @@ contract DataOrder is Ownable, ModifierUtils {
   struct SellerInfo {
     address notary;
     string hash;
-    string signature;
+    bytes signature;
     uint32 closedAt;
     uint32 createdAt;
     uint32 notarizedAt;
@@ -149,7 +149,7 @@ contract DataOrder is Ownable, ModifierUtils {
     address seller,
     address notary,
     string hash,
-    string signature
+    bytes signature
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
     require(!hasSellerBeenAccepted(seller));
     require(hasNotaryBeenAdded(notary));
@@ -223,6 +223,28 @@ contract DataOrder is Ownable, ModifierUtils {
   }
 
   /**
+   * @dev Gets the notary information.
+   * @param notary Notary address to get info for.
+   * @return Notary Information.
+   */
+  function getNotaryInfo(
+    address notary
+  ) public view returns (
+    address,
+    uint256,
+    uint256,
+    uint32
+  ) {
+    NotaryInfo memory info = notaryInfo[notary];
+    return (
+      notary,
+      info.responsesPercentage,
+      info.notarizationFee,
+      uint32(info.addedAt)
+    );
+  }
+
+  /**
    * @dev Gets the seller information.
    * @param seller Seller address to get info for.
    * @return Seller Information.
@@ -234,7 +256,7 @@ contract DataOrder is Ownable, ModifierUtils {
     address,
     uint256,
     string,
-    string,
+    bytes,
     uint32,
     uint32,
     uint32,
