@@ -3,7 +3,6 @@ const DeployUtils = require('../utils/deploymentutils');
 var DataExchange = artifacts.require("./DataExchange.sol");
 var Wibcoin = artifacts.require("./Wibcoin.sol");
 
-var ArrayUtils = artifacts.require("./lib/ArrayUtils.sol");
 var MultiMap = artifacts.require("./lib/MultiMap.sol");
 var CryptoUtils = artifacts.require("./lib/CryptoUtils.sol");
 var ECRecovery = artifacts.require('zeppelin-solidity/contracts/ECRecovery.sol');
@@ -60,10 +59,6 @@ const deployDevelopment = (deployer, accounts) => {
 const deployExchange = (deployer, from) => {
   return deployer.deploy(MultiMap, from).then(function() {
     return deployer.link(MultiMap, DataExchange);
-  }).then(function() {
-    return deployer.deploy(ArrayUtils, from);
-  }).then(function() {
-    return deployer.link(ArrayUtils, DataExchange);
   }).then(function() {
     return deployer.deploy(ECRecovery, from);
   }).then(function() {
