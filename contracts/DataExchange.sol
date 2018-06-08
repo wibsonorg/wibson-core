@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 
 import "zeppelin-solidity/contracts/lifecycle/TokenDestructible.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./DataOrder.sol";
@@ -19,7 +19,7 @@ import "./lib/CryptoUtils.sol";
  *      such has some helper methods to access the data needed by the different
  *      parties involved in the Protocol.
  */
-contract DataExchange is TokenDestructible, ModifierUtils {
+contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
@@ -36,6 +36,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   MultiMap.MapStorage openOrders;
+  MultiMap.MapStorage validNotaries;
   MultiMap.MapStorage allowedNotaries;
 
   mapping(address => address[]) public ordersBySeller;
@@ -81,10 +82,22 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     address notary,
     string name,
     string publicKey
-  ) public onlyOwner validAddress(notary) returns (bool) {
+  ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
     allowedNotaries.insert(notary);
     notaryInfo[notary] = NotaryInfo(notary, name, publicKey);
     return true;
+  }
+
+  /**
+   * @dev Removes an existing notary.
+   * @notice At least one notary is needed to enable `DataExchange` operation.
+   * @param notary Address of a Notary to remove.
+   * @return Whether the notary was successfully removed. False if not existed.
+   */
+  function removeNotary(
+    address notary
+  ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
+    return allowedNotaries.remove(notary);
   }
 
   /**
@@ -111,11 +124,10 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     string termsAndConditions,
     string buyerURL,
     string publicKey
-  ) public returns (address) {
+  ) public whenNotPaused returns (address) {
     require(notaries.length > 0);
     require(allowedNotaries.length() > 0);
 
-    MultiMap.MapStorage storage validNotaries;
     for (uint i = 0; i < notaries.length; i++) {
       if (!allowedNotaries.exist(notaries[i]) ||
           MultiMap.exist(validNotaries, notaries[i])) {
@@ -157,7 +169,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
    */
   function acceptToBeNotary(
     address orderAddr
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     if (order.hasNotaryAccepted(msg.sender)) {
       return true;
@@ -181,7 +193,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   function setOrderPrice(
     address orderAddr,
     uint256 price
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     require(msg.sender == order.buyer());
     return order.setPrice(price);
@@ -207,7 +219,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     address notary,
     string hash,
     string signature
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
@@ -262,7 +274,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
     address seller,
     bool isOrderVerified,
     bytes notarySignature
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
@@ -314,7 +326,7 @@ contract DataExchange is TokenDestructible, ModifierUtils {
    */
   function close(
     address orderAddr
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     require(msg.sender == order.buyer() || msg.sender == owner);
 
