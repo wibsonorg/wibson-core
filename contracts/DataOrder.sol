@@ -288,7 +288,7 @@ contract DataOrder is Ownable, ModifierUtils {
       return bytes32("TransactionCompletedByNotary");
     }
 
-    return bytes32("unknown");
+    revert();
   }
 
 }
