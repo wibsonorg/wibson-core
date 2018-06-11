@@ -327,6 +327,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   function close(
     address orderAddr
   ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+    require(openOrders.exist(orderAddr));
     DataOrder order = DataOrder(orderAddr);
     require(msg.sender == order.buyer() || msg.sender == owner);
 
