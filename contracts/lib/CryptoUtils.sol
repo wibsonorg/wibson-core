@@ -11,28 +11,23 @@ library CryptoUtils {
 
   /**
    * @dev Hashes the given parameters using the `keccak256` algorithm.
-   * @notice In order to get the same hash using `Web3` you must use `web3.sha3`
-   *         function with the first parameter as follow:
-   *            ('0x' +
-   *            <order address without leading 0x> +
-   *            <seller address without leading 0x> +
-   *            <sender address without leading 0x> +
-   *            <notary's action:
-   *              '01' if the seller was audited
-   *              '00' if the seller was not audited
-   *            > +
-   *            <notary's veredict if seller was audited encoded as:
-   *              '01' if data is valid
-   *              '00' if data is invalid
-   *            >
-   *
-   *         And set the encoding option as `hex`.
+   * @notice In order to get the same hash using `Web3`, you must use
+   *         `web3.utils.soliditySha3` in v1.0 (or the homonymous function in
+   *         the `web3-utils` package) as follows:
+   *           web3.utils.soliditySha3(
+   *             orderAddress,
+   *             sellerAddress,
+   *             senderAddress,
+   *             wasAudited,
+   *             isDataValid
+   *           )
+   *         http://web3js.readthedocs.io/en/1.0/web3-utils.html#utils-soliditysha3
    * @param order Order address.
    * @param seller Seller address.
-   * @param sender Sender address (usually will be se buyer address)
+   * @param sender Sender address (usually will be the buyer address)
    * @param wasAudited Indicates whether the data was audited or not.
    * @param isDataValid Indicates the result of the audit, if happened.
-   * @return Keccak265 hash of (the order + seller + sender + audit).
+   * @return Keccak265 hash of (order + seller + sender + wasAudited + isDataValid).
    */
   function hashData(
     address order,
