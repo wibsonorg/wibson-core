@@ -47,7 +47,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
-  // TODO(cristian): Is there any batter way to do this?
+  // TODO(cristian): Is there any better way to do this?
   mapping(
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;
@@ -230,7 +230,8 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     );
 
     if (okay) {
-      buyerBalance[buyer][orderAddr][seller].add(orderPrice);
+      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].add(orderPrice);
+
       ordersBySeller[seller].push(orderAddr);
       token.transferFrom(buyer, this, orderPrice);
       emit DataAdded(order, seller);
