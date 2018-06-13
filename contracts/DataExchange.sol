@@ -87,7 +87,12 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     string publicKey
   ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
     allowedNotaries.insert(notary);
-    notaryInfo[notary] = NotaryInfo(notary, name, notaryUrl, publicKey);
+    notaryInfo[notary] = NotaryInfo(
+      notary,
+      name,
+      notaryUrl,
+      publicKey
+    );
     return true;
   }
 

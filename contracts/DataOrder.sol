@@ -58,7 +58,7 @@ contract DataOrder is Ownable, ModifierUtils {
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
-  mapping(address => NotaryStatus) internal notaryStatus;
+  mapping(address => NotaryInfo) internal notaryInfo;
 
   address[] public sellers;
   address[] public notaries;
