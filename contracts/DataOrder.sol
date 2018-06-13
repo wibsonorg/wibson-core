@@ -58,7 +58,7 @@ contract DataOrder is Ownable, ModifierUtils {
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
-  mapping(address => NotaryInfo) internal notaryInfo;
+  mapping(address => NotaryStatus) internal notaryStatus;
 
   address[] public sellers;
   address[] public notaries;
@@ -304,7 +304,7 @@ contract DataOrder is Ownable, ModifierUtils {
       return bytes32("TransactionCompletedByNotary");
     }
 
-    return bytes32("unknown");
+    revert();
   }
 
 }

@@ -37,6 +37,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   MultiMap.MapStorage openOrders;
+  MultiMap.MapStorage validNotaries;
   MultiMap.MapStorage allowedNotaries;
 
   mapping(address => address[]) public ordersBySeller;
@@ -168,7 +169,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     uint256 responsesPercentage,
     uint256 notarizationFee,
     bytes notarySignature
-  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
@@ -221,7 +222,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address notary,
     string hash,
     bytes signature
-  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     uint256 orderPrice = order.price();
@@ -280,7 +281,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     bool wasAudited,
     bool isDataValid,
     bytes notarySignature
-  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
@@ -328,7 +329,8 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    */
   function close(
     address orderAddr
-  ) public whenNotPaused validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
+    require(openOrders.exist(orderAddr));
     DataOrder order = DataOrder(orderAddr);
     require(msg.sender == order.buyer() || msg.sender == owner);
 
