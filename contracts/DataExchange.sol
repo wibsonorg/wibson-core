@@ -158,7 +158,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
-   * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarizationFee Fee to be charged per validation done.
    * @param notarySignature Notary's signature over the other arguments.
    * @return Whether the Notary was added successfully or not.
    */
@@ -180,6 +180,14 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     if (!allowedNotaries.exist(notary)) {
       return false;
     }
+
+    CryptoUtils.validateNotaryAddition(
+      orderAddr,
+      notary,
+      responsesPercentage,
+      notarizationFee,
+      notarySignature
+    );
 
     bool okay = order.addNotary(notary, responsesPercentage, notarizationFee);
     if (okay) {
@@ -240,43 +248,6 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   /**
-   * @dev Private method to validate the notary's signature to close the
-   * `DataResponse`.
-   * @param orderAddr Order address where the DataResponse belongs to.
-   * @param seller Seller address.
-   * @param notary Notary address.
-   * @param sender Caller address.
-   * @param wasAudited Indicates whether the data was audited or not.
-   * @param isDataValid Indicates the result of the audit, if happened.
-   * @param notarySignature Off-chain Notary signature.
-   */
-  function validateNotarySignature(
-    address orderAddr,
-    address seller,
-    address notary,
-    address sender,
-    bool wasAudited,
-    bool isDataValid,
-    bytes notarySignature
-  ) private pure {
-    bytes32 hash = CryptoUtils.hashData(
-      orderAddr,
-      seller,
-      sender,
-      wasAudited,
-      isDataValid
-    );
-
-    require(
-      CryptoUtils.isSignedBy(
-        hash,
-        notary,
-        notarySignature
-      )
-    );
-  }
-
-  /**
    * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
    *      the seller's data and checks that it is valid or not, he must close
    *      the DataResponse signaling the result.
@@ -319,7 +290,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
     require(order.hasSellerBeenAccepted(seller));
 
-    validateNotarySignature(
+    CryptoUtils.validateNotaryVeredict(
       orderAddr,
       seller,
       order.getNotaryForSeller(seller),
@@ -332,12 +303,13 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     if (order.closeDataResponse(seller)) {
       require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
 
-      address dest = seller;
-      if (wasAudited && !isDataValid) {
-        dest = buyer;
-      }
       buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
-      token.transfer(dest, orderPrice);
+
+      if (wasAudited && !isDataValid) { // `Stack too deep` error if declare variable
+        token.transfer(buyer, orderPrice);
+      } else {
+        token.transfer(seller, orderPrice);
+      }
 
       emit TransactionCompleted(order, seller);
       return true;
