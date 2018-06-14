@@ -50,9 +50,9 @@ const deployDevelopment = (deployer, accounts) => {
     ]);
   }).then(function(values) {
     const instance = values[0];
-    instance.addNotary(accounts.notary1, "Notary A", values[1].publicKey, from);
-    instance.addNotary(accounts.notary2, "Notary B", values[2].publicKey, from);
-    instance.addNotary(accounts.notary3, "Notary C", values[3].publicKey, from);
+    instance.registerNotary(accounts.notary1, "Notary A", "www.notarya.com/storage", values[1].publicKey, from);
+    instance.registerNotary(accounts.notary2, "Notary B", "www.notaryb.com/storage", values[2].publicKey, from);
+    instance.registerNotary(accounts.notary3, "Notary C", "www.notaryc.com/storage", values[3].publicKey, from);
   });
 }
 

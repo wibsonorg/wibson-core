@@ -11,12 +11,14 @@
     "test:coverage": "solidity-coverage"
   },
   "devDependencies": {
+    "abi-decoder": "^1.1.0",
     "ganache-cli": "^6.1.0",
     "solidity-coverage": "^0.5.4",
     "solium": "^1.1.6",
     "solium-plugin-zeppelin": "0.0.2",
-    "truffle": "^4.1.5",
-    "truffle-solidity-loader": "0.0.8"
+    "truffle": "^4.1.11",
+    "truffle-solidity-loader": "0.0.8",
+    "web3-utils": "^1.0.0-beta.34"
   },
   "dependencies": {
     "buffer": "^5.0.8",
