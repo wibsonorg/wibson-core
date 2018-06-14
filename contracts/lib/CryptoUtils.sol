@@ -26,7 +26,7 @@ library CryptoUtils {
     address signer,
     bytes signature
   ) private pure returns (bool) {
-    require(signer != 0x0);
+    require(signer != address(0));
     bytes32 prefixedHash = ECRecovery.toEthSignedMessageHash(hash);
     address recovered = ECRecovery.recover(prefixedHash, signature);
     return recovered == signer;
@@ -50,8 +50,8 @@ library CryptoUtils {
     string notarizationTermsOfService,
     bytes notarySignature
   ) public pure returns (bool) {
-    require(order != 0x0);
-    require(notary != 0x0);
+    require(order != address(0));
+    require(notary != address(0));
     bytes32 hash = keccak256(
       abi.encodePacked(
         order,
@@ -81,9 +81,9 @@ library CryptoUtils {
     bool isDataValid,
     bytes notarySignature
   ) public pure returns (bool) {
-    require(order != 0x0);
-    require(seller != 0x0);
-    require(notary != 0x0);
+    require(order != address(0));
+    require(seller != address(0));
+    require(notary != address(0));
     bytes32 hash = keccak256(
       abi.encodePacked(
         order,
