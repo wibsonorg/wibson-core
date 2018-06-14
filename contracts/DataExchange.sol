@@ -187,12 +187,14 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       return false;
     }
 
-    CryptoUtils.validateNotaryAddition(
-      orderAddr,
-      notary,
-      responsesPercentage,
-      notarizationFee,
-      notarySignature
+    require(
+      CryptoUtils.isNotaryAdditionValid(
+        orderAddr,
+        notary,
+        responsesPercentage,
+        notarizationFee,
+        notarySignature
+      )
     );
 
     bool okay = order.addNotary(notary, responsesPercentage, notarizationFee);
@@ -296,14 +298,16 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
     require(order.hasSellerBeenAccepted(seller));
 
-    CryptoUtils.validateNotaryVeredict(
-      orderAddr,
-      seller,
-      order.getNotaryForSeller(seller),
-      msg.sender,
-      wasAudited,
-      isDataValid,
-      notarySignature
+    require(
+      CryptoUtils.isNotaryVeredictValid(
+        orderAddr,
+        seller,
+        order.getNotaryForSeller(seller),
+        msg.sender,
+        wasAudited,
+        isDataValid,
+        notarySignature
+      )
     );
 
     if (order.closeDataResponse(seller)) {

@@ -2,6 +2,7 @@ pragma solidity ^0.4.21;
 
 import "zeppelin-solidity/contracts/ECRecovery.sol";
 
+
 /**
  * @title CryptoUtils
  * @author Cristian Adamo <cristian@wibson.org>
@@ -18,7 +19,7 @@ library CryptoUtils {
    * @param hash Hash of the data using the `keccak256` algorithm.
    * @param signer Signer address.
    * @param signature Signature over the hash.
-   * @return Whether the signer is the same that signed the hash.
+   * @return Whether the signer is the one who signed the hash.
    */
   function isSignedBy(
     bytes32 hash,
@@ -27,13 +28,15 @@ library CryptoUtils {
   ) private pure returns (bool) {
     require(signer != 0x0);
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 prefixedHash = keccak256(prefix, hash);
+    bytes32 prefixedHash = keccak256(
+      prefix, hash // TODO: use abi.encodePacked
+    );
     address recovered = ECRecovery.recover(prefixedHash, signature);
     return recovered == signer;
   }
 
   /**
-   * @dev Validates the notary's signature to be added to the `DataOrder`.
+   * @dev Checks if the notary's signature to be added to the `DataOrder` is valid.
    * @param order Order address.
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
@@ -41,28 +44,28 @@ library CryptoUtils {
    * @param notarizationFee Fee to be charged per validation done.
    * @param notarySignature Off-chain Notary signature.
    */
-  function validateNotaryAddition(
+  function isNotaryAdditionValid(
     address order,
     address notary,
     uint256 responsesPercentage,
     uint256 notarizationFee,
     bytes notarySignature
-  ) public pure {
+  ) public pure returns (bool) {
     require(order != 0x0);
     require(notary != 0x0);
     bytes32 hash = keccak256(
-      order,
-      responsesPercentage,
-      notarizationFee
+      /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
+        order,
+        responsesPercentage,
+        notarizationFee
+      /* ) */
     );
 
-    require(
-      isSignedBy(hash, notary, notarySignature)
-    );
+    return isSignedBy(hash, notary, notarySignature);
   }
 
   /**
-   * @dev Validates the notary's signature to close the `DataResponse`.
+   * @dev Checks if the notary's signature to close the `DataResponse` is valid.
    * @param order Order address.
    * @param seller Seller address.
    * @param notary Notary address.
@@ -71,7 +74,7 @@ library CryptoUtils {
    * @param isDataValid Indicates the result of the audit, if happened.
    * @param notarySignature Off-chain Notary signature.
    */
-  function validateNotaryVeredict(
+  function isNotaryVeredictValid(
     address order,
     address seller,
     address notary,
@@ -79,21 +82,21 @@ library CryptoUtils {
     bool wasAudited,
     bool isDataValid,
     bytes notarySignature
-  ) public pure {
+  ) public pure returns (bool) {
     require(order != 0x0);
     require(seller != 0x0);
     require(notary != 0x0);
     require(sender != 0x0);
     bytes32 hash = keccak256(
-      order,
-      seller,
-      sender,
-      wasAudited,
-      isDataValid
+      /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
+        order,
+        seller,
+        sender,
+        wasAudited,
+        isDataValid
+      /* ) */
     );
 
-    require(
-      isSignedBy(hash, notary, notarySignature)
-    );
+    return isSignedBy(hash, notary, notarySignature);
   }
 }
