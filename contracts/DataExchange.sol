@@ -301,17 +301,16 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     DataOrder order = DataOrder(orderAddr);
     uint256 orderPrice = order.price();
     address buyer = order.buyer();
-    // Note: Commented out since the method throw `Stack too deep` error.
-    // address notary = order.getNotaryForSeller(seller);
+    address notary = order.getNotaryForSeller(seller);
 
-    require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
+    require(msg.sender == buyer || msg.sender == notary);
     require(order.hasSellerBeenAccepted(seller));
 
     require(
       CryptoUtils.isNotaryVeredictValid(
         orderAddr,
         seller,
-        order.getNotaryForSeller(seller),
+        notary,
         wasAudited,
         isDataValid,
         notarySignature

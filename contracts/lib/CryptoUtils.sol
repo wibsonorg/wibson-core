@@ -29,7 +29,7 @@ library CryptoUtils {
     require(signer != 0x0);
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
     bytes32 prefixedHash = keccak256(
-      prefix, hash // TODO: use abi.encodePacked
+      abi.encodePacked(prefix, hash)
     );
     address recovered = ECRecovery.recover(prefixedHash, signature);
     return recovered == signer;
@@ -56,12 +56,12 @@ library CryptoUtils {
     require(order != 0x0);
     require(notary != 0x0);
     bytes32 hash = keccak256(
-      /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
+      abi.encodePacked(
         order,
         responsesPercentage,
         notarizationFee,
         notarizationTermsOfService
-      /* ) */
+      )
     );
 
     return isSignedBy(hash, notary, notarySignature);
@@ -88,12 +88,12 @@ library CryptoUtils {
     require(seller != 0x0);
     require(notary != 0x0);
     bytes32 hash = keccak256(
-      /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
+      abi.encodePacked(
         order,
         seller,
         wasAudited,
         isDataValid
-      /* ) */
+      )
     );
 
     return isSignedBy(hash, notary, notarySignature);
