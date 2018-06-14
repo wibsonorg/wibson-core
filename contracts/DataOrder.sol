@@ -37,9 +37,8 @@ contract DataOrder is Ownable, ModifierUtils {
     address notary;
     string hash;
     bytes signature;
-    uint32 closedAt;
     uint32 createdAt;
-    uint32 notarizedAt;
+    uint32 closedAt;
     DataResponseStatus status;
   }
 
@@ -159,7 +158,6 @@ contract DataOrder is Ownable, ModifierUtils {
       notary,
       hash,
       signature,
-      0,
       uint32(block.timestamp),
       0,
       DataResponseStatus.DataResponseAdded
@@ -254,10 +252,8 @@ contract DataOrder is Ownable, ModifierUtils {
   ) public view returns (
     address,
     address,
-    uint256,
     string,
     bytes,
-    uint32,
     uint32,
     uint32,
     bytes32
@@ -266,12 +262,10 @@ contract DataOrder is Ownable, ModifierUtils {
     return (
       seller,
       info.notary,
-      price,
       info.hash,
       info.signature,
-      uint32(info.closedAt),
       uint32(info.createdAt),
-      uint32(info.notarizedAt),
+      uint32(info.closedAt),
       getDataResponseStatusAsString(info.status)
     );
   }
