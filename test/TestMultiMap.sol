@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "truffle/Assert.sol";
 import { MultiMap } from "../contracts/lib/MultiMap.sol";
@@ -20,7 +20,7 @@ contract TestMultiMap {
     bool f = MultiMap.exist(_store, 0xb2930B35844a230f00E51431aCAe96Fe543a0347);
     Assert.isFalse(f, "Key does not exist");
 
-    bool f2 = MultiMap.exist(_store, 0x0);
+    bool f2 = MultiMap.exist(_store, address(0));
     Assert.isFalse(f2, "0x0 address never exists");
   }
 
