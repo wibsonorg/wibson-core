@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/ECRecovery.sol";
 
@@ -27,10 +27,7 @@ library CryptoUtils {
     bytes signature
   ) private pure returns (bool) {
     require(signer != 0x0);
-    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 prefixedHash = keccak256(
-      abi.encodePacked(prefix, hash)
-    );
+    bytes32 prefixedHash = ECRecovery.toEthSignedMessageHash(hash);
     address recovered = ECRecovery.recover(prefixedHash, signature);
     return recovered == signer;
   }

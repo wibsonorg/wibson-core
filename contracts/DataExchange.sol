@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/lifecycle/TokenDestructible.sol";
 import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
@@ -65,9 +65,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @dev Contract costructor.
    * @param tokenAddress Address of the Wibcoin token address (ERC20).
    */
-  function DataExchange(
-    address tokenAddress
-  ) public validAddress(tokenAddress) {
+  constructor(address tokenAddress) public validAddress(tokenAddress) {
     token = Wibcoin(tokenAddress);
   }
 

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
@@ -17,7 +17,7 @@ contract Wibcoin is StandardToken {
   // solium-disable-next-line zeppelin/no-arithmetic-operations
   uint256 public constant INITIAL_SUPPLY = 9000000000 * (10 ** uint256(decimals));
 
-  function Wibcoin() public {
+  constructor() public {
     totalSupply_ = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
     emit Transfer(0x0, msg.sender, INITIAL_SUPPLY);

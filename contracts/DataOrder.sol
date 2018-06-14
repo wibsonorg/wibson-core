@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./lib/ModifierUtils.sol";
@@ -79,7 +79,7 @@ contract DataOrder is Ownable, ModifierUtils {
    *        data to be sent.
    * @return The address of the newly created order.
    */
-  function DataOrder(
+  constructor(
     address _buyer,
     string _filters,
     string _dataRequest,
