@@ -42,6 +42,7 @@ library CryptoUtils {
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`.
    * @param notarizationFee Fee to be charged per validation done.
+   * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @param notarySignature Off-chain Notary signature.
    */
   function isNotaryAdditionValid(
@@ -49,6 +50,7 @@ library CryptoUtils {
     address notary,
     uint256 responsesPercentage,
     uint256 notarizationFee,
+    string notarizationTermsOfService,
     bytes notarySignature
   ) public pure returns (bool) {
     require(order != 0x0);
@@ -57,7 +59,8 @@ library CryptoUtils {
       /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
         order,
         responsesPercentage,
-        notarizationFee
+        notarizationFee,
+        notarizationTermsOfService
       /* ) */
     );
 

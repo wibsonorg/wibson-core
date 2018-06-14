@@ -120,7 +120,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness, notaries will audit only the percentage indicated when
    *        they are added to the `DataOrder`.
-   * @param termsAndConditions Copy of the terms and conditions for the order.
+   * @param termsAndConditions Buyer's terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
@@ -165,6 +165,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
    * @param notarizationFee Fee to be charged per validation done.
+   * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @param notarySignature Notary's signature over the other arguments.
    * @return Whether the Notary was added successfully or not.
    */
@@ -173,6 +174,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address notary,
     uint256 responsesPercentage,
     uint256 notarizationFee,
+    string notarizationTermsOfService,
     bytes notarySignature
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
@@ -193,11 +195,18 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
         notary,
         responsesPercentage,
         notarizationFee,
+        notarizationTermsOfService,
         notarySignature
       )
     );
 
-    bool okay = order.addNotary(notary, responsesPercentage, notarizationFee);
+    bool okay = order.addNotary(
+      notary,
+      responsesPercentage,
+      notarizationFee,
+      notarizationTermsOfService
+    );
+
     if (okay) {
       openOrders.insert(orderAddr);
       ordersByNotary[notary].push(orderAddr);

@@ -29,6 +29,7 @@ contract DataOrder is Ownable, ModifierUtils {
   struct NotaryInfo {
     uint256 responsesPercentage;
     uint256 notarizationFee;
+    string notarizationTermsOfService;
     uint32 addedAt;
   }
 
@@ -112,12 +113,14 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
    * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @return Whether the Notary was added successfully or not.
    */
   function addNotary(
     address notary,
     uint256 responsesPercentage,
-    uint256 notarizationFee
+    uint256 notarizationFee,
+    string notarizationTermsOfService
   ) public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
     require(responsesPercentage >= 0);
@@ -127,6 +130,7 @@ contract DataOrder is Ownable, ModifierUtils {
     notaryInfo[notary] = NotaryInfo(
       responsesPercentage,
       notarizationFee,
+      notarizationTermsOfService,
       uint32(block.timestamp)
     );
     notaries.push(notary);
@@ -231,6 +235,7 @@ contract DataOrder is Ownable, ModifierUtils {
     address,
     uint256,
     uint256,
+    string,
     uint32
   ) {
     NotaryInfo memory info = notaryInfo[notary];
@@ -238,6 +243,7 @@ contract DataOrder is Ownable, ModifierUtils {
       notary,
       info.responsesPercentage,
       info.notarizationFee,
+      info.notarizationTermsOfService,
       uint32(info.addedAt)
     );
   }
