@@ -113,7 +113,7 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
-   * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarizationFee Fee to be charged per validation done.
    * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @return Whether the Notary was added successfully or not.
    */
@@ -124,7 +124,6 @@ contract DataOrder is Ownable, ModifierUtils {
     string notarizationTermsOfService
   ) public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
-    require(responsesPercentage >= 0);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
 
@@ -247,6 +246,16 @@ contract DataOrder is Ownable, ModifierUtils {
       info.notarizationTermsOfService,
       uint32(info.addedAt)
     );
+  }
+
+  /**
+   * @dev Gets a given notary's notarization fee.
+   * @param notary Notary address to get the fee from.
+   * @return Notarization Fee.
+   */
+  function getNotarizationFee(address notary) public view returns (uint256) {
+    NotaryInfo memory info = notaryInfo[notary];
+    return info.notarizationFee;
   }
 
   /**

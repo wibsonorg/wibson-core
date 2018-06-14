@@ -28,16 +28,20 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "couldn't register Notary");
     })
     .then(() => {
-      return meta["dx"].setMinimumInitialBudgetForAudits(2000);
+      return meta["dx"].setMinimumInitialBudgetForAudits(2000, { from: OWNER });
     })
     .then((res) => {
       assert.ok(res, "couldn't set minimum initial budget for audit");
     })
     .then(() => {
+      return meta.wib.approve(meta.dx.address, 3000, { from: BUYER });
+    })
+    .then(() => {
+      meta["price"] = 20;
       return meta["dx"].newOrder(
         "age:20,gender:male",
         "data request",
-        20,
+        meta.price,
         3000,
         false,
         "Terms and Conditions",
@@ -62,14 +66,14 @@ contract('DataExchange', (accounts) => {
       }
 
       meta["newOrderAddress"] = newOrderAddress;
+      meta["notarizationFee"] = 1;
 
       const responsesPercentage = 30;
-      const notaryFee = 1;
       const notarizationTermsOfService = "Notary Terms and Conditions";
       const hash = web3Utils.soliditySha3(
         newOrderAddress,
         responsesPercentage,
-        notaryFee,
+        meta.notarizationFee,
         notarizationTermsOfService
       );
       const sig = web3.eth.sign(NOTARY_A, hash);
@@ -78,7 +82,7 @@ contract('DataExchange', (accounts) => {
         newOrderAddress,
         NOTARY_A,
         responsesPercentage,
-        notaryFee,
+        meta.notarizationFee,
         notarizationTermsOfService,
         sig,
         { from: BUYER }
@@ -153,22 +157,20 @@ contract('DataExchange', (accounts) => {
       );
       const sig = web3.eth.sign(NOTARY_A, hash);
 
-      meta.dx.closeDataResponse(
+      return meta.dx.closeDataResponse(
         meta.newOrderAddress,
         SELLER,
         true, // wasAudited
         true, // isDataValid
         sig,
         { from: BUYER }
-      ).then((res) => {
-        assert.ok(res, "Buyer could not close Data Response");
-      })
-      .catch((err) => {
-        console.log("    ✗ FAIL: DX.closeDataResponse(...)", err.message);
-      })
+      )
+    })
+    .then((res) => {
+      assert.ok(res, "Buyer could not close Data Response");
     })
     .then(() => {
-      return meta.dx.close(meta.newOrderAddress, { from: BUYER });
+      return meta.dx.closeOrder(meta.newOrderAddress, { from: BUYER });
     })
     .then((res) => {
       assert.equal((res.logs[0].event), "OrderClosed");
