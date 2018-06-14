@@ -147,19 +147,17 @@ contract('DataExchange', (accounts) => {
       );
       const sig = web3.eth.sign(NOTARY_A, hash);
 
-      meta.dx.closeDataResponse(
+      return meta.dx.closeDataResponse(
         meta.newOrderAddress,
         SELLER,
         true, // wasAudited
         true, // isDataValid
         sig,
         { from: BUYER }
-      ).then((res) => {
-        assert.ok(res, "Buyer could not close Data Response");
-      })
-      .catch((err) => {
-        console.log("    ✗ FAIL: DX.closeDataResponse(...)", err.message);
-      })
+      )
+    })
+    .then((res) => {
+      assert.ok(res, "Buyer could not close Data Response");
     })
     .then(() => {
       return meta.dx.close(meta.newOrderAddress, { from: BUYER });
