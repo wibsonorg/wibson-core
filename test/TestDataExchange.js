@@ -59,7 +59,13 @@ contract('DataExchange', (accounts) => {
 
       const responsesPercentage = 30;
       const notaryFee = 1;
-      const hash = web3Utils.soliditySha3(newOrderAddress, responsesPercentage, notaryFee);
+      const notarizationTermsOfService = "Notary Terms and Conditions";
+      const hash = web3Utils.soliditySha3(
+        newOrderAddress,
+        responsesPercentage,
+        notaryFee,
+        notarizationTermsOfService
+      );
       const sig = web3.eth.sign(NOTARY_A, hash);
 
       return meta.dx.addNotaryToOrder(
@@ -67,6 +73,7 @@ contract('DataExchange', (accounts) => {
         NOTARY_A,
         responsesPercentage,
         notaryFee,
+        notarizationTermsOfService,
         sig,
         { from: BUYER }
       );
