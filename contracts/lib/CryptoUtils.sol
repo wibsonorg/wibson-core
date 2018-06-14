@@ -57,10 +57,10 @@ library CryptoUtils {
     require(notary != 0x0);
     bytes32 hash = keccak256(
       /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
-        order,
-        responsesPercentage,
-        notarizationFee,
-        notarizationTermsOfService
+      order,
+      responsesPercentage,
+      notarizationFee,
+      notarizationTermsOfService
       /* ) */
     );
 
@@ -89,10 +89,10 @@ library CryptoUtils {
     require(notary != 0x0);
     bytes32 hash = keccak256(
       /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
-        order,
-        seller,
-        wasAudited,
-        isDataValid
+      order,
+      seller,
+      wasAudited,
+      isDataValid
       /* ) */
     );
 
