@@ -61,6 +61,8 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
 
+  uint256 public minimumInitialBudgetForAudits;
+
   /**
    * @dev Contract costructor.
    * @param tokenAddress Address of the Wibcoin token address (ERC20).
@@ -69,6 +71,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address tokenAddress
   ) public validAddress(tokenAddress) {
     token = Wibcoin(tokenAddress);
+    minimumInitialBudgetForAudits = 0;
   }
 
   /**
@@ -110,12 +113,28 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   /**
+   * @dev Sets the minimum initial budget for audits to be placed by a buyer
+   * on `DataOrder` creation.
+   * @notice The initial budget for audit is used as a preventive method to reduce
+   * spam `DataOrders` in the network.
+   * @param _minimumInitialBudgetForAudits The new minimum for initial budget for
+   * audits per `DataOrder`.
+   * @return Whether the new value was successfully modified or not.
+   */
+  function setMinimumInitialBudgetForAudits(
+    uint256 _minimumInitialBudgetForAudits
+  ) public onlyOwner returns (bool) {
+    minimumInitialBudgetForAudits = _minimumInitialBudgetForAudits;
+    return true;
+  }
+
+  /**
    * @dev Creates a New Order.
    * @notice The `msg.sender` will become the buyer of the order.
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param price Price per added Data Response.
-   * @param minimumBudgetForAudit The initial budget set for future audits.
+   * @param initialBudgetForAudits The initial budget set for future audits.
    * @param notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness, notaries will audit only the percentage indicated when
@@ -130,18 +149,20 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     string filters,
     string dataRequest,
     uint256 price,
-    uint256 minimumBudgetForAudit,
+    uint256 initialBudgetForAudits,
     bool notarizeAllResponses,
     string termsAndConditions,
     string buyerURL,
     string publicKey
   ) public whenNotPaused returns (address) {
+    require(initialBudgetForAudits >= minimumInitialBudgetForAudits);
+
     address newOrderAddr = new DataOrder(
       msg.sender,
       filters,
       dataRequest,
       price,
-      minimumBudgetForAudit,
+      initialBudgetForAudits,
       notarizeAllResponses,
       termsAndConditions,
       buyerURL,

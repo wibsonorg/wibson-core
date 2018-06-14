@@ -28,6 +28,12 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "couldn't register Notary");
     })
     .then(() => {
+      return meta["dx"].setMinimumInitialBudgetForAudits(2000);
+    })
+    .then((res) => {
+      assert.ok(res, "couldn't set minimum initial budget for audit");
+    })
+    .then(() => {
       return meta["dx"].newOrder(
         "age:20,gender:male",
         "data request",
