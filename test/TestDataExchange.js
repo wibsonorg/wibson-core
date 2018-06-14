@@ -135,7 +135,6 @@ contract('DataExchange', (accounts) => {
       const hash = web3Utils.soliditySha3(
         meta.newOrderAddress,
         SELLER,
-        BUYER,
         true,
         true
       );

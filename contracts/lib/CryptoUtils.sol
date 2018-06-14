@@ -69,7 +69,6 @@ library CryptoUtils {
    * @param order Order address.
    * @param seller Seller address.
    * @param notary Notary address.
-   * @param sender Sender address (usually will be the buyer address)
    * @param wasAudited Indicates whether the data was audited or not.
    * @param isDataValid Indicates the result of the audit, if happened.
    * @param notarySignature Off-chain Notary signature.
@@ -78,7 +77,6 @@ library CryptoUtils {
     address order,
     address seller,
     address notary,
-    address sender,
     bool wasAudited,
     bool isDataValid,
     bytes notarySignature
@@ -86,12 +84,10 @@ library CryptoUtils {
     require(order != 0x0);
     require(seller != 0x0);
     require(notary != 0x0);
-    require(sender != 0x0);
     bytes32 hash = keccak256(
       /* abi.encodePacked( */ // TODO: fails on compile, abi not declared
         order,
         seller,
-        sender,
         wasAudited,
         isDataValid
       /* ) */

@@ -118,8 +118,8 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @param minimumBudgetForAudit The initial budget set for future audits.
    * @param notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
-   *        truthiness notaries will audit only the percentage indicated when
-   *        they were added to the system.
+   *        truthiness, notaries will audit only the percentage indicated when
+   *        they are added to the `DataOrder`.
    * @param termsAndConditions Copy of the terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
@@ -303,7 +303,6 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
         orderAddr,
         seller,
         order.getNotaryForSeller(seller),
-        msg.sender,
         wasAudited,
         isDataValid,
         notarySignature

@@ -36,7 +36,6 @@ contract TestCryptoUtils {
     bool result = CryptoUtils.isNotaryVeredictValid(
       0x29716E075f5E40f276b7102348f24F6bd69B16E3,
       0x8c7c8D0A884a6dE1D807d750eC0d6F4Bb1682131,
-      0xDCE4f4062f834578f32dD31D4FAc039428cCF64F,
       0x624cd72975D9683b52222245254835CD82D22f2a,
       false,
       false,
@@ -48,7 +47,6 @@ contract TestCryptoUtils {
   function testNotaryVeredictInValidSignature() public {
     bool result = CryptoUtils.isNotaryVeredictValid(
       0X28955C3CF5FF9CD9DC557D5A4B90730031775743,
-      0xe0F5206bcD039e7B1392e8918821224E2A7437B9,
       0xe0F5206bcD039e7B1392e8918821224E2A7437B9,
       0xe0F5206bcD039e7B1392e8918821224E2A7437B9,
       true,
