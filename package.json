@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "compile": "truffle compile",
     "lint:sol": "solium -d .",
     "lint:sol:fix": "solium -d . --fix",
     "truffle": "truffle",

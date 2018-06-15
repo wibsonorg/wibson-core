@@ -47,7 +47,7 @@ contract DataOrder is Ownable, ModifierUtils {
   string public filters;
   string public dataRequest;
   uint256 public price;
-  uint256 public minimumBudgetForAudit;
+  uint256 public initialBudgetForAudits;
   bool public notarizeAllResponses;
   string public termsAndConditions;
   string public buyerURL;
@@ -69,6 +69,7 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param _price Price per added Data Response.
+   * @param _initialBudgetForAudits The initial budget set for future audits.
    * @param _notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness notaries will audit only the percentage indicated when
@@ -84,7 +85,7 @@ contract DataOrder is Ownable, ModifierUtils {
     string _filters,
     string _dataRequest,
     uint256 _price,
-    uint256 _minimumBudgetForAudit,
+    uint256 _initialBudgetForAudits,
     bool _notarizeAllResponses,
     string _termsAndConditions,
     string _buyerURL,
@@ -97,7 +98,7 @@ contract DataOrder is Ownable, ModifierUtils {
     filters = _filters;
     dataRequest = _dataRequest;
     price = _price;
-    minimumBudgetForAudit = _minimumBudgetForAudit;
+    initialBudgetForAudits = _initialBudgetForAudits;
     notarizeAllResponses = _notarizeAllResponses;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
@@ -112,7 +113,7 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
-   * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarizationFee Fee to be charged per validation done.
    * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @return Whether the Notary was added successfully or not.
    */
@@ -123,7 +124,6 @@ contract DataOrder is Ownable, ModifierUtils {
     string notarizationTermsOfService
   ) public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
-    require(responsesPercentage >= 0);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
 

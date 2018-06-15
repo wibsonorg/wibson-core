@@ -28,7 +28,7 @@ library MultiMap {
     MapStorage storage self,
     uint index
   ) public view returns (address) {
-    require(index >= 0 && index < self.size);
+    require(index < self.size);
     return self.indexToAddress[index];
   }
 

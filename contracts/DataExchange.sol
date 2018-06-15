@@ -2,6 +2,7 @@ pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/lifecycle/TokenDestructible.sol";
 import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "zeppelin-solidity/contracts/math/Math.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./DataOrder.sol";
@@ -53,6 +54,10 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;
 
+  // @dev buyerRemainingBudgetForAudits Keeps track of the buyer's remaining
+  // budget from the initial one set on the `DataOrder`
+  mapping(address => mapping(address => uint256)) public buyerRemainingBudgetForAudits;
+
   modifier isOrderLegit(address order) {
     require(orders[order]);
     _;
@@ -60,6 +65,9 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
 
   // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
+
+  // @dev The minimum for initial budget for audits per `DataOrder`.
+  uint256 public minimumInitialBudgetForAudits;
 
   /**
    * @dev Contract costructor.
@@ -71,6 +79,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address ownerAddress
   ) public validAddress(tokenAddress) {
     token = Wibcoin(tokenAddress);
+    minimumInitialBudgetForAudits = 0;
     transferOwnership(ownerAddress);
   }
 
@@ -113,12 +122,28 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   }
 
   /**
+   * @dev Sets the minimum initial budget for audits to be placed by a buyer
+   * on `DataOrder` creation.
+   * @notice The initial budget for audit is used as a preventive method to reduce
+   * spam `DataOrders` in the network.
+   * @param _minimumInitialBudgetForAudits The new minimum for initial budget for
+   * audits per `DataOrder`.
+   * @return Whether the new value was successfully modified or not.
+   */
+  function setMinimumInitialBudgetForAudits(
+    uint256 _minimumInitialBudgetForAudits
+  ) public onlyOwner returns (bool) {
+    minimumInitialBudgetForAudits = _minimumInitialBudgetForAudits;
+    return true;
+  }
+
+  /**
    * @dev Creates a New Order.
    * @notice The `msg.sender` will become the buyer of the order.
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param price Price per added Data Response.
-   * @param minimumBudgetForAudit The initial budget set for future audits.
+   * @param initialBudgetForAudits The initial budget set for future audits.
    * @param notarizeAllResponses Sets whether the notaries must notarize all
    *        `DataResponses` or not. If not, in order to guarantee data
    *        truthiness, notaries will audit only the percentage indicated when
@@ -133,23 +158,29 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     string filters,
     string dataRequest,
     uint256 price,
-    uint256 minimumBudgetForAudit,
+    uint256 initialBudgetForAudits,
     bool notarizeAllResponses,
     string termsAndConditions,
     string buyerURL,
     string publicKey
   ) public whenNotPaused returns (address) {
+    require(initialBudgetForAudits >= minimumInitialBudgetForAudits);
+    require(token.allowance(msg.sender, this) >= initialBudgetForAudits);
+
     address newOrderAddr = new DataOrder(
       msg.sender,
       filters,
       dataRequest,
       price,
-      minimumBudgetForAudit,
+      initialBudgetForAudits,
       notarizeAllResponses,
       termsAndConditions,
       buyerURL,
       publicKey
     );
+
+    token.transferFrom(msg.sender, this, initialBudgetForAudits);
+    buyerRemainingBudgetForAudits[msg.sender][newOrderAddr] = initialBudgetForAudits;
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
     orders[newOrderAddr] = true;
@@ -184,11 +215,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     address buyer = order.buyer();
     require(msg.sender == buyer);
 
-    if (order.hasNotaryBeenAdded(notary)) {
-      return true;
-    }
-
-    if (!allowedNotaries.exist(notary)) {
+    if (order.hasNotaryBeenAdded(notary) || !allowedNotaries.exist(notary)) {
       return false;
     }
 
@@ -244,11 +271,8 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
-    uint256 orderPrice = order.price();
-
     require(msg.sender == buyer);
     require(order.hasNotaryBeenAdded(notary));
-    require(token.allowance(buyer, this) >= orderPrice);
 
     bool okay = order.addDataResponse(
       seller,
@@ -256,15 +280,13 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
       hash,
       signature
     );
+    require(okay);
 
-    if (okay) {
-      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].add(orderPrice);
+    chargeBuyer(order, seller);
 
-      ordersBySeller[seller].push(orderAddr);
-      token.transferFrom(buyer, this, orderPrice);
-      emit DataAdded(order, seller);
-    }
-    return okay;
+    ordersBySeller[seller].push(orderAddr);
+    emit DataAdded(order, seller);
+    return true;
   }
 
   /**
@@ -302,13 +324,11 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     bytes notarySignature
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
-    uint256 orderPrice = order.price();
     address buyer = order.buyer();
     address notary = order.getNotaryForSeller(seller);
 
     require(msg.sender == buyer || msg.sender == notary);
     require(order.hasSellerBeenAccepted(seller));
-
     require(
       CryptoUtils.isNotaryVeredictValid(
         orderAddr,
@@ -319,22 +339,18 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
         notarySignature
       )
     );
+    require(order.closeDataResponse(seller));
+    payPlayers(
+      order,
+      buyer,
+      seller,
+      notary,
+      wasAudited,
+      isDataValid
+    );
 
-    if (order.closeDataResponse(seller)) {
-      require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
-
-      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
-
-      if (wasAudited && !isDataValid) { // `Stack too deep` error if declare variable
-        token.transfer(buyer, orderPrice);
-      } else {
-        token.transfer(seller, orderPrice);
-      }
-
-      emit TransactionCompleted(order, seller);
-      return true;
-    }
-    return false;
+    emit TransactionCompleted(order, seller);
+    return true;
   }
 
   /**
@@ -346,7 +362,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @param orderAddr Order address to close.
    * @return Whether the DataOrder was successfully closed or not.
    */
-  function close(
+  function closeOrder(
     address orderAddr
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     require(openOrders.exist(orderAddr));
@@ -436,6 +452,80 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   ) public view validAddress(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     return order.hasSellerBeenAccepted(msg.sender);
+  }
+
+  /**
+   * @dev Charges a buyer the orderPrice and notary fee for a given `DataResponse`.
+   * @notice 1. Tokens are held in the DataExchange contract until players must
+   *            be paid.
+   *         2. This function follows a basic invoice flow:
+   *             base price
+   *           + extra fees
+   *             ---------
+   *             total charges
+   *           - pre paid charges
+   *             ---------
+   *             final charges
+   *
+   * @param order DataOrder to which the DataResponse applies.
+   * @param seller Address of the Seller.
+   */
+  function chargeBuyer(DataOrder order, address seller) private whenNotPaused {
+    address buyer = order.buyer();
+    address notary = order.getNotaryForSeller(seller);
+    uint256 remainingBudget = buyerRemainingBudgetForAudits[buyer][order];
+
+    uint256 orderPrice = order.price();
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
+    uint256 totalCharges = orderPrice.add(notarizationFee);
+
+    uint256 prePaid = Math.min256(notarizationFee, remainingBudget);
+    uint256 finalCharges = totalCharges.sub(prePaid);
+
+    buyerRemainingBudgetForAudits[buyer][order] = remainingBudget.sub(prePaid);
+    require(token.allowance(buyer, this) >= finalCharges);
+    require(token.transferFrom(buyer, this, finalCharges));
+
+    // Bookkeeping of the available tokens paid by the Buyer and now in control
+    // of the DataExchange takes into account the total charges (final + pre-paid)
+    buyerBalance[buyer][order][seller] = buyerBalance[buyer][order][seller].add(totalCharges);
+  }
+
+  /**
+   * @dev Pays the seller, notary and/or buyer according to the notary's veredict.
+   * @param order DataOrder to which the payments apply.
+   * @param buyer Address of the Buyer.
+   * @param seller Address of the Seller.
+   * @param notary Address of the Notary.
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
+   */
+  function payPlayers(
+    DataOrder order,
+    address buyer,
+    address seller,
+    address notary,
+    bool wasAudited,
+    bool isDataValid
+  ) private whenNotPaused {
+    uint256 orderPrice = order.price();
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
+    uint256 totalCharges = orderPrice.add(notarizationFee);
+
+    require(buyerBalance[buyer][order][seller] >= totalCharges);
+    buyerBalance[buyer][order][seller] = buyerBalance[buyer][order][seller].sub(totalCharges);
+
+    if (wasAudited) {
+      // notarization services were given, then the notary gets paid
+      require(token.transfer(notary, notarizationFee));
+
+      // seller gave good data, then gets paid. Otherwise, tokens return to buyer
+      address dest = isDataValid ? seller : buyer;
+      require(token.transfer(dest, orderPrice));
+    } else {
+      // no notarization done, then the seller gets paid
+      require(token.transfer(seller, orderPrice));
+    }
   }
 
 }
