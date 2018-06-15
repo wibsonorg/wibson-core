@@ -249,16 +249,6 @@ contract DataOrder is Ownable, ModifierUtils {
   }
 
   /**
-   * @dev Gets a given notary's notarization fee.
-   * @param notary Notary address to get the fee from.
-   * @return Notarization Fee.
-   */
-  function getNotarizationFee(address notary) public view returns (uint256) {
-    NotaryInfo memory info = notaryInfo[notary];
-    return info.notarizationFee;
-  }
-
-  /**
    * @dev Gets the seller information.
    * @param seller Seller address to get info for.
    * @return Seller Information.

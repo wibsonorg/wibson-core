@@ -471,7 +471,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     uint256 remainingBudget = buyerRemainingBudgetForAudits[buyer][order];
 
     uint256 orderPrice = order.price();
-    uint256 notarizationFee = order.getNotarizationFee(notary);
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
     uint256 totalCharges = orderPrice.add(notarizationFee);
 
     uint256 prePaid = Math.min256(notarizationFee, remainingBudget);
@@ -504,7 +504,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
     bool isDataValid
   ) private whenNotPaused {
     uint256 orderPrice = order.price();
-    uint256 notarizationFee = order.getNotarizationFee(notary);
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
     uint256 totalCharges = orderPrice.add(notarizationFee);
 
     require(buyerBalance[buyer][order][seller] >= totalCharges);
