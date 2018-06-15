@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -28,7 +28,7 @@ library MultiMap {
     MapStorage storage self,
     uint index
   ) public view returns (address) {
-    require(index >= 0 && index < self.size);
+    require(index < self.size);
     return self.indexToAddress[index];
   }
 
@@ -42,8 +42,12 @@ library MultiMap {
     MapStorage storage self,
     address _key
   ) public view returns (bool) {
-    uint targetIndex = self.addressToIndex[_key];
-    return self.indexToAddress[targetIndex] == _key;
+    if (_key != address(0)) {
+      uint targetIndex = self.addressToIndex[_key];
+      return self.indexToAddress[targetIndex] == _key;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -56,6 +60,7 @@ library MultiMap {
     MapStorage storage self,
     address _key
   ) public returns (bool) {
+    require(_key != address(0));
     if (exist(self, _key)) {
       return true;
     }
@@ -84,6 +89,7 @@ library MultiMap {
    * @return Whether the address was removed or not.
    */
   function remove(MapStorage storage self, address _key) public returns (bool) {
+    require(_key != address(0));
     if (!exist(self, _key)) {
       return false;
     }

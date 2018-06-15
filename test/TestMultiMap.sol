@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.24;
 
 import "truffle/Assert.sol";
 import { MultiMap } from "../contracts/lib/MultiMap.sol";
@@ -17,8 +17,11 @@ contract TestMultiMap {
     bool t = MultiMap.exist(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
     Assert.isTrue(t, "Key exists");
 
-    bool f = MultiMap.exist(_store, 0x0);
-    Assert.isFalse(f, "Key not exists");
+    bool f = MultiMap.exist(_store, 0xb2930B35844a230f00E51431aCAe96Fe543a0347);
+    Assert.isFalse(f, "Key does not exist");
+
+    bool f2 = MultiMap.exist(_store, address(0));
+    Assert.isFalse(f2, "0x0 address never exists");
   }
 
   function testInsert() public {
@@ -39,7 +42,7 @@ contract TestMultiMap {
     bool rt = MultiMap.remove(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
     Assert.isTrue(rt, "Key removed correctly");
 
-    bool rf = MultiMap.remove(_store, 0x0);
+    bool rf = MultiMap.remove(_store, 0xb2930B35844a230f00E51431aCAe96Fe543a0347);
     Assert.isFalse(rf, "Return false if key not exists");
 
     bool f = MultiMap.exist(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
