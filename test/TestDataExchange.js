@@ -4,7 +4,7 @@ var Wibcoin = artifacts.require("./Wibcoin.sol");
 
 contract('DataExchange', (accounts) => {
 
-  const OWNER      = accounts[0];
+  const OWNER      = accounts[6];
   const NOTARY_A   = accounts[1];
   const NOTARY_B   = accounts[2];
   const BUYER      = accounts[4];
