@@ -41,14 +41,14 @@ const deployStaging = (deployer, accounts) => {
  */
 const deployDevelopment = (deployer, accounts) => {
   const from = { from: accounts.owner };
-  deployExchange(deployer, from).then(function() {
+  deployExchange(deployer, from, accounts.multisig).then(function() {
     return Promise.all([
       DataExchange.deployed()
     ]);
   });
 }
 
-const deployExchange = (deployer, from) => {
+const deployExchange = (deployer, from, owner) => {
   return deployer.deploy(MultiMap, from).then(function() {
     return deployer.link(MultiMap, DataExchange);
   }).then(function() {
@@ -60,6 +60,6 @@ const deployExchange = (deployer, from) => {
   }).then(function() {
     return deployer.link(CryptoUtils, DataExchange);
   }).then(function() {
-    return deployer.deploy(DataExchange, Wibcoin.address, from);
+    return deployer.deploy(DataExchange, Wibcoin.address, owner, from);
   });
 };
