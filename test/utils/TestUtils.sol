@@ -16,9 +16,10 @@ library TestUtils {
    * @param signature Signature of the function to be executed.
    * @return True if the underlying call succeeds, false if not.
    */
-  function execute(string signature) internal returns (bool){
-    bytes4 sig = bytes4(keccak256(signature));
-    address self = address(this);
+  function execute(address self, string signature) internal returns (bool){
+    bytes4 sig = bytes4(
+      keccak256(abi.encodePacked(signature))
+      );
     return self.call(sig);
   }
 }
