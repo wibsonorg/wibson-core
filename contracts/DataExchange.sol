@@ -417,7 +417,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @return A list of `DataOrder` addresses.
    */
   function getOpenOrders() public view returns (address[]) {
-    return openOrders.toArray();
+    return openOrders.addresses;
   }
 
   /**
@@ -425,7 +425,7 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
    * @return List of notary addresses.
    */
   function getAllowedNotaries() public view returns (address[]) {
-    return allowedNotaries.toArray();
+    return allowedNotaries.addresses;
   }
 
   /**
