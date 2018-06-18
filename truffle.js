@@ -1,5 +1,6 @@
+require('babel-register');
+require('babel-polyfill');
 const DeployUtils = require('./utils/deploymentutils');
-
 /*
 if (!mnemonic || !owner) {
   throw new Error("Missing MNEMONIC or WIBOWNER envs.");
