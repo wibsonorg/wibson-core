@@ -1,7 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./lib/ModifierUtils.sol";
 
 
 /**
@@ -11,7 +10,12 @@ import "./lib/ModifierUtils.sol";
  *      This holds the information about the "deal" between them and how the
  *      transaction has evolved.
  */
-contract DataOrder is Ownable, ModifierUtils {
+contract DataOrder is Ownable {
+  modifier validAddress(address addr) {
+    require(addr != address(0));
+    _;
+  }
+
   enum OrderStatus {
     OrderCreated,
     NotaryAdded,

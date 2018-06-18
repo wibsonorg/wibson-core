@@ -8,7 +8,6 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "./DataOrder.sol";
 import "./Wibcoin.sol";
 import "./lib/MultiMap.sol";
-import "./lib/ModifierUtils.sol";
 import "./lib/CryptoUtils.sol";
 
 
@@ -20,7 +19,7 @@ import "./lib/CryptoUtils.sol";
  *      such has some helper methods to access the data needed by the different
  *      parties involved in the Protocol.
  */
-contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
+contract DataExchange is TokenDestructible, Pausable {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
@@ -57,6 +56,11 @@ contract DataExchange is TokenDestructible, Pausable, ModifierUtils {
   // @dev buyerRemainingBudgetForAudits Keeps track of the buyer's remaining
   // budget from the initial one set on the `DataOrder`
   mapping(address => mapping(address => uint256)) public buyerRemainingBudgetForAudits;
+
+  modifier validAddress(address addr) {
+    require(addr != address(0));
+    _;
+  }
 
   modifier isOrderLegit(address order) {
     require(orders[order]);
