@@ -35,7 +35,6 @@ npm run test:coverage
 -   Wibcoin: `0x`
 -   DataExchange: `0x`
 -   Migrations `0x`
--   ModifierUtils `0x`
 -   MultiMap `0x`
 -   ECRecovery `0x`
 -   CryptoUtils `0x`

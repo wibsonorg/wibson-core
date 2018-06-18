@@ -1,10 +1,11 @@
 const web3Utils = require('web3-utils');
 var DataExchange = artifacts.require("./DataExchange.sol");
+var DataOrder = artifacts.require("./DataOrder.sol");
 var Wibcoin = artifacts.require("./Wibcoin.sol");
 
 contract('DataExchange', (accounts) => {
 
-  const OWNER      = accounts[0];
+  const OWNER      = accounts[6];
   const NOTARY_A   = accounts[1];
   const NOTARY_B   = accounts[2];
   const BUYER      = accounts[4];
@@ -28,12 +29,21 @@ contract('DataExchange', (accounts) => {
       assert.ok(res, "couldn't register Notary");
     })
     .then(() => {
+      return meta["dx"].setMinimumInitialBudgetForAudits(2000, { from: OWNER });
+    })
+    .then((res) => {
+      assert.ok(res, "couldn't set minimum initial budget for audit");
+    })
+    .then(() => {
+      return meta.wib.approve(meta.dx.address, 3000, { from: BUYER });
+    })
+    .then(() => {
+      meta["price"] = 20;
       return meta["dx"].newOrder(
         "age:20,gender:male",
         "data request",
-        20,
+        meta.price,
         3000,
-        false,
         "Terms and Conditions",
         "https://buyer.example.com/data",
         "public-key",
@@ -56,14 +66,14 @@ contract('DataExchange', (accounts) => {
       }
 
       meta["newOrderAddress"] = newOrderAddress;
+      meta["notarizationFee"] = 1;
 
       const responsesPercentage = 30;
-      const notaryFee = 1;
       const notarizationTermsOfService = "Notary Terms and Conditions";
       const hash = web3Utils.soliditySha3(
         newOrderAddress,
         responsesPercentage,
-        notaryFee,
+        meta.notarizationFee,
         notarizationTermsOfService
       );
       const sig = web3.eth.sign(NOTARY_A, hash);
@@ -72,7 +82,7 @@ contract('DataExchange', (accounts) => {
         newOrderAddress,
         NOTARY_A,
         responsesPercentage,
-        notaryFee,
+        meta.notarizationFee,
         notarizationTermsOfService,
         sig,
         { from: BUYER }
@@ -81,6 +91,18 @@ contract('DataExchange', (accounts) => {
     .then((res) => {
       assert.equal((res.logs[0].event), "NotaryAdded");
       assert.ok(res, "Notary was not added");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A);
+    })
+    .then((res) => {
+      assert.ok(res, "Notary is not in Data Order");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getNotaryInfo(NOTARY_A);
+    })
+    .then((res) => {
+      assert.equal(res[2], meta["notarizationFee"], "notarizationFee does not match");
     })
     .then(() => {
       return meta.dx.getOpenOrders();
@@ -132,6 +154,12 @@ contract('DataExchange', (accounts) => {
     .then((res) => {
       assert.ok(res, "Data response has not been accepted");
     })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER);
+    })
+    .then((res) => {
+      assert.equal(res[1], NOTARY_A, "Selected notary does not match");
+    })
     .then(() => {
       return meta.dx.getOrdersForSeller(SELLER);
     })
@@ -147,22 +175,26 @@ contract('DataExchange', (accounts) => {
       );
       const sig = web3.eth.sign(NOTARY_A, hash);
 
-      meta.dx.closeDataResponse(
+      return meta.dx.closeDataResponse(
         meta.newOrderAddress,
         SELLER,
         true, // wasAudited
         true, // isDataValid
         sig,
         { from: BUYER }
-      ).then((res) => {
-        assert.ok(res, "Buyer could not close Data Response");
-      })
-      .catch((err) => {
-        console.log("    ✗ FAIL: DX.closeDataResponse(...)", err.message);
-      })
+      )
+    })
+    .then((res) => {
+      assert.ok(res, "Buyer could not close Data Response");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER);
+    })
+    .then((res) => {
+      assert.equal(web3Utils.hexToUtf8(res[6]), "TransactionCompleted", "SellerInfo status does not match");
     })
     .then(() => {
-      return meta.dx.close(meta.newOrderAddress, { from: BUYER });
+      return meta.dx.closeOrder(meta.newOrderAddress, { from: BUYER });
     })
     .then((res) => {
       assert.equal((res.logs[0].event), "OrderClosed");

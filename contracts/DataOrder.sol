@@ -1,7 +1,6 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./lib/ModifierUtils.sol";
 
 
 /**
@@ -11,7 +10,12 @@ import "./lib/ModifierUtils.sol";
  *      This holds the information about the "deal" between them and how the
  *      transaction has evolved.
  */
-contract DataOrder is Ownable, ModifierUtils {
+contract DataOrder is Ownable {
+  modifier validAddress(address addr) {
+    require(addr != address(0));
+    _;
+  }
+
   enum OrderStatus {
     OrderCreated,
     NotaryAdded,
@@ -21,8 +25,7 @@ contract DataOrder is Ownable, ModifierUtils {
   enum DataResponseStatus {
     DataResponseAdded,
     RefundedToBuyer,
-    TransactionCompleted,
-    TransactionCompletedByNotary
+    TransactionCompleted
   }
 
   // --- Notary Information ---
@@ -47,8 +50,7 @@ contract DataOrder is Ownable, ModifierUtils {
   string public filters;
   string public dataRequest;
   uint256 public price;
-  uint256 public minimumBudgetForAudit;
-  bool public notarizeAllResponses;
+  uint256 public initialBudgetForAudits;
   string public termsAndConditions;
   string public buyerURL;
   string public publicKey;
@@ -69,23 +71,19 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param _price Price per added Data Response.
-   * @param _notarizeAllResponses Sets whether the notaries must notarize all
-   *        `DataResponses` or not. If not, in order to guarantee data
-   *        truthiness notaries will audit only the percentage indicated when
-   *        they were added to the system.
+   * @param _initialBudgetForAudits The initial budget set for future audits.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _publicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
    * @return The address of the newly created order.
    */
-  function DataOrder(
+  constructor(
     address _buyer,
     string _filters,
     string _dataRequest,
     uint256 _price,
-    uint256 _minimumBudgetForAudit,
-    bool _notarizeAllResponses,
+    uint256 _initialBudgetForAudits,
     string _termsAndConditions,
     string _buyerURL,
     string _publicKey
@@ -97,8 +95,7 @@ contract DataOrder is Ownable, ModifierUtils {
     filters = _filters;
     dataRequest = _dataRequest;
     price = _price;
-    minimumBudgetForAudit = _minimumBudgetForAudit;
-    notarizeAllResponses = _notarizeAllResponses;
+    initialBudgetForAudits = _initialBudgetForAudits;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
@@ -112,7 +109,7 @@ contract DataOrder is Ownable, ModifierUtils {
    * @param notary Notary's address.
    * @param responsesPercentage Percentage of `DataResponses` to audit per
    * `DataOrder`. Value must be between 0 and 100.
-   * @param notarizationFee Fee to be charged Percentage of the price`DataOrder`
+   * @param notarizationFee Fee to be charged per validation done.
    * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @return Whether the Notary was added successfully or not.
    */
@@ -123,7 +120,6 @@ contract DataOrder is Ownable, ModifierUtils {
     string notarizationTermsOfService
   ) public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
-    require(responsesPercentage >= 0);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
 
@@ -177,13 +173,17 @@ contract DataOrder is Ownable, ModifierUtils {
    *      the seller's data and checks that it is valid or not, he must signal
    *      DataResponse as completed.
    * @param seller Seller address.
+   * @param transactionCompleted True, if the seller got paid for his/her data.
    * @return Whether the DataResponse was successfully closed or not.
    */
   function closeDataResponse(
-    address seller
+    address seller,
+    bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
     if (hasSellerBeenAccepted(seller)) {
-      sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
+      sellerInfo[seller].status = transactionCompleted
+        ? DataResponseStatus.TransactionCompleted
+        : DataResponseStatus.RefundedToBuyer;
       sellerInfo[seller].closedAt = uint32(block.timestamp);
       return true;
     }
@@ -298,10 +298,6 @@ contract DataOrder is Ownable, ModifierUtils {
 
     if (drs == DataResponseStatus.TransactionCompleted) {
       return bytes32("TransactionCompleted");
-    }
-
-    if (drs == DataResponseStatus.TransactionCompletedByNotary) {
-      return bytes32("TransactionCompletedByNotary");
     }
 
     revert();
