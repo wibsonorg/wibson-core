@@ -148,10 +148,6 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param price Price per added Data Response.
    * @param initialBudgetForAudits The initial budget set for future audits.
-   * @param notarizeAllResponses Sets whether the notaries must notarize all
-   *        `DataResponses` or not. If not, in order to guarantee data
-   *        truthiness, notaries will audit only the percentage indicated when
-   *        they are added to the `DataOrder`.
    * @param termsAndConditions Buyer's terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
@@ -163,7 +159,6 @@ contract DataExchange is TokenDestructible, Pausable {
     string dataRequest,
     uint256 price,
     uint256 initialBudgetForAudits,
-    bool notarizeAllResponses,
     string termsAndConditions,
     string buyerURL,
     string publicKey
@@ -177,7 +172,6 @@ contract DataExchange is TokenDestructible, Pausable {
       dataRequest,
       price,
       initialBudgetForAudits,
-      notarizeAllResponses,
       termsAndConditions,
       buyerURL,
       publicKey
@@ -343,7 +337,8 @@ contract DataExchange is TokenDestructible, Pausable {
         notarySignature
       )
     );
-    require(order.closeDataResponse(seller));
+    bool transactionCompleted = !wasAudited || isDataValid;
+    require(order.closeDataResponse(seller, transactionCompleted));
     payPlayers(
       order,
       buyer,

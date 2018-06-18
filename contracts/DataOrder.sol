@@ -25,8 +25,7 @@ contract DataOrder is Ownable {
   enum DataResponseStatus {
     DataResponseAdded,
     RefundedToBuyer,
-    TransactionCompleted,
-    TransactionCompletedByNotary
+    TransactionCompleted
   }
 
   // --- Notary Information ---
@@ -52,7 +51,6 @@ contract DataOrder is Ownable {
   string public dataRequest;
   uint256 public price;
   uint256 public initialBudgetForAudits;
-  bool public notarizeAllResponses;
   string public termsAndConditions;
   string public buyerURL;
   string public publicKey;
@@ -74,10 +72,6 @@ contract DataOrder is Ownable {
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param _price Price per added Data Response.
    * @param _initialBudgetForAudits The initial budget set for future audits.
-   * @param _notarizeAllResponses Sets whether the notaries must notarize all
-   *        `DataResponses` or not. If not, in order to guarantee data
-   *        truthiness notaries will audit only the percentage indicated when
-   *        they were added to the system.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _publicKey Public Key of the buyer, which will be used to encrypt the
@@ -90,7 +84,6 @@ contract DataOrder is Ownable {
     string _dataRequest,
     uint256 _price,
     uint256 _initialBudgetForAudits,
-    bool _notarizeAllResponses,
     string _termsAndConditions,
     string _buyerURL,
     string _publicKey
@@ -103,7 +96,6 @@ contract DataOrder is Ownable {
     dataRequest = _dataRequest;
     price = _price;
     initialBudgetForAudits = _initialBudgetForAudits;
-    notarizeAllResponses = _notarizeAllResponses;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
     publicKey = _publicKey;
@@ -181,13 +173,17 @@ contract DataOrder is Ownable {
    *      the seller's data and checks that it is valid or not, he must signal
    *      DataResponse as completed.
    * @param seller Seller address.
+   * @param transactionCompleted True, if the seller got paid for his/her data.
    * @return Whether the DataResponse was successfully closed or not.
    */
   function closeDataResponse(
-    address seller
+    address seller,
+    bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
     if (hasSellerBeenAccepted(seller)) {
-      sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
+      sellerInfo[seller].status = transactionCompleted
+        ? DataResponseStatus.TransactionCompleted
+        : DataResponseStatus.RefundedToBuyer;
       sellerInfo[seller].closedAt = uint32(block.timestamp);
       return true;
     }
@@ -302,10 +298,6 @@ contract DataOrder is Ownable {
 
     if (drs == DataResponseStatus.TransactionCompleted) {
       return bytes32("TransactionCompleted");
-    }
-
-    if (drs == DataResponseStatus.TransactionCompletedByNotary) {
-      return bytes32("TransactionCompletedByNotary");
     }
 
     revert();

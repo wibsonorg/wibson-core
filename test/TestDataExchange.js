@@ -1,5 +1,6 @@
 const web3Utils = require('web3-utils');
 var DataExchange = artifacts.require("./DataExchange.sol");
+var DataOrder = artifacts.require("./DataOrder.sol");
 var Wibcoin = artifacts.require("./Wibcoin.sol");
 
 contract('DataExchange', (accounts) => {
@@ -43,7 +44,6 @@ contract('DataExchange', (accounts) => {
         "data request",
         meta.price,
         3000,
-        false,
         "Terms and Conditions",
         "https://buyer.example.com/data",
         "public-key",
@@ -91,6 +91,18 @@ contract('DataExchange', (accounts) => {
     .then((res) => {
       assert.equal((res.logs[0].event), "NotaryAdded");
       assert.ok(res, "Notary was not added");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A);
+    })
+    .then((res) => {
+      assert.ok(res, "Notary is not in Data Order");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getNotaryInfo(NOTARY_A);
+    })
+    .then((res) => {
+      assert.equal(res[2], meta["notarizationFee"], "notarizationFee does not match");
     })
     .then(() => {
       return meta.dx.getOpenOrders();
@@ -142,6 +154,12 @@ contract('DataExchange', (accounts) => {
     .then((res) => {
       assert.ok(res, "Data response has not been accepted");
     })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER);
+    })
+    .then((res) => {
+      assert.equal(res[1], NOTARY_A, "Selected notary does not match");
+    })
     .then(() => {
       return meta.dx.getOrdersForSeller(SELLER);
     })
@@ -168,6 +186,12 @@ contract('DataExchange', (accounts) => {
     })
     .then((res) => {
       assert.ok(res, "Buyer could not close Data Response");
+    })
+    .then((res) => {
+      return DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER);
+    })
+    .then((res) => {
+      assert.equal(web3Utils.hexToUtf8(res[6]), "TransactionCompleted", "SellerInfo status does not match");
     })
     .then(() => {
       return meta.dx.closeOrder(meta.newOrderAddress, { from: BUYER });
