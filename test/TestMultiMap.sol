@@ -1,63 +1,61 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.24;
 
 import "truffle/Assert.sol";
 import { MultiMap } from "../contracts/lib/MultiMap.sol";
 
 
 contract TestMultiMap {
-  MultiMap.MapStorage private _store;
-
-  function testGet() public {
-    MultiMap.exist(_store, 0); // TODO
-  }
+  MultiMap.MapStorage store;
 
   function testExist() public {
-    MultiMap.insert(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
+    bool f = MultiMap.exist(store, 0xb2930B35844a230f00E51431aCAe96Fe543a0347);
+    Assert.isFalse(f, "Key should not exist");
 
-    bool t = MultiMap.exist(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.isTrue(t, "Key exists");
+    bool f2 = MultiMap.exist(store, address(0));
+    Assert.isFalse(f2, "0x0 address never exists");
 
-    bool f = MultiMap.exist(_store, 0x0);
-    Assert.isFalse(f, "Key not exists");
+    MultiMap.insert(store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
+
+    bool t = MultiMap.exist(store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
+    Assert.isTrue(t, "Key should exist");
   }
 
   function testInsert() public {
-    bool b = MultiMap.insert(_store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
-    Assert.isTrue(b, "Key inserted correctly");
+    bool b = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
+    Assert.isTrue(b, "Key was not inserted correctly");
+  }
+
+  function testGet() public {
+    address addr = 0xe0F5206bcD039e7B1392e8918821224E2A7437B9;
+    address storedAddress = MultiMap.get(store, 1);
+    Assert.equal(storedAddress, addr, "Inserted key does not match original one");
   }
 
   function testRemoveAt() public {
-    MultiMap.removeAt(_store, 0); // TODO
+    address addr = 0xC257274276a4E539741Ca11b590B9447B26A8051;
+    bool b = MultiMap.removeAt(store, 0);
+    Assert.isTrue(b, "Key was not removed correctly");
+    bool t = MultiMap.exist(store, addr);
+    Assert.isFalse(t, "Removed key should not exist");
   }
 
   function testRemove() public {
-    MultiMap.insert(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
+    address addr = 0xe0F5206bcD039e7B1392e8918821224E2A7437B9;
+    bool rt = MultiMap.remove(store, addr);
+    Assert.isTrue(rt, "Key was not removed correctly");
 
-    bool t = MultiMap.exist(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.isTrue(t, "Key exists before removing");
+    bool f = MultiMap.exist(store, addr);
+    Assert.isFalse(f, "Key should not exist after removing it");
 
-    bool rt = MultiMap.remove(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.isTrue(rt, "Key removed correctly");
-
-    bool rf = MultiMap.remove(_store, 0x0);
-    Assert.isFalse(rf, "Return false if key not exists");
-
-    bool f = MultiMap.exist(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.isFalse(f, "Key not exists after removing");
+    bool rf = MultiMap.remove(store, 0xb2930B35844a230f00E51431aCAe96Fe543a0347);
+    Assert.isFalse(rf, "Should return false if key not exists");
   }
 
   function testLength() public {
-    MultiMap.insert(_store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
-    MultiMap.insert(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.equal(MultiMap.length(_store), 2, "Correct length");
+    Assert.isZero(MultiMap.length(store), "Length of empty map should be zero");
 
-    MultiMap.remove(_store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
-    MultiMap.remove(_store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
-    Assert.isZero(MultiMap.length(_store), "Length of empty map is zero");
-  }
-
-  function testToArray() public {
-    MultiMap.toArray(_store); // TODO
+    MultiMap.insert(store, 0xC257274276a4E539741Ca11b590B9447B26A8051);
+    Assert.equal(MultiMap.length(store), 1, "Length should be one");
   }
 
 }

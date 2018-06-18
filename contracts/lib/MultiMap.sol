@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -14,8 +14,7 @@ library MultiMap {
 
   struct MapStorage {
     mapping(address => uint) addressToIndex;
-    mapping(uint => address) indexToAddress;
-    uint size;
+    address[] addresses;
   }
 
   /**
@@ -28,8 +27,8 @@ library MultiMap {
     MapStorage storage self,
     uint index
   ) public view returns (address) {
-    require(index >= 0 && index < self.size);
-    return self.indexToAddress[index];
+    require(index < self.addresses.length);
+    return self.addresses[index];
   }
 
   /**
@@ -42,8 +41,12 @@ library MultiMap {
     MapStorage storage self,
     address _key
   ) public view returns (bool) {
-    uint targetIndex = self.addressToIndex[_key];
-    return self.indexToAddress[targetIndex] == _key;
+    if (_key != address(0)) {
+      uint targetIndex = self.addressToIndex[_key];
+      return targetIndex < self.addresses.length && self.addresses[targetIndex] == _key;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -56,15 +59,16 @@ library MultiMap {
     MapStorage storage self,
     address _key
   ) public returns (bool) {
+    require(_key != address(0));
     if (exist(self, _key)) {
       return true;
     }
 
-    self.addressToIndex[_key] = self.size;
-    self.indexToAddress[self.size] = _key;
-    self.size++;
+    self.addressToIndex[_key] = self.addresses.length;
+    uint currentLength = self.addresses.length;
+    uint newLength = self.addresses.push(_key);
 
-    return true;
+    return newLength == (SafeMath.add(currentLength, 1));
   }
 
   /**
@@ -74,7 +78,7 @@ library MultiMap {
    * @return Whether the index was removed or not.
    */
   function removeAt(MapStorage storage self, uint index) public returns (bool) {
-    return remove(self, self.indexToAddress[index]);
+    return remove(self, self.addresses[index]);
   }
 
   /**
@@ -84,21 +88,22 @@ library MultiMap {
    * @return Whether the address was removed or not.
    */
   function remove(MapStorage storage self, address _key) public returns (bool) {
+    require(_key != address(0));
     if (!exist(self, _key)) {
       return false;
     }
 
     uint currentIndex = self.addressToIndex[_key];
 
-    uint lastIndex = SafeMath.sub(self.size, 1);
-    address lastAddress = self.indexToAddress[lastIndex];
+    uint lastIndex = SafeMath.sub(self.addresses.length, 1);
+    address lastAddress = self.addresses[lastIndex];
     self.addressToIndex[lastAddress] = currentIndex;
-    self.indexToAddress[currentIndex] = lastAddress;
+    self.addresses[currentIndex] = lastAddress;
 
-    delete self.indexToAddress[lastIndex];
+    delete self.addresses[lastIndex];
     delete self.addressToIndex[_key];
 
-    self.size--;
+    self.addresses.length--;
     return true;
   }
 
@@ -108,21 +113,6 @@ library MultiMap {
    * @return Length.
    */
   function length(MapStorage storage self) public view returns (uint) {
-    return self.size;
-  }
-
-  /**
-   * @dev Converts a `MultiMap` of addresses into a memory array of addresses.
-   * @param self `MultiMap` storage to convert.
-   * @return A memory array of addresses.
-   */
-  function toArray(
-    MapStorage storage self
-  ) internal view returns (address[]) {
-    address[] memory rs = new address[](length(self));
-    for (uint i = 0; i < length(self); i++) {
-      rs[i] = get(self, i);
-    }
-    return rs;
+    return self.addresses.length;
   }
 }

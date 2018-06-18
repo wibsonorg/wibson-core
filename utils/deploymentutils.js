@@ -1,5 +1,4 @@
 const fs = require('fs');
-const forge = require('node-forge');
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
 
@@ -25,6 +24,7 @@ exports.getDevelopmentAccounts = function(accounts) {
     "notary3": accounts[3],
     "buyer": accounts[4],
     "seller": accounts[5],
+    "multisig": accounts[6]
   };
 }
 
@@ -33,29 +33,6 @@ exports.isRopsten = function(network) { return network == "ropsten" };
 exports.isPrivateNet = function(network) { return network == "staging" };
 exports.isStaging = function(network) { return network == "ropsten" || network == "staging" };
 exports.isDevelop = function(network) { return network == "development" };
-
-exports.generateKeyPair = function() {
-  const RSA_KEY_SIZE = 2048;
-
-  const resp = new Promise(function(resolve, reject) {
-    forge.pki.rsa.generateKeyPair({
-      bits: RSA_KEY_SIZE,
-      workers: -1
-    }, function(error, keypair) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve({
-          publicKey: forge.pki.publicKeyToPem(keypair.publicKey),
-          privateKey: forge.pki.privateKeyToPem(keypair.privateKey),
-        });
-      }
-    });
-  });
-
-  return resp;
-}
-
 
 // --- ( Truffle Deployment ) ---
 exports.getProvider = function(mnemonic, network) {

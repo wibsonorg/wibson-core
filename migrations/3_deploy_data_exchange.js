@@ -41,22 +41,14 @@ const deployStaging = (deployer, accounts) => {
  */
 const deployDevelopment = (deployer, accounts) => {
   const from = { from: accounts.owner };
-  deployExchange(deployer, from).then(function() {
+  deployExchange(deployer, from, accounts.multisig).then(function() {
     return Promise.all([
-      DataExchange.deployed(),
-      DeployUtils.generateKeyPair(),
-      DeployUtils.generateKeyPair(),
-      DeployUtils.generateKeyPair()
+      DataExchange.deployed()
     ]);
-  }).then(function(values) {
-    const instance = values[0];
-    instance.addNotary(accounts.notary1, "Notary A", values[1].publicKey, from);
-    instance.addNotary(accounts.notary2, "Notary B", values[2].publicKey, from);
-    instance.addNotary(accounts.notary3, "Notary C", values[3].publicKey, from);
   });
 }
 
-const deployExchange = (deployer, from) => {
+const deployExchange = (deployer, from, owner) => {
   return deployer.deploy(MultiMap, from).then(function() {
     return deployer.link(MultiMap, DataExchange);
   }).then(function() {
@@ -68,6 +60,6 @@ const deployExchange = (deployer, from) => {
   }).then(function() {
     return deployer.link(CryptoUtils, DataExchange);
   }).then(function() {
-    return deployer.deploy(DataExchange, Wibcoin.address, from);
+    return deployer.deploy(DataExchange, Wibcoin.address, owner, from);
   });
 };
