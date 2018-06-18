@@ -366,10 +366,16 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     require(openOrders.exist(orderAddr));
     DataOrder order = DataOrder(orderAddr);
-    require(msg.sender == order.buyer() || msg.sender == owner);
+    address buyer = order.buyer();
+    require(msg.sender == buyer || msg.sender == owner);
 
     bool okay = order.close();
     if (okay) {
+      // remaining budget for audits go back to buyer.
+      uint256 remainingBudget = buyerRemainingBudgetForAudits[buyer][order];
+      buyerRemainingBudgetForAudits[buyer][order] = 0;
+      require(token.transfer(buyer, remainingBudget));
+
       openOrders.remove(orderAddr);
       emit OrderClosed(orderAddr);
     }
@@ -514,17 +520,14 @@ contract DataExchange is TokenDestructible, Pausable {
     require(buyerBalance[buyer][order][seller] >= totalCharges);
     buyerBalance[buyer][order][seller] = buyerBalance[buyer][order][seller].sub(totalCharges);
 
-    if (wasAudited) {
-      // notarization services were given, then the notary gets paid
-      require(token.transfer(notary, notarizationFee));
+    // if no notarization was done, notarization fee tokens go back to buyer.
+    address notarizationFeeReceiver = wasAudited ? notary : buyer;
 
-      // seller gave good data, then gets paid. Otherwise, tokens return to buyer
-      address dest = isDataValid ? seller : buyer;
-      require(token.transfer(dest, orderPrice));
-    } else {
-      // no notarization done, then the seller gets paid
-      require(token.transfer(seller, orderPrice));
-    }
+    // if no notarization was done or data is invalid, order price tokens go back to buyer.
+    address orderPriceReceiver = !wasAudited || isDataValid ? seller : buyer;
+
+    require(token.transfer(notarizationFeeReceiver, notarizationFee));
+    require(token.transfer(orderPriceReceiver, orderPrice));
   }
 
 }
