@@ -2,18 +2,12 @@ pragma solidity ^0.4.21;
 
 import "truffle/Assert.sol";
 import "../../contracts/DataOrder.sol";
+import "../utils/TestUtils.sol";
+
 
 contract TestDataOrderConstructor {
   address private buyerAddr = 0x4bfaffccc303c3572f82dc488373bfc0b106eb70;
   address private notaryA = 0x4753ee2bbd63e60cbf764e8d3ed7c84522ad4ead;
-
-  // A little utility that runs a wrapped method invocation as an internal Solidity call
-  // Returns true if the underlying call succeeds and false if it throws.
-  function execute(string signature) internal returns (bool){
-    bytes4 sig = bytes4(keccak256(signature));
-    address self = address(this);
-    return self.call(sig);
-  }
 
   function createDataOrderWithInvalidPrice() internal {
     new DataOrder(
@@ -69,17 +63,17 @@ contract TestDataOrderConstructor {
 
   function testConstructor() public {
     Assert.isFalse(
-      execute("createDataOrderWithInvalidPrice()"),
+      TestUtils.execute("createDataOrderWithInvalidPrice()"),
       "Constructor should receive a valid price"
     );
 
     Assert.isFalse(
-      execute("createDataOrderWithSenderAsBuyer()"),
+      TestUtils.execute("createDataOrderWithSenderAsBuyer()"),
       "Buyer should not be the sender"
     );
 
     Assert.isFalse(
-      execute("createDataOrderWithZeroAddressAsBuyer()"),
+      TestUtils.execute("createDataOrderWithZeroAddressAsBuyer()"),
       "Buyer should not be 0x0"
     );
 
