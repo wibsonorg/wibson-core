@@ -1,6 +1,7 @@
 node_modules
 build
 migrations
+test
 *.md
 *.js
 *.json
