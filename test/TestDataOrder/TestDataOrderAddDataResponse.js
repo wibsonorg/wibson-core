@@ -27,20 +27,20 @@ contract('DataOrder', (accounts) => {
       10,
       1,
       "terms",
-      { from: owner, gas: 3000000 }
+      { from: owner }
     );
     signature = signMessage([order.address, seller, notary, dataHash], seller);
   })
 
   it('can not add a data response if order is closed', async function () {
-    await order.close({ from: owner, gas: 3000000 });
+    await order.close({ from: owner });
     try {
       await order.addDataResponse(
         seller,
         notary,
         dataHash,
         signature,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -56,7 +56,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -72,7 +72,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -88,7 +88,7 @@ contract('DataOrder', (accounts) => {
         "0x0",
         dataHash,
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -104,7 +104,7 @@ contract('DataOrder', (accounts) => {
         order.address,
         dataHash,
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -120,7 +120,7 @@ contract('DataOrder', (accounts) => {
         inexistentNotary,
         dataHash,
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -135,7 +135,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         signature,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
     } catch (error) {
       assert.fail();
@@ -146,7 +146,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         signature,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -161,7 +161,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         "0x4931ac3b001414eeff2c",
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       assert.fail();
     } catch (error) {
@@ -176,7 +176,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         signature,
-        { from: notOwner, gas: 3000000 }
+        { from: notOwner }
       );
       assert.fail();
     } catch (error) {
@@ -191,7 +191,7 @@ contract('DataOrder', (accounts) => {
         notary,
         dataHash,
         signature,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
       assert(sellerWasAdded, "Seller was not added correctly");
@@ -208,7 +208,7 @@ contract('DataOrder', (accounts) => {
         notary,
         "",
         sig,
-        { from: owner, gas: 3000000 }
+        { from: owner }
       );
       const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
       assert(sellerWasAdded, "Seller was not added correctly");

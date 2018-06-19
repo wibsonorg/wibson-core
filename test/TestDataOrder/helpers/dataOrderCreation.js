@@ -10,7 +10,7 @@ const createHardcodedDataOrder = async (owner, buyer) => {
     "Order T&C",
     "https://buyer.example.com/data",
     "public-key",
-    { from: owner, gas: 3000000 }
+    { from: owner }
   );
 }
 

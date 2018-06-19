@@ -8,8 +8,8 @@
     "lint:sol:fix": "solium -d . --fix",
     "truffle": "truffle",
     "ganache": "ganache-cli",
-    "test": "truffle test",
-    "test:coverage": "solidity-coverage"
+    "test": "scripts/test.sh",
+    "test:coverage": "SOLIDITY_COVERAGE=true scripts/test.sh"
   },
   "devDependencies": {
     "abi-decoder": "^1.1.0",
