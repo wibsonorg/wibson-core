@@ -14,16 +14,6 @@ contract('DataOrder', (accounts) => {
     order = await createHardcodedDataOrder(owner, buyer);
   })
 
-  // address notary,
-  // uint256 responsesPercentage,
-  // uint256 notarizationFee,
-  // string notarizationTermsOfService
-
-  //after adding a notary
-  //  returns true
-  //  status must be NotaryAdded
-
-
   it('can not add a notary if order is closed', async function () {
     await order.close({ from: owner });
     try {
