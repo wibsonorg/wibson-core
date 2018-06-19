@@ -1,7 +1,8 @@
 const DataExchange = artifacts.require("./DataExchange.sol");
 const Wibcoin = artifacts.require("./Wibcoin.sol");
 
-// TODO: Move to helpers
+import assertRevert from "../helpers/assertRevert";
+
 const newOrder = async (dataExchange, {
   filters = "age:20,gender:male",
   dataRequest = "data request",
@@ -23,10 +24,6 @@ const newOrder = async (dataExchange, {
     { from }
   );
 }
-
-// TODO: Move to helpers
-const assertRevert = (error) =>
-  assert(error.toString().includes('revert'), error.toString());
 
 contract('DataExchange', async accounts => {
   const owner = accounts[0];
