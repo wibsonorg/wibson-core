@@ -446,20 +446,6 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Gets whether a `DataResponse` for a given the seller (the caller of
-   *      this function) has been accepted or not.
-   * @notice The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was accepted or not.
-   */
-  function hasDataResponseBeenAccepted(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender);
-  }
-
-  /**
    * @dev Charges a buyer the orderPrice and notary fee for a given `DataResponse`.
    * @notice 1. Tokens are held in the DataExchange contract until players must
    *            be paid.

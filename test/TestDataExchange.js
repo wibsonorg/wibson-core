@@ -148,12 +148,6 @@ contract('DataExchange', (accounts) => {
       assert.equal((res.logs[0].event), "DataAdded");
       assert.ok(res, "Buyer could not add data response to order");
     })
-    .then(() => {
-      return meta.dx.hasDataResponseBeenAccepted(meta.newOrderAddress, { from: SELLER });
-    })
-    .then((res) => {
-      assert.ok(res, "Data response has not been accepted");
-    })
     .then((res) => {
       return DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER);
     })
