@@ -1,5 +1,6 @@
+require('babel-register');
+require('babel-polyfill');
 const DeployUtils = require('./utils/deploymentutils');
-
 /*
 if (!mnemonic || !owner) {
   throw new Error("Missing MNEMONIC or WIBOWNER envs.");
@@ -13,6 +14,13 @@ module.exports = {
       host: "localhost",
       port: 8545,
       network_id: "*"
+    },
+    coverage: {
+      host: "localhost",
+      port: 8555,
+      network_id: '*',
+      gas: 0xfffffffffff,
+      gasPrice: 0x01,
     },
     ropsten: {
       port: 8545,
