@@ -5,7 +5,7 @@ import "zeppelin-solidity/contracts/ECRecovery.sol";
 
 /**
  * @title CryptoUtils
- * @author Cristian Adamo <cristian@wibson.org>
+ * @author Wibson Development Team <developers@wibson.org>
  * @dev Cryptographic utilities used by the Wibson protocol.
  * @notice In order to get the same hashes using `Web3` upon which the signatures
  *         are checked, you must use `web3.utils.soliditySha3` in v1.0 (or the

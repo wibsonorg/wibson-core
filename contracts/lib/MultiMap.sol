@@ -5,7 +5,7 @@ import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title MultiMap
- * @author Cristian Adamo <cristian@wibson.org>
+ * @author Wibson Development Team <developers@wibson.org>
  * @dev An address `MultiMap`, that allows to get elements using an address or
  *      the assigned index.
  *      `MultiMap` is useful when you need to keep track of a set of addresses.

@@ -13,7 +13,7 @@ import "./lib/CryptoUtils.sol";
 
 /**
  * @title DataExchange
- * @author Cristian Adamo <cristian@wibson.org>
+ * @author Wibson Development Team <developers@wibson.org>
  * @dev `DataExchange` is the core contract of the Wibson's Protocol. This
  *      allows the creation, management, and tracking of `DataOrder`s. Also,
  *      such has some helper methods to access the data needed by the different
@@ -48,7 +48,7 @@ contract DataExchange is TokenDestructible, Pausable {
   mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
-  // TODO(cristian): Is there any better way to do this?
+  // TODO: Is there a better way to do this?
   mapping(
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;

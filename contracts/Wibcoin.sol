@@ -5,7 +5,7 @@ import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 /**
  * @title Wibcoin
- * @author Cristian Adamo <cristian@wibson.org>
+ * @author Wibson Development Team <developers@wibson.org>
  * @dev Wibson Oficial Token, this is an ERC20 standard compliant token.
  *      Wibcoin token has an initial supply of 9 billion tokens with 9 decimals.
  */

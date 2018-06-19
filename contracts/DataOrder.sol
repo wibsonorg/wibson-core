@@ -5,7 +5,7 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 /**
  * @title DataOrder
- * @author Cristian Adamo <cristian@wibson.org>
+ * @author Wibson Development Team <developers@wibson.org>
  * @dev `DataOrder` is the contract between a given buyer and a set of sellers.
  *      This holds the information about the "deal" between them and how the
  *      transaction has evolved.
