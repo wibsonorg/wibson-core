@@ -1,5 +1,6 @@
-var DataOrder = artifacts.require("./DataOrder.sol");
+const DataOrder = artifacts.require("./DataOrder.sol");
 
+// TODO: to be deprecated
 const createHardcodedDataOrder = async (owner, buyer) => {
   return DataOrder.new(
     buyer,
@@ -14,6 +15,31 @@ const createHardcodedDataOrder = async (owner, buyer) => {
   );
 }
 
+const createDataOrder = async ({
+  buyer,
+  filters = "age:20,gender:male",
+  dataRequest = "data request",
+  price = 20,
+  initialBudgetForAudits = 10,
+  termsAndConditions = "DataOrder T&C",
+  buyerUrl = "https://buyer.example.com/data",
+  buyerPublicKey = "public-key",
+  from
+}) => {
+  return await DataOrder.new(
+    buyer,
+    filters,
+    dataRequest,
+    price,
+    initialBudgetForAudits,
+    termsAndConditions,
+    buyerUrl,
+    buyerPublicKey,
+    { from }
+  );
+}
+
 export {
+  createDataOrder,
   createHardcodedDataOrder
 };

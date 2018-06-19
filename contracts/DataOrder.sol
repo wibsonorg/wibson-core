@@ -13,6 +13,7 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract DataOrder is Ownable {
   modifier validAddress(address addr) {
     require(addr != address(0));
+    require(addr != address(this));
     _;
   }
 
@@ -88,8 +89,8 @@ contract DataOrder is Ownable {
     string _buyerURL,
     string _publicKey
   ) public validAddress(_buyer) {
-    require(msg.sender != _buyer);
-    require(_price > 0);
+    require(bytes(_buyerURL).length > 0);
+    require(bytes(_publicKey).length > 0);
 
     buyer = _buyer;
     filters = _filters;
