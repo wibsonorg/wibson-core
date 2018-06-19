@@ -1,5 +1,3 @@
-const web3Utils = require('web3-utils');
-
 import { createHardcodedDataOrder } from "./helpers/dataOrderCreation";
 import assertRevert from "../helpers/assertRevert";
 
