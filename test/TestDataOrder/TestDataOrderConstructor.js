@@ -1,6 +1,4 @@
-const web3Utils = require('web3-utils');
-
-var DataOrder = artifacts.require("./DataOrder.sol");
+const DataOrder = artifacts.require("./DataOrder.sol");
 
 // TODO: Move to helpers
 const createDataOrder = async ({
@@ -31,11 +29,11 @@ const createDataOrder = async ({
 const assertRevert = (error) =>
   assert(error.toString().includes('revert'), error.toString());
 
-contract('DataOrder', async (accounts) => {
+contract('DataOrder Constructor', async (accounts) => {
   const owner = accounts[0];
   const buyer = accounts[4];
 
-  it('creates a DataOrder', async () => {
+  it('creates a DataOrder', async function () {
     const dataOrder = await createDataOrder({ owner, buyer });
     assert(dataOrder, "DataOrder was not created properly");
   });
