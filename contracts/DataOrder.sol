@@ -241,6 +241,7 @@ contract DataOrder is Ownable {
     string,
     uint32
   ) {
+    require(hasNotaryBeenAdded(notary));
     NotaryInfo memory info = notaryInfo[notary];
     return (
       notary,

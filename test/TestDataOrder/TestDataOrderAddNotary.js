@@ -164,4 +164,35 @@ contract('DataOrder', (accounts) => {
     assert.isNotOk(res2, 'Returned true for an inexistent notary');
   })
 
+  it('gets notary info', async function () {
+    await order.addNotary(
+      notary,
+      50,
+      10,
+      "Sample TOS",
+      { from: owner }
+    );
+
+    let res = await order.getNotaryInfo(notary);
+    assert(res, 'Could not find added notary');
+    assert(res[0] === notary, 'Notary address is different');
+    assert(res[1].toNumber() === 50, 'responses percentage is different');
+    assert(res[2].toNumber() === 10, 'notarization fee is different');
+    assert(res[3] === 'Sample TOS', 'terms of service is different');
+
+    try {
+      await order.getNotaryInfo('0x0');
+      assert.fail('Does not validate 0x0 address');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getNotaryInfo(other);
+      assert.fail('Does not get info for a notary that was not added');
+    } catch (error) {
+      assertRevert(error);
+    }
+  })
+
 });
