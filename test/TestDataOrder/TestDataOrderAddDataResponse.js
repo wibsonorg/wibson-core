@@ -272,4 +272,30 @@ contract('DataOrder', (accounts) => {
     }
   })
 
+  it('should get notary for seller', async function () {
+    await order.addDataResponse(
+      seller,
+      notary,
+      dataHash,
+      signature,
+      { from: owner }
+    );
+    const res = await order.getNotaryForSeller(seller);
+    assert.equal(res, notary, "notary differs");
+
+    try {
+      await order.getNotaryForSeller('0x0');
+      assert.fail('Did not fail for 0x0 seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getNotaryForSeller(other);
+      assert.fail('Did not fail for nonexistent seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+  })
+
 });
