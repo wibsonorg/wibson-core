@@ -140,4 +140,28 @@ contract('DataOrder', (accounts) => {
     assert(orderStatus.toNumber() === 1, 'order status is not NotaryAdded')
   })
 
+  it('checks if a notary has been added', async function () {
+    await order.addNotary(
+      notary,
+      50,
+      10,
+      "Sample TOS",
+      { from: owner }
+    );
+
+    let res = await order.hasNotaryBeenAdded(notary);
+    assert(res, 'Could not find added notary');
+
+    try {
+      await order.hasNotaryBeenAdded('0x0');
+      assert.fail('Does not validate 0x0 address');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+
+    let res2 = await order.hasNotaryBeenAdded(other);
+    assert.isNotOk(res2, 'Returned true for an inexistent notary');
+  })
+
 });
