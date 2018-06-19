@@ -14,16 +14,6 @@ contract('DataOrder', (accounts) => {
     order = await createHardcodedDataOrder(owner, buyer);
   })
 
-  // address notary,
-  // uint256 responsesPercentage,
-  // uint256 notarizationFee,
-  // string notarizationTermsOfService
-
-  //after adding a notary
-  //  returns true
-  //  status must be NotaryAdded
-
-
   it('can not add a notary if order is closed', async function () {
     await order.close({ from: owner });
     try {
@@ -147,7 +137,62 @@ contract('DataOrder', (accounts) => {
     assert(res, 'addNotary did not return true');
 
     let orderStatus = await order.orderStatus()
-    assert(orderStatus.toNumber() === 1, 'order status is not NotaryAdded')
+    assert.equal(orderStatus.toNumber(), 1, 'order status is not NotaryAdded')
+  })
+
+  it('checks if a notary has been added', async function () {
+    await order.addNotary(
+      notary,
+      50,
+      10,
+      "Sample TOS",
+      { from: owner }
+    );
+
+    let res = await order.hasNotaryBeenAdded(notary);
+    assert(res, 'Could not find added notary');
+
+    try {
+      await order.hasNotaryBeenAdded('0x0');
+      assert.fail('Does not validate 0x0 address');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+
+    let res2 = await order.hasNotaryBeenAdded(other);
+    assert.isNotOk(res2, 'Returned true for an inexistent notary');
+  })
+
+  it('gets notary info', async function () {
+    await order.addNotary(
+      notary,
+      50,
+      10,
+      "Sample TOS",
+      { from: owner }
+    );
+
+    let res = await order.getNotaryInfo(notary);
+    assert(res, 'Could not find added notary');
+    assert.equal(res[0], notary, 'Notary address is different');
+    assert.equal(res[1].toNumber(), 50, 'responses percentage is different');
+    assert.equal(res[2].toNumber(), 10, 'notarization fee is different');
+    assert.equal(res[3], 'Sample TOS', 'terms of service is different');
+
+    try {
+      await order.getNotaryInfo('0x0');
+      assert.fail('Does not validate 0x0 address');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getNotaryInfo(other);
+      assert.fail('Does not get info for a notary that was not added');
+    } catch (error) {
+      assertRevert(error);
+    }
   })
 
 });

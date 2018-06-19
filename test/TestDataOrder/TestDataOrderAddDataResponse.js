@@ -2,6 +2,7 @@ const web3Utils = require('web3-utils');
 
 import { createDataOrder } from "./helpers/dataOrderCreation";
 import signMessage from "../helpers/signMessage";
+import assertRevert from "../helpers/assertRevert";
 
 contract('DataOrder', (accounts) => {
 
@@ -11,6 +12,7 @@ contract('DataOrder', (accounts) => {
   const seller = accounts[5];
   const owner = accounts[6];
   const notOwner = accounts[7];
+  const other = accounts[8];
 
   const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
 
@@ -44,7 +46,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -60,7 +62,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -76,7 +78,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -92,7 +94,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -108,7 +110,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -124,7 +126,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -150,7 +152,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -165,7 +167,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -180,7 +182,7 @@ contract('DataOrder', (accounts) => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes('revert'), error.toString());
+      assertRevert(error);
     }
   })
 
@@ -214,6 +216,85 @@ contract('DataOrder', (accounts) => {
       assert(sellerWasAdded, "Seller was not added correctly");
     } catch (error) {
       assert.fail();
+    }
+  })
+
+  it('should check if seller has been accepted', async function () {
+    await order.addDataResponse(
+      seller,
+      notary,
+      dataHash,
+      signature,
+      { from: owner }
+    );
+    const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
+    assert(sellerWasAdded, "Seller was not added correctly");
+
+    try {
+      await order.hasSellerBeenAccepted('0x0');
+      assert.fail('Did not fail for 0x0 seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    const sellerNotExists = await order.hasSellerBeenAccepted(other);
+    assert.isNotOk(sellerNotExists, "Seller that not exists has been accepted");
+  })
+
+  it('should get seller info', async function () {
+    await order.addDataResponse(
+      seller,
+      notary,
+      dataHash,
+      signature,
+      { from: owner }
+    );
+    const res = await order.getSellerInfo(seller);
+    assert(res, "Could not get seller info");
+    assert.equal(res[0], seller, "seller differs");
+    assert.equal(res[1], notary, "notary differs");
+    assert.equal(res[2], dataHash, "hash differs");
+    assert.equal(res[3], signature, "signature differs");
+    assert.equal(web3Utils.hexToUtf8(res[6]), "DataResponseAdded", "Status differs");
+
+    try {
+      await order.getSellerInfo('0x0');
+      assert.fail('Did not fail for 0x0 seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getSellerInfo(other);
+      assert.fail('Did not fail for nonexistent seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+  })
+
+  it('should get notary for seller', async function () {
+    await order.addDataResponse(
+      seller,
+      notary,
+      dataHash,
+      signature,
+      { from: owner }
+    );
+    const res = await order.getNotaryForSeller(seller);
+    assert.equal(res, notary, "notary differs");
+
+    try {
+      await order.getNotaryForSeller('0x0');
+      assert.fail('Did not fail for 0x0 seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getNotaryForSeller(other);
+      assert.fail('Did not fail for nonexistent seller');
+    } catch (error) {
+      assertRevert(error);
     }
   })
 
