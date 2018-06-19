@@ -137,7 +137,7 @@ contract('DataOrder', (accounts) => {
     assert(res, 'addNotary did not return true');
 
     let orderStatus = await order.orderStatus()
-    assert(orderStatus.toNumber() === 1, 'order status is not NotaryAdded')
+    assert.equal(orderStatus.toNumber(), 1, 'order status is not NotaryAdded')
   })
 
   it('checks if a notary has been added', async function () {
@@ -175,10 +175,10 @@ contract('DataOrder', (accounts) => {
 
     let res = await order.getNotaryInfo(notary);
     assert(res, 'Could not find added notary');
-    assert(res[0] === notary, 'Notary address is different');
-    assert(res[1].toNumber() === 50, 'responses percentage is different');
-    assert(res[2].toNumber() === 10, 'notarization fee is different');
-    assert(res[3] === 'Sample TOS', 'terms of service is different');
+    assert.equal(res[0], notary, 'Notary address is different');
+    assert.equal(res[1].toNumber(), 50, 'responses percentage is different');
+    assert.equal(res[2].toNumber(), 10, 'notarization fee is different');
+    assert.equal(res[3], 'Sample TOS', 'terms of service is different');
 
     try {
       await order.getNotaryInfo('0x0');

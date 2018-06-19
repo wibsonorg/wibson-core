@@ -82,7 +82,7 @@ contract('DataOrder', (accounts) => {
     assert(res, 'close() did not return true');
 
     let orderStatus = await order.orderStatus()
-    assert(orderStatus.toNumber() === 2, 'order status is not TransactionCompleted')
+    assert.equal(orderStatus.toNumber(), 2, 'order status is not TransactionCompleted')
   })
 
 });

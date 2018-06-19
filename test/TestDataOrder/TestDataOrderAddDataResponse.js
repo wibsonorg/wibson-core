@@ -241,4 +241,35 @@ contract('DataOrder', (accounts) => {
     assert.isNotOk(sellerNotExists, "Seller that not exists has been accepted");
   })
 
+  it('should get seller info', async function () {
+    await order.addDataResponse(
+      seller,
+      notary,
+      dataHash,
+      signature,
+      { from: owner }
+    );
+    const res = await order.getSellerInfo(seller);
+    assert(res, "Could not get seller info");
+    assert.equal(res[0], seller, "seller differs");
+    assert.equal(res[1], notary, "notary differs");
+    assert.equal(res[2], dataHash, "hash differs");
+    assert.equal(res[3], signature, "signature differs");
+    assert.equal(web3Utils.hexToUtf8(res[6]), "DataResponseAdded", "Status differs");
+
+    try {
+      await order.getSellerInfo('0x0');
+      assert.fail('Did not fail for 0x0 seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+
+    try {
+      await order.getSellerInfo(other);
+      assert.fail('Did not fail for nonexistent seller');
+    } catch (error) {
+      assertRevert(error);
+    }
+  })
+
 });
