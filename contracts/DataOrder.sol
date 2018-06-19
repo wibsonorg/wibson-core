@@ -221,7 +221,9 @@ contract DataOrder is Ownable {
    * @param notary Notary address to check.
    * @return Whether the notary was added or not.
    */
-  function hasNotaryBeenAdded(address notary) public view returns (bool) {
+  function hasNotaryBeenAdded(
+    address notary
+  ) public view validAddress(notary) returns (bool) {
     return notaryInfo[notary].addedAt != 0;
   }
 
@@ -232,7 +234,7 @@ contract DataOrder is Ownable {
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (
+  ) public view validAddress(notary) returns (
     address,
     uint256,
     uint256,
@@ -256,7 +258,7 @@ contract DataOrder is Ownable {
    */
   function getSellerInfo(
     address seller
-  ) public view returns (
+  ) public view validAddress(seller) returns (
     address,
     address,
     string,
@@ -282,7 +284,9 @@ contract DataOrder is Ownable {
    * @param seller Seller address.
    * @return Address of the notary assigned to the given seller.
    */
-  function getNotaryForSeller(address seller) public view returns (address) {
+  function getNotaryForSeller(
+    address seller
+  ) public view validAddress(seller) returns (address) {
     return sellerInfo[seller].notary;
   }
 
