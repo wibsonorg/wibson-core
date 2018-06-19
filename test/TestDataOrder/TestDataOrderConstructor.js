@@ -31,6 +31,19 @@ contract('DataOrder', async (accounts) => {
       }
     });
 
+    // This test is for documentation purposes.
+    // The string `buyerUrl` is not limited in length, so anyone can submit
+    // an URL the size they want, but the longer the string the more expensive
+    // the transaction (8 units of gas per byte aprox.).
+    it('creates a DataOrder with a huge Buyer URL', async function () {
+      const dataOrder = await createDataOrder({
+        buyer,
+        buyerUrl: buyerLongUrl(),
+        from: owner
+      });
+      assert(dataOrder, "DataOrder was not created properly");
+    });
+
     it('can not create a DataOrder with an empty Buyer Public Key', async function () {
       try {
         await createDataOrder({ buyer, buyerPublicKey: '', from: owner });
@@ -66,3 +79,41 @@ contract('DataOrder', async (accounts) => {
     });
   });
 });
+
+function buyerLongUrl() {
+  return [
+    "https://buyr.co/dat/eylhqusnlzhjmwngsoiikgbymcodwfctlvxmigmd",
+    "rjknuinutuvdjzhdyixexvkfjyqntxxfuyghdncgfxezmqtmitbpzugyqhgw",
+    "khunprrdktlgjtioazctzjosrxsmhgyomdfxwtxvfiorcrwpfokabowxdbxz",
+    "dnxhjglcuxxwrgmspqfktellzgjjsqcovlsrlxwpbsbbjdzgbnurtsjvkofd",
+    "ptrgygjpjmginrfckoszxvwpiqakdxkosumedoidlwenlmovctsnugdpvqcm",
+    "hkiqwzqyzghrdcofooolpfcbpzlbgqognbuwkngmwysvatygczvfggekijxm",
+    "fehzcndcaanlgwlzsghvwropkaynjovmdgvwhjrnfwvbyfjgmzlskqkauzua",
+    "lgmpmtqsfbyijvgoouaizvhgsxodlhtlrjafxdgdenijvvyixgggtggnqkfy",
+    "hgplyvffyozytnertfjhzpnapbpptdbmjcrzqnmbhwbxcunpprfginzczgxd",
+    "zujwlsgsukovhodflcvotxwlyrkzlkryxvxicblapycqldymrqtmlcqvhagu",
+    "lnfatztanyosyotrqzvqmkdubaalveowmeflejkyqwexddacopxryerqrrnr",
+    "vsczeesmgtzvkqkcdwoolzxtwaxqvyzrdstxmopkbswopuyyjedthaxzrpop",
+    "jcfvahlvqfcojsotcoqfcmpssloymskcpcfaxjlbemcflvhlbmrocomlganc",
+    "biojhkldvltdaznmmnijwlgvxvlhwjnykzfmteqecegrlunawqljigenznnd",
+    "xqrzvhgshjnkwcwynufnlqxkseksviskqyxuxtqctzpnylngamuxyzyjmxha",
+    "qcvuhbawqcjflgusughjruquqwkedfdqsdgazwymvwiefwgutbbbgcsdapsu",
+    "achrrhckaysobkzckzctaznqwobkkbizojbqmmwkagdbjvuudkmbcaygrnnc",
+    "ccbkxgajqcmosisrhhfvnfvbjakxdmnvpmfyivzwpfsbkuttfitlfebmotbn",
+    "ngyvcojbnvfktqpkcfgboajyqbyqvlupvpqunedgftmmhdcmxflgbpafkdew",
+    "qdceltukbqtgnlbwtcvkpgpmghqlizxnirxqxtysbvzondjczovoklwwdrle",
+    "ujkllzzbffpstyragoblwreyjlxjbzfekkiudguoixrhkxxomlafuarssbwf",
+    "czqkkcliiusjeuhwwytvytpgqreykpefownjceqxaljlcpmonetwmzscovgt",
+    "jukybiazrpbkaxktfanzmadelgrorqijjsoyabboayinjmfsvzepryfjlich",
+    "uzjecggftuvsyycvvxlrmlhtnupeaisjfltaddnzfsccddcmltzcpovojysx",
+    "tfijyyqktwhgqtzegxgqeinnybbxfcgkxkzdzbzqbdfsgnkcysquetjegyza",
+    "qexhcfbsnkqxgxbtzxcjpiwgqysusumyppykdcyzfjpaxkryorlabdmtohuf",
+    "krvlzuogxmqrujjnrmhspbgrykjvuxlzqilyxhroplppgudodmppagxaxpht",
+    "xxalkwgbivkzcsxydekgabjmfmluvsxlmjdslrmmqdbywsgfnhvdxzyblzzb",
+    "ascqozfulserpbxlsegrhlribvwkubkyzsbggkyonouiczjfhozmtemtuast",
+    "binsuyaxsbwmjvatufgbsekmzacpgveikichjfynthqgldpqttcyckdzsrev",
+    "moqwggxycdejszfrjvgxdvsuhmdyprnmebgvgfclxdgfqaiyacazstogytyz",
+    "rbmgnhdwrlfoselanushcfztpkptfyucdadrdosqhnbvkccbpktnekeaeila",
+    "kheozchodqrdohstaezboojaagxndsxvqwrbygtccwczjczjnvgucrqghkhm"
+  ].join("");
+}
