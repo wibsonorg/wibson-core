@@ -16,12 +16,9 @@ contract('DataOrder', (accounts) => {
   const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
 
   let signature;
-  let emptyDataHashSignature;
-  let orderWithoutNotary;
   let order;
 
   beforeEach('setup DataOrder for each test', async () => {
-    orderWithoutNotary = await createDataOrder({ buyer, from: owner });
     order = await createDataOrder({ buyer, from: owner });
     await order.addNotary(
       notary,

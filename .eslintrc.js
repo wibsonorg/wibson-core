@@ -1,10 +1,10 @@
 module.exports = {
     "extends": "airbnb-base",
     "env": {
-      "node"    : true,
-      "mocha"   : true
+      "node": true,
+      "mocha": true
     },
-    "globals" : {
+    "globals": {
       "artifacts": false,
       "contract": false,
       "assert": false,

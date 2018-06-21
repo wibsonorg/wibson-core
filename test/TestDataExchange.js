@@ -52,10 +52,10 @@ contract('DataExchange', (accounts) => {
       })
       .then(() => {
         let newOrderAddress;
-        for (let i = 0; i < meta.order.logs.length; i++) {
+        for (let i = 0; i < meta.order.logs.length; i += 1) {
           const log = meta.order.logs[i];
 
-          if (log.event == 'NewOrder') {
+          if (log.event === 'NewOrder') {
             newOrderAddress = log.args.orderAddr;
             break;
           }
@@ -88,11 +88,11 @@ contract('DataExchange', (accounts) => {
         assert.equal((res.logs[0].event), 'NotaryAdded');
         assert.ok(res, 'Notary was not added');
       })
-      .then(res => DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A))
+      .then(() => DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A))
       .then((res) => {
         assert.ok(res, 'Notary is not in Data Order');
       })
-      .then(res => DataOrder.at(meta.newOrderAddress).getNotaryInfo(NOTARY_A))
+      .then(() => DataOrder.at(meta.newOrderAddress).getNotaryInfo(NOTARY_A))
       .then((res) => {
         assert.equal(res[2], meta.notarizationFee, 'notarizationFee does not match');
       })
@@ -132,7 +132,7 @@ contract('DataExchange', (accounts) => {
         assert.equal((res.logs[0].event), 'DataAdded');
         assert.ok(res, 'Buyer could not add data response to order');
       })
-      .then(res => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
+      .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
       .then((res) => {
         assert.equal(res[1], NOTARY_A, 'Selected notary does not match');
       })
@@ -161,7 +161,7 @@ contract('DataExchange', (accounts) => {
       .then((res) => {
         assert.ok(res, 'Buyer could not close Data Response');
       })
-      .then(res => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
+      .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
       .then((res) => {
         assert.equal(web3Utils.hexToUtf8(res[6]), 'TransactionCompleted', 'SellerInfo status does not match');
       })

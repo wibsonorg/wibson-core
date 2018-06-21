@@ -1,8 +1,6 @@
 import { createDataOrder } from './helpers/dataOrderCreation';
 import assertRevert from '../helpers/assertRevert';
 
-const DataOrder = artifacts.require('./DataOrder.sol');
-
 contract('DataOrder', async (accounts) => {
   const owner = accounts[0];
   const buyer = accounts[4];

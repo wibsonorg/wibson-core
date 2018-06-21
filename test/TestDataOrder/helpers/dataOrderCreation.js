@@ -23,7 +23,7 @@ const createDataOrder = async ({
   buyerUrl = 'https://buyer.example.com/data',
   buyerPublicKey = 'public-key',
   from,
-}) => await DataOrder.new(
+}) => DataOrder.new(
   buyer,
   filters,
   dataRequest,

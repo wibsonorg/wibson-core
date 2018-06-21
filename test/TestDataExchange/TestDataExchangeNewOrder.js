@@ -12,7 +12,7 @@ const newOrder = async (dataExchange, {
   buyerUrl = 'https://buyer.example.com/data',
   buyerPublicKey = 'public-key',
   from,
-}) => await dataExchange.newOrder(
+}) => dataExchange.newOrder(
   filters,
   dataRequest,
   price,
@@ -30,7 +30,6 @@ contract('DataExchange', async (accounts) => {
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
   let dataExchange;
-  const allowance = 3000;
 
   beforeEach(async () => {
     dataExchange = await DataExchange.new(tokenAddress, owner);
