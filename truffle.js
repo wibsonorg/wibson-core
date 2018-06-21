@@ -8,15 +8,15 @@ if (!mnemonic || !owner) {
 */
 
 module.exports = {
-  migrations_directory: "./migrations",
+  migrations_directory: './migrations',
   networks: {
     development: {
-      host: "localhost",
+      host: 'localhost',
       port: 8545,
-      network_id: "*"
+      network_id: '*',
     },
     coverage: {
-      host: "localhost",
+      host: 'localhost',
       port: 8555,
       network_id: '*',
       gas: 0xfffffffffff,
@@ -26,20 +26,20 @@ module.exports = {
       port: 8545,
       from: DeployUtils.getRopstenOwner,
       network_id: 3, // official id of the ropsten network
-      gas: 4600000
+      gas: 4600000,
     },
     staging: {
-      host: "localhost",
+      host: 'localhost',
       port: 8545,
       from: DeployUtils.getStagingOwner,
-      network_id: "*",
-      gas: 4600000
-    }
+      network_id: '*',
+      gas: 4600000,
+    },
   },
   solc: {
     optimizer: {
       enabled: true,
-      runs: 200
-    }
-  }
+      runs: 200,
+    },
+  },
 };
