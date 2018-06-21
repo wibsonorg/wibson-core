@@ -51,6 +51,28 @@ const addNotaryToOrder = async (dataExchange, {
   );
 }
 
+const addDataResponseToOrder = async (dataExchange, {
+  orderAddress,
+  seller,
+  notary,
+  dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d",
+  from
+}) => {
+  return await dataExchange.addDataResponseToOrder(
+    orderAddress,
+    seller,
+    notary,
+    dataHash,
+    signMessage([
+      orderAddress,
+      seller,
+      notary,
+      dataHash
+    ], seller),
+    { from }
+  );
+}
+
 contract('DataExchange', async accounts => {
   const notary = accounts[1];
   const buyer = accounts[4];
@@ -59,6 +81,7 @@ contract('DataExchange', async accounts => {
   const notOwner = accounts[7];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
+  const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
 
   let dataExchange;
 
@@ -129,6 +152,52 @@ contract('DataExchange', async accounts => {
       }
     });
 
+    it('can not close a DataResponse if there is not DataResponse for the Seller', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      try {
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          seller,
+          true,
+          true,
+          "a signature",
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not close a DataResponse if the notary signature is invalid', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, { orderAddress, seller, notary, from: buyer });
+
+      try {
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          seller,
+          true,
+          true,
+          signMessage([
+            orderAddress,
+            seller,
+            true,
+            false
+          ], notary),
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
     it('can not close a DataResponse of a closed DataOrder', async function () {
       const tx = await newOrder(dataExchange, { from: buyer });
       const orderAddress = tx.logs[0].args.orderAddr;
@@ -149,26 +218,5 @@ contract('DataExchange', async accounts => {
         assertRevert(error);
       }
     });
-
-    // it('asd', async function () {
-    //   const orderAddress = await newOrder(dataExchange, { from: buyer });
-    //   const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
-    //   const signature = signMessage([order.address, seller, notary, dataHash], seller);
-
-    //   await dataExchange.addDataResponse(
-    //     orderAddress,
-    //     seller,
-    //     notary,
-    //     dataHash,
-    //     signature,
-    //     { from: owner }
-    //   );
-
-    //   try {
-    //     assert.fail();
-    //   } catch (error) {
-    //     assertRevert(error);
-    //   }
-    // });
   });
 })
