@@ -14,9 +14,9 @@ import "./lib/CryptoUtils.sol";
 /**
  * @title DataExchange
  * @author Wibson Development Team <developers@wibson.org>
- * @dev `DataExchange` is the core contract of the Wibson's Protocol. This
- *      allows the creation, management, and tracking of `DataOrder`s. Also,
- *      such has some helper methods to access the data needed by the different
+ * @dev `DataExchange` is the core contract of the Wibson Protocol.
+ *      This allows the creation, management, and tracking of `DataOrder`s.
+ *      Also, such has some helper methods to access the data needed by the different
  *      parties involved in the Protocol.
  */
 contract DataExchange is TokenDestructible, Pausable {
@@ -74,7 +74,7 @@ contract DataExchange is TokenDestructible, Pausable {
   uint256 public minimumInitialBudgetForAudits;
 
   /**
-   * @dev Contract costructor.
+   * @dev Contract constructor.
    * @param tokenAddress Address of the Wibcoin token address (ERC20).
    * @param ownerAddress Address of the DataExchange owner.
    */
@@ -88,7 +88,7 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Registers a new notary or replaces a already existing one.
+   * @dev Registers a new notary or replaces an already existing one.
    * @notice At least one notary is needed to enable `DataExchange` operation.
    * @param notary Address of a Notary to add.
    * @param name Name Of the Notary.
@@ -208,7 +208,7 @@ contract DataExchange is TokenDestructible, Pausable {
     uint256 notarizationFee,
     string notarizationTermsOfService,
     bytes notarySignature
-  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) validAddress(notary) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
@@ -238,10 +238,7 @@ contract DataExchange is TokenDestructible, Pausable {
     if (okay) {
       openOrders.insert(orderAddr);
       ordersByNotary[notary].push(orderAddr);
-      emit NotaryAdded(
-        order,
-        notary
-      );
+      emit NotaryAdded(order, notary);
     }
     return okay;
   }
@@ -443,20 +440,6 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public view returns (address, string, string, string) {
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
-  }
-
-  /**
-   * @dev Gets whether a `DataResponse` for a given the seller (the caller of
-   *      this function) has been accepted or not.
-   * @notice The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was accepted or not.
-   */
-  function hasDataResponseBeenAccepted(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender);
   }
 
   /**

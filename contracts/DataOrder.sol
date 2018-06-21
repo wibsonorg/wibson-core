@@ -13,6 +13,7 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract DataOrder is Ownable {
   modifier validAddress(address addr) {
     require(addr != address(0));
+    require(addr != address(this));
     _;
   }
 
@@ -88,8 +89,8 @@ contract DataOrder is Ownable {
     string _buyerURL,
     string _publicKey
   ) public validAddress(_buyer) {
-    require(msg.sender != _buyer);
-    require(_price > 0);
+    require(bytes(_buyerURL).length > 0);
+    require(bytes(_publicKey).length > 0);
 
     buyer = _buyer;
     filters = _filters;
@@ -118,7 +119,7 @@ contract DataOrder is Ownable {
     uint256 responsesPercentage,
     uint256 notarizationFee,
     string notarizationTermsOfService
-  ) public onlyOwner returns (bool) {
+  ) public onlyOwner validAddress(notary) returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
@@ -180,14 +181,15 @@ contract DataOrder is Ownable {
     address seller,
     bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
-    if (hasSellerBeenAccepted(seller)) {
-      sellerInfo[seller].status = transactionCompleted
-        ? DataResponseStatus.TransactionCompleted
-        : DataResponseStatus.RefundedToBuyer;
-      sellerInfo[seller].closedAt = uint32(block.timestamp);
-      return true;
-    }
-    return false;
+    require(orderStatus != OrderStatus.TransactionCompleted);
+    require(hasSellerBeenAccepted(seller));
+    require(sellerInfo[seller].status == DataResponseStatus.DataResponseAdded);
+
+    sellerInfo[seller].status = transactionCompleted
+      ? DataResponseStatus.TransactionCompleted
+      : DataResponseStatus.RefundedToBuyer;
+    sellerInfo[seller].closedAt = uint32(block.timestamp);
+    return true;
   }
 
   /**
@@ -220,7 +222,9 @@ contract DataOrder is Ownable {
    * @param notary Notary address to check.
    * @return Whether the notary was added or not.
    */
-  function hasNotaryBeenAdded(address notary) public view returns (bool) {
+  function hasNotaryBeenAdded(
+    address notary
+  ) public view validAddress(notary) returns (bool) {
     return notaryInfo[notary].addedAt != 0;
   }
 
@@ -231,13 +235,14 @@ contract DataOrder is Ownable {
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (
+  ) public view validAddress(notary) returns (
     address,
     uint256,
     uint256,
     string,
     uint32
   ) {
+    require(hasNotaryBeenAdded(notary));
     NotaryInfo memory info = notaryInfo[notary];
     return (
       notary,
@@ -255,7 +260,7 @@ contract DataOrder is Ownable {
    */
   function getSellerInfo(
     address seller
-  ) public view returns (
+  ) public view validAddress(seller) returns (
     address,
     address,
     string,
@@ -281,7 +286,9 @@ contract DataOrder is Ownable {
    * @param seller Seller address.
    * @return Address of the notary assigned to the given seller.
    */
-  function getNotaryForSeller(address seller) public view returns (address) {
+  function getNotaryForSeller(
+    address seller
+  ) public view validAddress(seller) returns (address) {
     return sellerInfo[seller].notary;
   }
 
