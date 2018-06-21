@@ -218,5 +218,56 @@ contract('DataExchange', async accounts => {
         assertRevert(error);
       }
     });
+
+    it('can not close a DataResponse of an invalid Seller', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      try {
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          '0x0',
+          true,
+          true,
+          "a signature",
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not close an already-closed DataResponse', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, { orderAddress, seller, notary, from: buyer });
+      const signature = signMessage([orderAddress, seller, true, true], notary);
+      await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        true,
+        signature,
+        { from: buyer }
+      );
+
+      try {
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          seller,
+          true,
+          true,
+          signature,
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
   });
 })
