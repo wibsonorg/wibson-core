@@ -181,14 +181,15 @@ contract DataOrder is Ownable {
     address seller,
     bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
-    if (hasSellerBeenAccepted(seller)) {
-      sellerInfo[seller].status = transactionCompleted
-        ? DataResponseStatus.TransactionCompleted
-        : DataResponseStatus.RefundedToBuyer;
-      sellerInfo[seller].closedAt = uint32(block.timestamp);
-      return true;
-    }
-    return false;
+    require(orderStatus != OrderStatus.TransactionCompleted);
+    require(hasSellerBeenAccepted(seller));
+    require(sellerInfo[seller].status == DataResponseStatus.DataResponseAdded);
+
+    sellerInfo[seller].status = transactionCompleted
+      ? DataResponseStatus.TransactionCompleted
+      : DataResponseStatus.RefundedToBuyer;
+    sellerInfo[seller].closedAt = uint32(block.timestamp);
+    return true;
   }
 
   /**
