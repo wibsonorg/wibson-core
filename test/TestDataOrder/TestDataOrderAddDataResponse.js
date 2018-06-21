@@ -15,12 +15,9 @@ contract('DataOrder', (accounts) => {
   const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
 
   let signature;
-  let emptyDataHashSignature ;
-  let orderWithoutNotary;
   let order;
 
   beforeEach('setup DataOrder for each test', async function () {
-    orderWithoutNotary = await createHardcodedDataOrder(owner, buyer);
     order = await createHardcodedDataOrder(owner, buyer);
     await order.addNotary(
       notary,
@@ -52,7 +49,7 @@ contract('DataOrder', (accounts) => {
     try {
       const sig = signMessage([order.address, 0x0, notary, dataHash], seller);
       await order.addDataResponse(
-        "0x0",
+        0x0,
         notary,
         dataHash,
         sig,
@@ -85,7 +82,7 @@ contract('DataOrder', (accounts) => {
       const sig = signMessage([order.address, seller, 0x0, dataHash], seller);
       await order.addDataResponse(
         seller,
-        "0x0",
+        0x0,
         dataHash,
         sig,
         { from: owner }
