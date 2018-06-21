@@ -1,19 +1,19 @@
 const DeployUtils = require('../utils/deploymentutils');
 
-var DataExchange = artifacts.require("./DataExchange.sol");
-var Wibcoin = artifacts.require("./Wibcoin.sol");
+const DataExchange = artifacts.require('./DataExchange.sol');
+const Wibcoin = artifacts.require('./Wibcoin.sol');
 
-var MultiMap = artifacts.require("./lib/MultiMap.sol");
-var CryptoUtils = artifacts.require("./lib/CryptoUtils.sol");
-var ECRecovery = artifacts.require('zeppelin-solidity/contracts/ECRecovery.sol');
+const MultiMap = artifacts.require('./lib/MultiMap.sol');
+const CryptoUtils = artifacts.require('./lib/CryptoUtils.sol');
+const ECRecovery = artifacts.require('zeppelin-solidity/contracts/ECRecovery.sol');
 
 
-module.exports = function(deployer, network, accounts) {
+module.exports = function (deployer, network, accounts) {
   if (DeployUtils.isStaging(network)) {
     const config = DeployUtils.getConfig();
 
     let tokenAddress;
-    if (network == "staging") {
+    if (network == 'staging') {
       tokenAddress = config.network.staging.deployedTokenAddress;
     } else {
       tokenAddress = config.network.ropsten.deployedTokenAddress;
@@ -34,32 +34,19 @@ module.exports = function(deployer, network, accounts) {
  */
 const deployStaging = (deployer, accounts) => {
   deployExchange(deployer, { from: accounts.owner });
-}
+};
 
 /**
  * Deploy Token to ganache network.
  */
 const deployDevelopment = (deployer, accounts) => {
   const from = { from: accounts.owner };
-  deployExchange(deployer, from, accounts.multisig).then(function() {
-    return Promise.all([
-      DataExchange.deployed()
-    ]);
-  });
-}
-
-const deployExchange = (deployer, from, owner) => {
-  return deployer.deploy(MultiMap, from).then(function() {
-    return deployer.link(MultiMap, DataExchange);
-  }).then(function() {
-    return deployer.deploy(ECRecovery, from);
-  }).then(function() {
-    return deployer.link(ECRecovery, CryptoUtils);
-  }).then(function() {
-    return deployer.deploy(CryptoUtils, from);
-  }).then(function() {
-    return deployer.link(CryptoUtils, DataExchange);
-  }).then(function() {
-    return deployer.deploy(DataExchange, Wibcoin.address, owner, from);
-  });
+  deployExchange(deployer, from, accounts.multisig).then(() => Promise.all([
+    DataExchange.deployed(),
+  ]));
 };
+
+const deployExchange = (deployer, from, owner) => deployer.deploy(MultiMap, from).then(() => deployer.link(MultiMap, DataExchange)).then(() => deployer.deploy(ECRecovery, from)).then(() => deployer.link(ECRecovery, CryptoUtils))
+  .then(() => deployer.deploy(CryptoUtils, from))
+  .then(() => deployer.link(CryptoUtils, DataExchange))
+  .then(() => deployer.deploy(DataExchange, Wibcoin.address, owner, from));

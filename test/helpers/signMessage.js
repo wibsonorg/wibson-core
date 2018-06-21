@@ -9,4 +9,4 @@ const web3Utils = require('web3-utils');
 export default (args, signer) => {
   const hash = web3Utils.soliditySha3(...args);
   return web3.eth.sign(signer, hash);
-}
+};
