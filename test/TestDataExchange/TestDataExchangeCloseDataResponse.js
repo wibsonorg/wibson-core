@@ -1,6 +1,7 @@
 const DataExchange = artifacts.require("./DataExchange.sol");
 const Wibcoin = artifacts.require("./Wibcoin.sol");
 
+import { createDataOrder } from "../TestDataOrder/helpers/dataOrderCreation";
 import signMessage from "../helpers/signMessage";
 import assertRevert from "../helpers/assertRevert";
 
@@ -55,6 +56,7 @@ contract('DataExchange', async accounts => {
   const buyer = accounts[4];
   const seller = accounts[5];
   const owner = accounts[6];
+  const notOwner = accounts[7];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
 
@@ -73,6 +75,60 @@ contract('DataExchange', async accounts => {
   });
 
   describe('closeDataResponse', async function () {
+    it('can not close a DataResponse of an invalid DataOrder', async function () {
+      try {
+        await dataExchange.closeDataResponse(
+          '0x0',
+          seller,
+          true,
+          true,
+          "a signature",
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not close a DataResponse of a DataOrder that does not belong to the DataExchange contract', async function () {
+      const order = await createDataOrder({ buyer, from: buyer });
+
+      try {
+        await dataExchange.closeDataResponse(
+          order.address,
+          seller,
+          true,
+          true,
+          "a signature",
+          { from: buyer }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not close a DataResponse if sender is other than buyer or notary', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      try {
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          seller,
+          true,
+          true,
+          "a signature",
+          { from: notOwner }
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
     it('can not close a DataResponse of a closed DataOrder', async function () {
       const tx = await newOrder(dataExchange, { from: buyer });
       const orderAddress = tx.logs[0].args.orderAddr;
