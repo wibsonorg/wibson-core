@@ -4,6 +4,7 @@ const Wibcoin = artifacts.require("./Wibcoin.sol");
 import { createDataOrder } from "../TestDataOrder/helpers/dataOrderCreation";
 import signMessage from "../helpers/signMessage";
 import assertRevert from "../helpers/assertRevert";
+import assertEvent from "../helpers/assertEvent";
 
 const newOrder = async (dataExchange, {
   filters = "age:20,gender:male",
@@ -81,7 +82,6 @@ contract('DataExchange', async accounts => {
   const notOwner = accounts[7];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
-  const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
 
   let dataExchange;
 
@@ -269,5 +269,22 @@ contract('DataExchange', async accounts => {
       }
     });
 
+    it('closes a DataResponse', async function () {
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, { orderAddress, seller, notary, from: buyer });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        true,
+        signMessage([orderAddress, seller, true, true], notary),
+        { from: buyer }
+      );
+
+      assertEvent(closeTransaction, "TransactionCompleted", "DataOrder was not closed correctly");
+    });
   });
 })
