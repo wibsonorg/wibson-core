@@ -6,7 +6,6 @@ const web3Utils = require('web3-utils');
 
 contract('DataOrder', accounts => {
   const notary = accounts[1];
-  const inexistentNotary = accounts[2];
   const buyer = accounts[4];
   const seller = accounts[5];
   const owner = accounts[6];
@@ -29,6 +28,18 @@ contract('DataOrder', accounts => {
   })
 
   describe('closeDataResponse', async function () {
+    it('can not close a DataResponse of a closed DataOrder', async function () {
+      const closeOrder = await createDataOrder({ buyer, from: owner });
+      await closeOrder.close({ from: owner });
+
+      try {
+        await closeOrder.closeDataResponse(seller, true, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error)
+      }
+    });
+
     it('can not close a DataResponse if Seller is 0x0', async function () {
       try {
         await order.closeDataResponse('0x0', true, { from: owner });
@@ -38,21 +49,18 @@ contract('DataOrder', accounts => {
       }
     });
 
-    it('can not close a DataResponse if Seller has not provided a DataResponse', async function () {
+    it('can not close a DataResponse if Seller is the DataOrder contract', async function () {
       try {
-        await order.closeDataResponse(seller, true, { from: owner });
+        await order.closeDataResponse(order.address, true, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error)
       }
     });
 
-    it('can not close a DataResponse of a closed DataOrder', async function () {
-      const closeOrder = await createDataOrder({ buyer, from: owner });
-      await closeOrder.close({ from: owner });
-
+    it('can not close a DataResponse if Seller has not provided a DataResponse', async function () {
       try {
-        await closeOrder.closeDataResponse(seller, true, { from: owner });
+        await order.closeDataResponse(seller, true, { from: owner });
         assert.fail();
       } catch (error) {
         assertRevert(error)
@@ -71,6 +79,15 @@ contract('DataOrder', accounts => {
 
       try {
         await order.closeDataResponse(seller, true, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error)
+      }
+    });
+
+    it('can not close a DataResponse if sender is not the Owner', async function () {
+      try {
+        await order.closeDataResponse(seller, true, { from: notOwner });
         assert.fail();
       } catch (error) {
         assertRevert(error)
