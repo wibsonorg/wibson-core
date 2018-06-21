@@ -6,8 +6,8 @@
     "compile": "truffle compile",
     "lint:sol": "solium -d .",
     "lint:sol:fix": "solium -d . --fix",
-    "lint:js": "eslint ./**",
-    "lint:js:fix": "eslint ./** --fix",
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint . --fix",
     "truffle": "truffle",
     "ganache": "ganache-cli",
     "test": "scripts/test.sh",
@@ -27,11 +27,11 @@
     "solium-plugin-zeppelin": "^0.0.2",
     "truffle": "^4.1.11",
     "truffle-core": "^4.1.11",
+    "truffle-hdwallet-provider": "^0.0.3",
     "truffle-solidity-loader": "^0.0.8",
     "web3-utils": "^1.0.0-beta.34"
   },
   "dependencies": {
-    "truffle-hdwallet-provider": "^0.0.3",
     "zeppelin-solidity": "^1.10.0"
   }
 }
