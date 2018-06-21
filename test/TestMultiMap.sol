@@ -21,8 +21,11 @@ contract TestMultiMap {
   }
 
   function testInsert() public {
-    bool b = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
-    Assert.isTrue(b, "Key was not inserted correctly");
+    bool b1 = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
+    Assert.isTrue(b1, "Key was not inserted correctly");
+
+    bool b2 = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
+    Assert.isTrue(b2, "Duplicated Key did not return true");
   }
 
   function testGet() public {
