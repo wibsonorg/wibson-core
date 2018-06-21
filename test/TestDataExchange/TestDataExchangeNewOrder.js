@@ -1,4 +1,4 @@
-import assertRevert from '../helpers/assertRevert';
+import { assertRevert } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');

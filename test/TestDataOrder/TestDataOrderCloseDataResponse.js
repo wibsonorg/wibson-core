@@ -1,6 +1,5 @@
 import { createDataOrder } from './helpers/dataOrderCreation';
-import assertRevert from '../helpers/assertRevert';
-import signMessage from '../helpers/signMessage';
+import { signMessage, assertRevert } from '../helpers';
 
 const web3Utils = require('web3-utils');
 

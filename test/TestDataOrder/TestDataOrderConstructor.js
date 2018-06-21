@@ -1,5 +1,5 @@
 import { createDataOrder } from './helpers/dataOrderCreation';
-import assertRevert from '../helpers/assertRevert';
+import { assertRevert } from '../helpers';
 
 contract('DataOrder', async (accounts) => {
   const owner = accounts[0];
