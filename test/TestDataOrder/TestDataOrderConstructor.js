@@ -7,7 +7,7 @@ contract('DataOrder', async (accounts) => {
   const owner = accounts[0];
   const buyer = accounts[4];
 
-  describe('Constructor', async function () {
+  describe('Constructor', function () {
     it('creates a DataOrder', async function () {
       const dataOrder = await createDataOrder({ buyer, from: owner });
       assert(dataOrder, "DataOrder was not created properly");

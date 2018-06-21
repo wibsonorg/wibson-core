@@ -18,7 +18,7 @@ contract('DataExchange', async accounts => {
     await token.approve(dataExchange.address, 3000, { from: buyer });
   });
 
-  describe('newOrder', async function () {
+  describe('newOrder', function () {
     it('creates a new DataOrder', async function () {
       const orderAddr = await createDataOrder(dataExchange, {
         price: 0,

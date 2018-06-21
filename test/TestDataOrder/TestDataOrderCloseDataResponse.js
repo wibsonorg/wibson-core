@@ -27,7 +27,7 @@ contract('DataOrder', accounts => {
     signature = signMessage([order.address, seller, notary, dataHash], seller);
   })
 
-  describe('closeDataResponse', async function () {
+  describe('closeDataResponse', function () {
     it('can not close a DataResponse of a closed DataOrder', async function () {
       const closeOrder = await createDataOrder({ buyer, from: owner });
       await closeOrder.close({ from: owner });
