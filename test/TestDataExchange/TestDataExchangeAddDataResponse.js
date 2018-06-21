@@ -1,5 +1,7 @@
 const web3Utils = require("web3-utils");
 import signMessage from "../helpers/signMessage";
+import assertRevert from "../helpers/assertRevert";
+import createDataOrder from "./helpers/createDataOrder";
 
 var DataExchange = artifacts.require("./DataExchange.sol");
 var DataOrder = artifacts.require("./DataOrder.sol");
@@ -39,16 +41,11 @@ contract("DataExchange", accounts => {
       from: buyer
     });
 
-    const tx = await dataExchange.newOrder(
-      "age:20,gender:male",
-      "data request",
-      orderPrice,
+    const tx = await createDataOrder(dataExchange, {
+      price: orderPrice,
       initialBudgetForAudits,
-      "Terms and Conditions",
-      "https://buyer.example.com/data",
-      "public-key",
-      { from: buyer }
-    );
+      from: buyer
+    });
     const orderAddr = tx.logs[0].args.orderAddr;
 
     const responsesPercentage = 30;
@@ -119,7 +116,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -138,7 +135,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -160,7 +157,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -182,7 +179,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -201,7 +198,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -223,7 +220,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -245,7 +242,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -267,7 +264,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -289,7 +286,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -325,7 +322,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -343,7 +340,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -361,7 +358,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -382,7 +379,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
@@ -401,7 +398,7 @@ contract("DataExchange", accounts => {
       );
       assert.fail();
     } catch (error) {
-      assert(error.toString().includes("revert"), error.toString());
+      assertRevert(error);
     }
   });
 
