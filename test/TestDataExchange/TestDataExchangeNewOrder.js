@@ -1,4 +1,4 @@
-import { assertRevert } from '../helpers';
+import { assertRevert, assertEvent } from '../helpers';
 import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -19,12 +19,12 @@ contract('DataExchange', async (accounts) => {
 
   describe('newOrder', () => {
     it('creates a new DataOrder', async () => {
-      const orderAddr = await newOrder(dataExchange, {
+      const newOrderTransaction = await newOrder(dataExchange, {
         price: 0,
         initialBudgetForAudits: 0,
         from: buyer,
       });
-      assert(orderAddr, 'DataOrder was not created properly');
+      assertEvent(newOrderTransaction, 'NewOrder', 'DataOrder was not created properly');
     });
 
     it('can not create a DataOrder with an initial budget for audits lower than the minimun', async () => {
