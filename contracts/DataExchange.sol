@@ -320,10 +320,10 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
-    address notary = order.getNotaryForSeller(seller);
-
-    require(msg.sender == buyer || msg.sender == notary);
     require(order.hasSellerBeenAccepted(seller));
+
+    address notary = order.getNotaryForSeller(seller);
+    require(msg.sender == buyer || msg.sender == notary);
     require(
       CryptoUtils.isNotaryVeredictValid(
         orderAddr,
