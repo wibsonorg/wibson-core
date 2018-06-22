@@ -1,13 +1,11 @@
-const web3Utils = require("web3-utils");
-import signMessage from "../helpers/signMessage";
-import assertRevert from "../helpers/assertRevert";
-import createDataOrder from "./helpers/createDataOrder";
+import signMessage from '../helpers/signMessage';
+import assertRevert from '../helpers/assertRevert';
+import { createDataOrder } from './helpers';
 
-var DataExchange = artifacts.require("./DataExchange.sol");
-var DataOrder = artifacts.require("./DataOrder.sol");
-var Wibcoin = artifacts.require("./Wibcoin.sol");
+const DataExchange = artifacts.require('./DataExchange.sol');
+const Wibcoin = artifacts.require('./Wibcoin.sol');
 
-contract("DataExchange", accounts => {
+contract('DataExchange', (accounts) => {
   let wibcoin;
   let dataExchange;
 
@@ -21,7 +19,7 @@ contract("DataExchange", accounts => {
   const sellerC = accounts[7];
   const notBuyer = accounts[8];
 
-  const dataHash = "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d";
+  const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
 
   let orderAddress;
   let orderAddressWithoutBudget;
@@ -32,32 +30,26 @@ contract("DataExchange", accounts => {
   const orderPrice = 20;
   const notarizationFee = 1;
 
-  const setUpDataOrder = async initialBudgetForAudits => {
-    let approval =
-      initialBudgetForAudits > 0 ? initialBudgetForAudits : notarizationFee;
+  const setUpDataOrder = async (initialBudgetForAudits) => {
+    let approval = initialBudgetForAudits > 0 ? initialBudgetForAudits : notarizationFee;
     approval += orderPrice;
 
     await wibcoin.increaseApproval(dataExchange.address, approval, {
-      from: buyer
+      from: buyer,
     });
 
     const tx = await createDataOrder(dataExchange, {
       price: orderPrice,
       initialBudgetForAudits,
-      from: buyer
+      from: buyer,
     });
-    const orderAddr = tx.logs[0].args.orderAddr;
+    const { orderAddr } = tx.logs[0].args;
 
     const responsesPercentage = 30;
-    const notarizationTermsOfService = "Notary Terms and Conditions";
+    const notarizationTermsOfService = 'Notary Terms and Conditions';
     const sig = signMessage(
-      [
-        orderAddr,
-        responsesPercentage,
-        notarizationFee,
-        notarizationTermsOfService
-      ],
-      notary
+      [orderAddr, responsesPercentage, notarizationFee, notarizationTermsOfService],
+      notary,
     );
 
     await dataExchange.addNotaryToOrder(
@@ -67,27 +59,27 @@ contract("DataExchange", accounts => {
       notarizationFee,
       notarizationTermsOfService,
       sig,
-      { from: buyer }
+      { from: buyer },
     );
     return orderAddr;
   };
 
-  beforeEach("setup DataExchange for each test", async function() {
+  beforeEach('setup DataExchange for each test', async () => {
     wibcoin = await Wibcoin.deployed();
     dataExchange = await DataExchange.new(Wibcoin.address, owner);
     await dataExchange.registerNotary(
       notary,
-      "Notary A",
-      "https://notary-a.com/data",
-      "public-key-a",
-      { from: owner }
+      'Notary A',
+      'https://notary-a.com/data',
+      'public-key-a',
+      { from: owner },
     );
     await dataExchange.registerNotary(
       inexistentNotary,
-      "Notary B",
-      "https://notary-b.com/data",
-      "public-key-b",
-      { from: owner }
+      'Notary B',
+      'https://notary-b.com/data',
+      'public-key-b',
+      { from: owner },
     );
 
     await wibcoin.approve(dataExchange.address, 0, { from: buyer });
@@ -97,12 +89,12 @@ contract("DataExchange", accounts => {
     signature = signMessage([orderAddress, sellerA, notary, dataHash], sellerA);
     signatureWithoutBudget = signMessage(
       [orderAddressWithoutBudget, sellerA, notary, dataHash],
-      sellerA
+      sellerA,
     );
   });
 
-  describe("addDataResponse", function() {
-    it("can not add a data response if order is closed", async function() {
+  describe('addDataResponse', () => {
+    it('can not add a data response if order is closed', async () => {
       await dataExchange.closeOrder(orderAddress, { from: buyer });
       try {
         await dataExchange.addDataResponseToOrder(
@@ -112,8 +104,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -121,31 +113,21 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if seller is 0x0", async function() {
+    it('can not add a data response if seller is 0x0', async () => {
       try {
         const sig = signMessage([orderAddress, 0x0, notary, dataHash], sellerA);
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          0x0,
-          notary,
-          dataHash,
-          sig,
-          {
-            from: buyer
-          }
-        );
+        await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, sig, {
+          from: buyer,
+        });
         assert.fail();
       } catch (error) {
         assertRevert(error);
       }
     });
 
-    it("can not add a data response if seller has same address as Data Order", async function() {
+    it('can not add a data response if seller has same address as Data Order', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, orderAddress, notary, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, orderAddress, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           orderAddress,
@@ -153,8 +135,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -162,12 +144,9 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if seller has same address as Data Exchange", async function() {
+    it('can not add a data response if seller has same address as Data Exchange', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, dataExchange.address, notary, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, dataExchange.address, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           dataExchange.address,
@@ -175,8 +154,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -184,34 +163,21 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if notary is 0x0", async function() {
+    it('can not add a data response if notary is 0x0', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, sellerA, 0x0, dataHash],
-          sellerA
-        );
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          0x0,
-          dataHash,
-          sig,
-          {
-            from: buyer
-          }
-        );
+        const sig = signMessage([orderAddress, sellerA, 0x0, dataHash], sellerA);
+        await dataExchange.addDataResponseToOrder(orderAddress, sellerA, 0x0, dataHash, sig, {
+          from: buyer,
+        });
         assert.fail();
       } catch (error) {
         assertRevert(error);
       }
     });
 
-    it("can not add a data response if notary has same address as Data Order", async function() {
+    it('can not add a data response if notary has same address as Data Order', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, sellerA, orderAddress, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, sellerA, orderAddress, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -219,8 +185,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -228,12 +194,9 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if notary has same address as Data Exchange", async function() {
+    it('can not add a data response if notary has same address as Data Exchange', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, sellerA, dataExchange.address, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, sellerA, dataExchange.address, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -241,8 +204,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -250,12 +213,9 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if notary was not added to Data Order", async function() {
+    it('can not add a data response if notary was not added to Data Order', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, sellerA, inexistentNotary, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, sellerA, inexistentNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -263,8 +223,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -272,12 +232,9 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if notary was not registered in Data Exchange", async function() {
+    it('can not add a data response if notary was not registered in Data Exchange', async () => {
       try {
-        const sig = signMessage(
-          [orderAddress, sellerA, unregisteredNotary, dataHash],
-          sellerA
-        );
+        const sig = signMessage([orderAddress, sellerA, unregisteredNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -285,8 +242,8 @@ contract("DataExchange", accounts => {
           dataHash,
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -294,10 +251,10 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response twice", async function() {
+    it('can not add a data response twice', async () => {
       try {
         await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
-          from: buyer
+          from: buyer,
         });
 
         await dataExchange.addDataResponseToOrder(
@@ -307,8 +264,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
       } catch (error) {
         assert.fail();
@@ -321,8 +278,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -330,17 +287,17 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response with invalid signature", async function() {
+    it('can not add a data response with invalid signature', async () => {
       try {
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           notary,
           dataHash,
-          "0x4931ac3b001414eeff2c",
+          '0x4931ac3b001414eeff2c',
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -348,7 +305,7 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if caller is not the buyer", async function() {
+    it('can not add a data response if caller is not the buyer', async () => {
       try {
         await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -357,8 +314,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: notBuyer
-          }
+            from: notBuyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -366,10 +323,10 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if does not pay for order price", async function() {
+    it('can not add a data response if does not pay for order price', async () => {
       try {
         await wibcoin.approve(dataExchange.address, notarizationFee, {
-          from: buyer
+          from: buyer,
         });
         await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -378,8 +335,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -387,10 +344,10 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if does not pay for notarization fee", async function() {
+    it('can not add a data response if does not pay for notarization fee', async () => {
       try {
         await wibcoin.approve(dataExchange.address, orderPrice, {
-          from: buyer
+          from: buyer,
         });
         await dataExchange.addDataResponseToOrder(
           orderAddressWithoutBudget,
@@ -399,8 +356,8 @@ contract("DataExchange", accounts => {
           dataHash,
           signatureWithoutBudget,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.fail();
       } catch (error) {
@@ -408,21 +365,21 @@ contract("DataExchange", accounts => {
       }
     });
 
-    it("can not add a data response if does not pay for notarization fee when initial budget does not cover it", async function() {
-      // initial budget set covers only two notarization fees, it must fail on the third
+    it('can not add a data response if does not pay for notarization fee when initial budget does not cover it', async () => {
       const sellers = [sellerA, sellerB, sellerC];
       let txOk = 0;
 
       try {
-        for (let i = 0; i < sellers.length; i++) {
+        // initial budget set in `beforeEach` covers only two notarization fees,
+        // it must fail on the third
+        for (let i = 0; i < sellers.length; i += 1) {
+          /* eslint-disable no-await-in-loop */
+          // https://eslint.org/docs/rules/no-await-in-loop#when-not-to-use-it
           await wibcoin.approve(dataExchange.address, orderPrice, {
-            from: buyer
+            from: buyer,
           });
           const seller = sellers[i];
-          const sig = signMessage(
-            [orderAddress, seller, notary, dataHash],
-            seller
-          );
+          const sig = signMessage([orderAddress, seller, notary, dataHash], seller);
           const tx = await dataExchange.addDataResponseToOrder(
             orderAddress,
             seller,
@@ -430,21 +387,22 @@ contract("DataExchange", accounts => {
             dataHash,
             sig,
             {
-              from: buyer
-            }
+              from: buyer,
+            },
           );
-          const wasEventEmitted = tx.logs[0].event === "DataAdded";
+          const wasEventEmitted = tx.logs[0].event === 'DataAdded';
           txOk += wasEventEmitted ? 1 : 0;
+          /* eslint-enable no-await-in-loop */
         }
         assert.fail();
       } catch (error) {
-        const result =
-          txOk === sellers.length - 1 && error.toString().includes("revert");
+        // if threw revert on the third seller (budget reached zero), then it works as expected
+        const result = txOk === sellers.length - 1 && error.toString().includes('revert');
         assert(result, error.toString());
       }
     });
 
-    it("should not pay the notarization fee if there still is initial budget available", async function() {
+    it('should not pay the notarization fee if there still is initial budget available', async () => {
       try {
         const initialBalance = await wibcoin.balanceOf(buyer);
         await dataExchange.addDataResponseToOrder(
@@ -454,21 +412,21 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         const finalBalance = await wibcoin.balanceOf(buyer);
         assert.equal(
           Number(initialBalance),
           Number(finalBalance) + orderPrice,
-          "Buyer should not spend more than the order price"
+          'Buyer should not spend more than the order price',
         );
       } catch (error) {
         assert.fail();
       }
     });
 
-    it("should add the data response if the notary is in the Data Order and the Data Exchange", async function() {
+    it('should add the data response if the notary is in the Data Order and the Data Exchange', async () => {
       try {
         const tx = await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -477,36 +435,36 @@ contract("DataExchange", accounts => {
           dataHash,
           signature,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.equal(
           tx.logs[0].event,
-          "DataAdded",
-          "Seller should be able to pick a notary that is in the Data Order and Data Exchange"
+          'DataAdded',
+          'Seller should be able to pick a notary that is in the Data Order and Data Exchange',
         );
       } catch (error) {
         assert.fail();
       }
     });
 
-    it("should add a data response even if dataHash is empty", async function() {
+    it('should add a data response even if dataHash is empty', async () => {
       try {
-        const sig = signMessage([orderAddress, sellerA, notary, ""], sellerA);
+        const sig = signMessage([orderAddress, sellerA, notary, ''], sellerA);
         const tx = await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           notary,
-          "",
+          '',
           sig,
           {
-            from: buyer
-          }
+            from: buyer,
+          },
         );
         assert.equal(
           tx.logs[0].event,
-          "DataAdded",
-          "Data Response should be added even with an empty data hash"
+          'DataAdded',
+          'Data Response should be added even with an empty data hash',
         );
       } catch (error) {
         assert.fail();

@@ -4,5 +4,5 @@
  * @param {String} message to display on error.
  * @throws {AssertionError} when the error is not originated from a revert.
  */
-export default (transaction, eventName, message = "") =>
+export default (transaction, eventName, message = '') =>
   assert.equal(transaction.logs[0].event, eventName, message);

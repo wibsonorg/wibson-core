@@ -8,6 +8,8 @@
     "lint:sol:fix": "solium -d . --fix",
     "lint:js": "eslint .",
     "lint:js:fix": "eslint . --fix",
+    "lint:all": "npm run lint:js && npm run lint:sol",
+    "lint:all:fix": "npm run lint:js:fix && npm run lint:sol:fix",
     "truffle": "truffle",
     "ganache": "ganache-cli",
     "test": "scripts/test.sh",
