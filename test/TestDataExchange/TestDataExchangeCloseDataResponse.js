@@ -184,14 +184,10 @@ contract('DataExchange', async (accounts) => {
         orderAddress, seller, notary, from: buyer,
       });
       const signature = signMessage([orderAddress, seller, true, true], notary);
-      await dataExchange.closeDataResponse(
-        orderAddress, seller, true, true, signature, { from: buyer },
-      );
+      await dataExchange.closeDataResponse(orderAddress, seller, true, true, signature, { from: buyer });
 
       try {
-        await dataExchange.closeDataResponse(
-          orderAddress, seller, true, true, signature, { from: buyer },
-        );
+        await dataExchange.closeDataResponse(orderAddress, seller, true, true, signature, { from: buyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);

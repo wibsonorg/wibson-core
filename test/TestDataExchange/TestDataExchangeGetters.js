@@ -1,5 +1,5 @@
 import { assertRevert, signMessage } from '../helpers';
-import { newOrder } from './helpers';
+import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -9,6 +9,7 @@ contract('DataExchange', async (accounts) => {
   const owner = accounts[2];
   const other = accounts[3];
   const buyer = accounts[4];
+  const seller = accounts[5];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
 
@@ -55,7 +56,37 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('', async () => {
+    it('should return no orders if passed an inexistent seller address', async () => {
+      const res = await dataExchange.getOrdersForSeller(
+        other,
+        { from: owner },
+      );
+
+      assert.equal(res.length, 0, 'did not return empty list of addresses');
+    });
+
+    it('should return orders for seller', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress, seller, notary, from: buyer,
+      });
+
+      const res = await dataExchange.getOrdersForSeller(
+        seller,
+        { from: owner },
+      );
+
+      assert.equal(res.length, 1, 'did not return list of addresses');
+      assert.equal(res[0], orderAddress, 'did not return order for seller');
     });
   });
 
