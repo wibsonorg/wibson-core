@@ -1,4 +1,4 @@
-import { assertRevert, signMessage } from '../helpers';
+import { assertRevert } from '../helpers';
 import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -148,37 +148,13 @@ contract('DataExchange', async (accounts) => {
 
       const tx1 = await newOrder(dataExchange, { from: buyer });
       const order1 = tx1.logs[0].args.orderAddr;
-      await dataExchange.addNotaryToOrder(
-        order1,
-        notary,
-        50,
-        10,
-        'TOS',
-        signMessage([
-          order1,
-          50,
-          10,
-          'TOS',
-        ], notary),
-        { from: buyer },
-      );
+      let orderAddress = order1;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       const tx2 = await newOrder(dataExchange, { from: buyer });
       const order2 = tx2.logs[0].args.orderAddr;
-      await dataExchange.addNotaryToOrder(
-        order2,
-        notary,
-        50,
-        10,
-        'TOS',
-        signMessage([
-          order2,
-          50,
-          10,
-          'TOS',
-        ], notary),
-        { from: buyer },
-      );
+      orderAddress = order2;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       const res = await dataExchange.getOpenOrders();
       assert.equal(res.length, 2, 'open orders is not correct length');
