@@ -409,7 +409,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForBuyer(
     address buyer
-  ) public view returns (address[]) {
+  ) public view validAddress(buyer) returns (address[]) {
     return ordersByBuyer[buyer];
   }
 

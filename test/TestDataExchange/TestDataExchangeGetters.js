@@ -30,7 +30,42 @@ contract('DataExchange', async (accounts) => {
   });
 
   describe('getOrdersForBuyer', async () => {
-    it('', async () => {
+    it('should fail if passed an invalid address', async () => {
+      try {
+        await dataExchange.getOrdersForBuyer(
+          '0x0',
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('should return no orders if passed an inexistent buyer address', async () => {
+      const res = await dataExchange.getOrdersForBuyer(
+        other,
+        { from: owner },
+      );
+
+      assert.equal(res.length, 0, 'did not return empty list of addresses');
+    });
+
+    it('should return orders for buyer', async () => {
+      const tx1 = await newOrder(dataExchange, { from: buyer });
+      const order1 = tx1.logs[0].args.orderAddr;
+
+      const tx2 = await newOrder(dataExchange, { from: buyer });
+      const order2 = tx2.logs[0].args.orderAddr;
+
+      const res = await dataExchange.getOrdersForBuyer(
+        buyer,
+        { from: owner },
+      );
+
+      assert.equal(res.length, 2, 'did not return the list of addresses');
+      assert.equal(res[0], order1, 'did not return order for buyer');
+      assert.equal(res[1], order2, 'did not return order for buyer');
     });
   });
 

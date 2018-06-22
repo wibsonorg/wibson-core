@@ -7,12 +7,10 @@ const Wibcoin = artifacts.require('./Wibcoin.sol');
 contract('DataExchange', (accounts) => {
   const OWNER = accounts[6];
   const NOTARY_A = accounts[1];
-  const NOTARY_B = accounts[2];
   const BUYER = accounts[4];
   const SELLER = accounts[5];
 
   const NOTARY_A_PK = 'abcd123xyz9-fo00o42bar-1fed019n1';
-  const NOTARY_B_PK = 'abcd123xyz9-fo00o42bar-1fed019n2';
 
   it('should do complete flow', () => {
     const meta = {};
