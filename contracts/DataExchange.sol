@@ -387,7 +387,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForNotary(
     address notary
-  ) public view returns (address[]) {
+  ) public view validAddress(notary) returns (address[]) {
     return ordersByNotary[notary];
   }
 
@@ -398,7 +398,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForSeller(
     address seller
-  ) public view returns (address[]) {
+  ) public view validAddress(seller) returns (address[]) {
     return ordersBySeller[seller];
   }
 

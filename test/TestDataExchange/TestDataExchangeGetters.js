@@ -20,11 +20,41 @@ contract('DataExchange', async (accounts) => {
   });
 
   describe('getOrdersForNotary', async () => {
-    it('', async () => {
+    it('should fail if passed an invalid address', async () => {
+      try {
+        await dataExchange.getOrdersForNotary(
+          '0x0',
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('returns no orders if there are none for the notary', async () => {
+      const res = await dataExchange.getOrdersForNotary(notary);
+
+      assert.equal(res.length, 0, 'orders for notary is not empty');
+    });
+
+    it('returns orders for notary', async () => {
     });
   });
 
   describe('getOrdersForSeller', async () => {
+    it('should fail if passed an invalid address', async () => {
+      try {
+        await dataExchange.getOrdersForSeller(
+          '0x0',
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
     it('', async () => {
     });
   });
