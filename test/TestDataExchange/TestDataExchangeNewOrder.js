@@ -1,27 +1,8 @@
 import { assertRevert } from '../helpers';
+import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
-
-const newOrder = async (dataExchange, {
-  filters = 'age:20,gender:male',
-  dataRequest = 'data request',
-  price = 20,
-  initialBudgetForAudits = 10,
-  termsAndConditions = 'DataOrder T&C',
-  buyerUrl = 'https://buyer.example.com/data',
-  buyerPublicKey = 'public-key',
-  from,
-}) => dataExchange.newOrder(
-  filters,
-  dataRequest,
-  price,
-  initialBudgetForAudits,
-  termsAndConditions,
-  buyerUrl,
-  buyerPublicKey,
-  { from },
-);
 
 contract('DataExchange', async (accounts) => {
   const owner = accounts[0];
@@ -36,7 +17,7 @@ contract('DataExchange', async (accounts) => {
     await token.approve(dataExchange.address, 3000, { from: buyer });
   });
 
-  describe('newOrder', async () => {
+  describe('newOrder', () => {
     it('creates a new DataOrder', async () => {
       const orderAddr = await newOrder(dataExchange, {
         price: 0,

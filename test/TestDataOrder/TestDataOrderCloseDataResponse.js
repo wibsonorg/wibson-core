@@ -16,17 +16,11 @@ contract('DataOrder', (accounts) => {
 
   beforeEach('setup DataOrder for each test', async () => {
     order = await createDataOrder({ buyer, from: owner });
-    await order.addNotary(
-      notary,
-      10,
-      1,
-      'terms',
-      { from: owner },
-    );
+    await order.addNotary(notary, 10, 1, 'terms', { from: owner });
     signature = signMessage([order.address, seller, notary, dataHash], seller);
   });
 
-  describe('closeDataResponse', async () => {
+  describe('closeDataResponse', () => {
     it('can not close a DataResponse of a closed DataOrder', async () => {
       const closeOrder = await createDataOrder({ buyer, from: owner });
       await closeOrder.close({ from: owner });
@@ -67,13 +61,7 @@ contract('DataOrder', (accounts) => {
     });
 
     it('can not close an already-closed DataResponse', async () => {
-      await order.addDataResponse(
-        seller,
-        notary,
-        dataHash,
-        signature,
-        { from: owner },
-      );
+      await order.addDataResponse(seller, notary, dataHash, signature, { from: owner });
       await order.closeDataResponse(seller, true, { from: owner });
 
       try {
@@ -94,35 +82,31 @@ contract('DataOrder', (accounts) => {
     });
 
     it('closes an accepted DataResponse', async () => {
-      await order.addDataResponse(
-        seller,
-        notary,
-        dataHash,
-        signature,
-        { from: owner },
-      );
+      await order.addDataResponse(seller, notary, dataHash, signature, { from: owner });
 
       const dataResponseClosed = await order.closeDataResponse(seller, true, { from: owner });
       assert(dataResponseClosed, 'DataResponse was not closed correctly');
 
       const sellerInfo = await order.getSellerInfo(seller);
-      assert.equal(web3Utils.hexToUtf8(sellerInfo[6]), 'TransactionCompleted', 'SellerInfo status does not match');
+      assert.equal(
+        web3Utils.hexToUtf8(sellerInfo[6]),
+        'TransactionCompleted',
+        'SellerInfo status does not match',
+      );
     });
 
     it('closes a DataResponse that was not accepted', async () => {
-      await order.addDataResponse(
-        seller,
-        notary,
-        dataHash,
-        signature,
-        { from: owner },
-      );
+      await order.addDataResponse(seller, notary, dataHash, signature, { from: owner });
 
       const dataResponseClosed = await order.closeDataResponse(seller, false, { from: owner });
       assert(dataResponseClosed, 'DataResponse was not closed correctly');
 
       const sellerInfo = await order.getSellerInfo(seller);
-      assert.equal(web3Utils.hexToUtf8(sellerInfo[6]), 'RefundedToBuyer', 'SellerInfo status does not match');
+      assert.equal(
+        web3Utils.hexToUtf8(sellerInfo[6]),
+        'RefundedToBuyer',
+        'SellerInfo status does not match',
+      );
     });
   });
 });

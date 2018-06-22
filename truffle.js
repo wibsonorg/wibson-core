@@ -1,5 +1,5 @@
-require('babel-register');
-require('babel-polyfill');
+require('babel-register'); // eslint-disable-line import/no-extraneous-dependencies
+require('babel-polyfill'); // eslint-disable-line import/no-extraneous-dependencies
 const DeployUtils = require('./utils/deploymentutils');
 /*
 if (!mnemonic || !owner) {
