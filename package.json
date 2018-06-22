@@ -11,7 +11,8 @@
     "truffle": "truffle",
     "ganache": "ganache-cli",
     "test": "scripts/test.sh",
-    "test:coverage": "SOLIDITY_COVERAGE=true scripts/test.sh"
+    "test:coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
+    "test:inspect": "INSPECT=true scripts/test.sh"
   },
   "devDependencies": {
     "abi-decoder": "^1.1.0",
@@ -26,7 +27,6 @@
     "solium": "^1.1.7",
     "solium-plugin-zeppelin": "^0.0.2",
     "truffle": "^4.1.11",
-    "truffle-core": "^4.1.11",
     "truffle-hdwallet-provider": "^0.0.3",
     "truffle-solidity-loader": "^0.0.8",
     "web3-utils": "^1.0.0-beta.34"
