@@ -171,28 +171,4 @@ contract('DataExchange', (accounts) => {
         assert.ok(res, 'Buyer could not close Data Order');
       });
   });
-
-  it('should add and remove a notary', () => {
-    const meta = {};
-
-    return DataExchange.deployed().then((dx) => {
-      meta.dx = dx;
-      return meta.dx.registerNotary(NOTARY_B, 'Notary B', 'https://notary-b.com/data', NOTARY_B_PK, { from: OWNER });
-    })
-      .then((res) => {
-        assert.ok(res, "couldn't register Notary");
-      })
-      .then(() => meta.dx.getNotaryInfo(NOTARY_B))
-      .then((res) => {
-        assert.deepEqual(res, [NOTARY_B, 'Notary B', 'https://notary-b.com/data', NOTARY_B_PK], 'failed to get Notary info');
-      })
-      .then(() => meta.dx.getAllowedNotaries())
-      .then((allowedNotaries) => {
-        assert.ok((allowedNotaries.length >= 1), 'failed to get allowed notaries');
-      })
-      .then(() => meta.dx.unregisterNotary(NOTARY_B, { from: OWNER }))
-      .then((res) => {
-        assert.ok(res, "couldn't unregister Notary");
-      });
-  });
 });

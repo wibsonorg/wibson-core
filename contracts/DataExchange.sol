@@ -437,7 +437,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (address, string, string, string) {
+  ) public view validAddress(notary) returns (address, string, string, string) {
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
   }
