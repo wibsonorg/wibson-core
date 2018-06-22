@@ -268,7 +268,15 @@ contract DataExchange is TokenDestructible, Pausable {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
-    allDistinct([orderAddr, buyer, seller, notary, address(this)]);
+    allDistinct(
+      [
+        orderAddr,
+        buyer,
+        seller,
+        notary,
+        address(this)
+      ]
+    );
     require(order.hasNotaryBeenAdded(notary));
 
     bool okay = order.addDataResponse(
@@ -449,8 +457,8 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param addresses array of five addresses to explore.
    */
   function allDistinct(address[5] addresses) private view {
-    for (uint i = 0; i < addresses.length; i++) {
-      for (uint j = i + 1; j < addresses.length; j++) {
+    for (uint i = 0; i < addresses.length; i = i.add(1)) {
+      for (uint j = i.add(1); j < addresses.length; j = j.add(1)) {
         require(addresses[i] != addresses[j]);
       }
     }
