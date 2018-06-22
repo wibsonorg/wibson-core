@@ -330,10 +330,10 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
-    address notary = order.getNotaryForSeller(seller);
-
-    require(msg.sender == buyer || msg.sender == notary);
     require(order.hasSellerBeenAccepted(seller));
+
+    address notary = order.getNotaryForSeller(seller);
+    require(msg.sender == buyer || msg.sender == notary);
     require(
       CryptoUtils.isNotaryVeredictValid(
         orderAddr,
@@ -397,7 +397,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForNotary(
     address notary
-  ) public view returns (address[]) {
+  ) public view validAddress(notary) returns (address[]) {
     return ordersByNotary[notary];
   }
 
@@ -408,7 +408,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForSeller(
     address seller
-  ) public view returns (address[]) {
+  ) public view validAddress(seller) returns (address[]) {
     return ordersBySeller[seller];
   }
 
@@ -419,7 +419,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForBuyer(
     address buyer
-  ) public view returns (address[]) {
+  ) public view validAddress(buyer) returns (address[]) {
     return ordersByBuyer[buyer];
   }
 
@@ -447,7 +447,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (address, string, string, string) {
+  ) public view validAddress(notary) returns (address, string, string, string) {
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
   }
@@ -456,7 +456,7 @@ contract DataExchange is TokenDestructible, Pausable {
    * @dev Requires that five addresses are distinct between themselves.
    * @param addresses array of five addresses to explore.
    */
-  function allDistinct(address[5] addresses) private view {
+  function allDistinct(address[5] addresses) private pure {
     for (uint i = 0; i < addresses.length; i = i.add(1)) {
       for (uint j = i.add(1); j < addresses.length; j = j.add(1)) {
         require(addresses[i] != addresses[j]);

@@ -1,5 +1,5 @@
-import assertRevert from '../helpers/assertRevert';
-import { createDataOrder } from './helpers';
+import { assertRevert } from '../helpers';
+import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -19,7 +19,7 @@ contract('DataExchange', async (accounts) => {
 
   describe('newOrder', () => {
     it('creates a new DataOrder', async () => {
-      const orderAddr = await createDataOrder(dataExchange, {
+      const orderAddr = await newOrder(dataExchange, {
         price: 0,
         initialBudgetForAudits: 0,
         from: buyer,
@@ -30,7 +30,7 @@ contract('DataExchange', async (accounts) => {
     it('can not create a DataOrder with an initial budget for audits lower than the minimun', async () => {
       try {
         await dataExchange.setMinimumInitialBudgetForAudits(10);
-        await createDataOrder(dataExchange, {
+        await newOrder(dataExchange, {
           price: 0,
           initialBudgetForAudits: 0,
           from: buyer,
@@ -43,7 +43,7 @@ contract('DataExchange', async (accounts) => {
 
     it('can not create a DataOrder when there is now allowance for the sender', async () => {
       try {
-        await createDataOrder(dataExchange, { from: anotherBuyer });
+        await newOrder(dataExchange, { from: anotherBuyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -52,7 +52,7 @@ contract('DataExchange', async (accounts) => {
 
     it('can not create a DataOrder with Zero Address as Buyer', async () => {
       try {
-        await createDataOrder(dataExchange, { from: '0x0' });
+        await newOrder(dataExchange, { from: '0x0' });
         assert.fail();
       } catch (error) {
         // Client-side generated error: Transaction never reaches the contract.
@@ -62,7 +62,7 @@ contract('DataExchange', async (accounts) => {
 
     it('can not create a DataOrder with an empty Buyer URL', async () => {
       try {
-        await createDataOrder(dataExchange, { buyerUrl: '', from: buyer });
+        await newOrder(dataExchange, { buyerUrl: '', from: buyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -71,7 +71,7 @@ contract('DataExchange', async (accounts) => {
 
     it('can not create a DataOrder with an empty Buyer Public Key', async () => {
       try {
-        await createDataOrder(dataExchange, { buyerPublicKey: '', from: buyer });
+        await newOrder(dataExchange, { buyerPublicKey: '', from: buyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);

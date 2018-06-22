@@ -1,6 +1,5 @@
-import signMessage from '../helpers/signMessage';
-import assertRevert from '../helpers/assertRevert';
-import { createDataOrder } from './helpers';
+import { assertRevert, signMessage } from '../helpers';
+import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -38,7 +37,7 @@ contract('DataExchange', (accounts) => {
       from: buyer,
     });
 
-    const tx = await createDataOrder(dataExchange, {
+    const tx = await newOrder(dataExchange, {
       price: orderPrice,
       initialBudgetForAudits,
       from: buyer,

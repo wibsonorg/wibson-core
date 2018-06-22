@@ -7,12 +7,10 @@ const Wibcoin = artifacts.require('./Wibcoin.sol');
 contract('DataExchange', (accounts) => {
   const OWNER = accounts[6];
   const NOTARY_A = accounts[1];
-  const NOTARY_B = accounts[2];
   const BUYER = accounts[4];
   const SELLER = accounts[5];
 
   const NOTARY_A_PK = 'abcd123xyz9-fo00o42bar-1fed019n1';
-  const NOTARY_B_PK = 'abcd123xyz9-fo00o42bar-1fed019n2';
 
   it('should do complete flow', () => {
     const meta = {};
@@ -169,30 +167,6 @@ contract('DataExchange', (accounts) => {
       .then((res) => {
         assert.equal((res.logs[0].event), 'OrderClosed');
         assert.ok(res, 'Buyer could not close Data Order');
-      });
-  });
-
-  it('should add and remove a notary', () => {
-    const meta = {};
-
-    return DataExchange.deployed().then((dx) => {
-      meta.dx = dx;
-      return meta.dx.registerNotary(NOTARY_B, 'Notary B', 'https://notary-b.com/data', NOTARY_B_PK, { from: OWNER });
-    })
-      .then((res) => {
-        assert.ok(res, "couldn't register Notary");
-      })
-      .then(() => meta.dx.getNotaryInfo(NOTARY_B))
-      .then((res) => {
-        assert.deepEqual(res, [NOTARY_B, 'Notary B', 'https://notary-b.com/data', NOTARY_B_PK], 'failed to get Notary info');
-      })
-      .then(() => meta.dx.getAllowedNotaries())
-      .then((allowedNotaries) => {
-        assert.ok((allowedNotaries.length >= 1), 'failed to get allowed notaries');
-      })
-      .then(() => meta.dx.unregisterNotary(NOTARY_B, { from: OWNER }))
-      .then((res) => {
-        assert.ok(res, "couldn't unregister Notary");
       });
   });
 });

@@ -1,5 +1,5 @@
 import { createHardcodedDataOrder } from './helpers/dataOrderCreation';
-import assertRevert from '../helpers/assertRevert';
+import { assertRevert } from '../helpers';
 
 contract('DataOrder', (accounts) => {
   const notary = accounts[1];
