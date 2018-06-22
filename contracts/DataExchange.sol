@@ -59,6 +59,7 @@ contract DataExchange is TokenDestructible, Pausable {
 
   modifier validAddress(address addr) {
     require(addr != address(0));
+    require(addr != address(this));
     _;
   }
 
@@ -267,6 +268,7 @@ contract DataExchange is TokenDestructible, Pausable {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
+    allDistinct([orderAddr, buyer, seller, notary, address(this)]);
     require(order.hasNotaryBeenAdded(notary));
 
     bool okay = order.addDataResponse(
@@ -440,6 +442,18 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public view returns (address, string, string, string) {
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
+  }
+
+  /**
+   * @dev Requires that five addresses are distinct between themselves.
+   * @param addresses array of five addresses to explore.
+   */
+  function allDistinct(address[5] addresses) private view {
+    for (uint i = 0; i < addresses.length; i++) {
+      for (uint j = i + 1; j < addresses.length; j++) {
+        require(addresses[i] != addresses[j]);
+      }
+    }
   }
 
   /**
