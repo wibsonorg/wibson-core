@@ -64,6 +64,14 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('should fail when passed an order that is not open', async () => {
+      await dataExchange.closeOrder(order, { from: owner });
+
+      try {
+        await dataExchange.closeOrder(order, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
 
     it('should fail when called by other than the order buyer or the contract owner', async () => {
@@ -85,7 +93,7 @@ contract('DataExchange', async (accounts) => {
       assert(res, 'failed when called by buyer');
     });
 
-    it('should fail if buyer did not approve the transfer', async () => {
+    it('should transfer remaining budget to audit', async () => {
     });
 
     it('should emit an `OrderClosed` event', async () => {
