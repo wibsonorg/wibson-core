@@ -1,4 +1,4 @@
-import { assertRevert } from '../helpers';
+import { assertRevert, assertEvent } from '../helpers';
 import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -10,6 +10,7 @@ contract('DataExchange', async (accounts) => {
   const anotherBuyer = accounts[5];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
   let dataExchange;
 
   beforeEach(async () => {
@@ -19,31 +20,29 @@ contract('DataExchange', async (accounts) => {
 
   describe('newOrder', () => {
     it('creates a new DataOrder', async () => {
-      const orderAddr = await newOrder(dataExchange, {
+      const newOrderTransaction = await newOrder(dataExchange, {
         price: 0,
         initialBudgetForAudits: 0,
         from: buyer,
       });
-      assert(orderAddr, 'DataOrder was not created properly');
+      assertEvent(newOrderTransaction, 'NewOrder', 'DataOrder was not created properly');
     });
 
-    it('can not create a DataOrder with an initial budget for audits lower than the minimun', async () => {
+    it('can not create a DataOrder with an initial budget for audits lower than the minimum', async () => {
       try {
-        await dataExchange.setMinimumInitialBudgetForAudits(10);
-        await newOrder(dataExchange, {
-          price: 0,
-          initialBudgetForAudits: 0,
-          from: buyer,
-        });
+        await dataExchange.setMinimumInitialBudgetForAudits(10, { from: owner });
+        await newOrder(dataExchange, { price: 0, initialBudgetForAudits: 0, from: buyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);
       }
     });
 
-    it('can not create a DataOrder when there is now allowance for the sender', async () => {
+    it('can not create a DataOrder when the sender did not aprove enough funds to be spent by the contract', async () => {
       try {
-        await newOrder(dataExchange, { from: anotherBuyer });
+        await token.approve(dataExchange.address, 5, { from: anotherBuyer });
+        await dataExchange.setMinimumInitialBudgetForAudits(10, { from: owner });
+        await newOrder(dataExchange, { initialBudgetForAudits: 20, from: anotherBuyer });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -52,11 +51,11 @@ contract('DataExchange', async (accounts) => {
 
     it('can not create a DataOrder with Zero Address as Buyer', async () => {
       try {
-        await newOrder(dataExchange, { from: '0x0' });
+        await newOrder(dataExchange, { from: zeroAddress });
         assert.fail();
       } catch (error) {
         // Client-side generated error: Transaction never reaches the contract.
-        assert.equal(error.message, 'invalid address');
+        assert.equal(error.message, 'sender account not recognized');
       }
     });
 
