@@ -5,6 +5,8 @@ import { assertEvent, assertRevert, signMessage } from '../helpers';
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
 
+const extractAddress = transaction => transaction.logs[0].args.orderAddr;
+
 contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
   const buyer = accounts[4];
@@ -13,6 +15,12 @@ contract('DataExchange', async (accounts) => {
   const notOwner = accounts[7];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
+
+  const balanceOf = async (address) => {
+    const balance = await token.balanceOf(address);
+    return balance.toNumber();
+  };
 
   let dataExchange;
 
@@ -27,9 +35,14 @@ contract('DataExchange', async (accounts) => {
   describe('closeDataResponse', async () => {
     it('can not close a DataResponse of an invalid DataOrder', async () => {
       try {
-        await dataExchange.closeDataResponse('0x0', seller, true, true, 'a signature', {
-          from: buyer,
-        });
+        await dataExchange.closeDataResponse(
+          zeroAddress,
+          seller,
+          true,
+          true,
+          signMessage([zeroAddress, seller, true, true], notary),
+          { from: buyer },
+        );
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -40,9 +53,14 @@ contract('DataExchange', async (accounts) => {
       const order = await createDataOrder({ buyer, from: buyer });
 
       try {
-        await dataExchange.closeDataResponse(order.address, seller, true, true, 'a signature', {
-          from: buyer,
-        });
+        await dataExchange.closeDataResponse(
+          order.address,
+          seller,
+          true,
+          true,
+          signMessage([order.address, seller, true, true], notary),
+          { from: buyer },
+        );
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -50,8 +68,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close a DataResponse of an invalid Seller', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -63,10 +80,10 @@ contract('DataExchange', async (accounts) => {
       try {
         await dataExchange.closeDataResponse(
           orderAddress,
-          '0x0',
+          zeroAddress,
           true,
           true,
-          signMessage([orderAddress, seller, true, true], notary),
+          signMessage([orderAddress, zeroAddress, true, true], notary),
           { from: buyer },
         );
         assert.fail();
@@ -76,8 +93,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close a DataResponse if there is not DataResponse for the Seller', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       try {
@@ -96,8 +112,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close a DataResponse if sender is other than buyer or notary', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -122,8 +137,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close a DataResponse if the notary signature is invalid', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -148,8 +162,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close a DataResponse of a closed DataOrder', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -175,8 +188,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('can not close an already-closed DataResponse', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -200,8 +212,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('closes a DataResponse', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -227,8 +238,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('closes a DataResponse if sender is the notary', async () => {
-      const tx = await newOrder(dataExchange, { from: buyer });
-      const orderAddress = tx.logs[0].args.orderAddr;
+      const orderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
         orderAddress,
@@ -251,6 +261,88 @@ contract('DataExchange', async (accounts) => {
         'TransactionCompleted',
         'DataResponse was not closed correctly',
       );
+    });
+
+    describe('payPlayers', async () => {
+      const initialBudgetForAudits = 10;
+      const orderPrice = 50;
+      const notarizationFee = 5;
+
+      it('transfers tokens to players', async () => {
+        const orderAddress = extractAddress(await newOrder(dataExchange, {
+          price: orderPrice, initialBudgetForAudits, from: buyer,
+        }));
+        await addNotaryToOrder(dataExchange, {
+          orderAddress, notary, notarizationFee, from: buyer,
+        });
+        await addDataResponseToOrder(dataExchange, {
+          orderAddress, seller, notary, from: buyer,
+        });
+
+        const notaryBalanceBefore = await balanceOf(notary);
+        const sellerBalanceBefore = await balanceOf(seller);
+
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          seller,
+          true,
+          true,
+          signMessage([orderAddress, seller, true, true], notary),
+          { from: buyer },
+        );
+
+        const notaryBalanceAfter = await balanceOf(notary);
+        const sellerBalanceAfter = await balanceOf(seller);
+        const dxBalanceAfter = await balanceOf(dataExchange.address);
+
+        assert.equal(
+          notaryBalanceAfter,
+          notaryBalanceBefore + notarizationFee,
+          'Notary balance was not updated correctly',
+        );
+        assert.equal(
+          sellerBalanceAfter,
+          sellerBalanceBefore + orderPrice,
+          'Seller balance was not updated correctly',
+        );
+        assert.equal(
+          dxBalanceAfter,
+          initialBudgetForAudits - notarizationFee,
+          'DataExchange balance was not updated correctly',
+        );
+      });
+
+      it('does not allow buyer to transfer tokens before closing a DataResponse', async () => {
+        const orderAddress = extractAddress(await newOrder(dataExchange, {
+          price: orderPrice, initialBudgetForAudits, from: buyer,
+        }));
+        await addNotaryToOrder(dataExchange, {
+          orderAddress, notary, notarizationFee, from: buyer,
+        });
+        await addDataResponseToOrder(dataExchange, {
+          orderAddress, seller, notary, from: buyer,
+        });
+
+        const dxBalanceBefore = await balanceOf(dataExchange.address);
+
+        try {
+          // You can not send a transaction as a contract
+          await token.transfer(buyer, dxBalanceBefore, { from: dataExchange.address });
+          await dataExchange.closeDataResponse(
+            orderAddress,
+            seller,
+            true,
+            true,
+            signMessage([orderAddress, seller, true, true], notary),
+            { from: buyer },
+          );
+
+          assert.fail();
+        } catch (error) {
+          // Can not send a transaction as a contract
+          assert.equal(error.message, 'sender account not recognized');
+        }
+      });
     });
   });
 });
