@@ -17,10 +17,10 @@ contract('DataExchange', async (accounts) => {
   const token = Wibcoin.at(tokenAddress);
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
-  const balanceOf = async address => {
+  const balanceOf = async (address) => {
     const balance = await token.balanceOf(address);
     return balance.toNumber();
-  }
+  };
 
   let dataExchange;
 
@@ -270,10 +270,10 @@ contract('DataExchange', async (accounts) => {
 
       it('transfers tokens to players', async () => {
         const orderAddress = extractAddress(await newOrder(dataExchange, {
-          price: orderPrice, initialBudgetForAudits, from: buyer
+          price: orderPrice, initialBudgetForAudits, from: buyer,
         }));
         await addNotaryToOrder(dataExchange, {
-          orderAddress, notary, notarizationFee, from: buyer
+          orderAddress, notary, notarizationFee, from: buyer,
         });
         await addDataResponseToOrder(dataExchange, {
           orderAddress, seller, notary, from: buyer,
@@ -295,17 +295,29 @@ contract('DataExchange', async (accounts) => {
         const sellerBalanceAfter = await balanceOf(seller);
         const dxBalanceAfter = await balanceOf(dataExchange.address);
 
-        assert.equal(notaryBalanceAfter, notaryBalanceBefore + notarizationFee, 'Notary balance was not updated correctly');
-        assert.equal(sellerBalanceAfter, sellerBalanceBefore + orderPrice, 'Seller balance was not updated correctly');
-        assert.equal(dxBalanceAfter, initialBudgetForAudits - notarizationFee, 'DataExchange balance was not updated correctly');
+        assert.equal(
+          notaryBalanceAfter,
+          notaryBalanceBefore + notarizationFee,
+          'Notary balance was not updated correctly',
+        );
+        assert.equal(
+          sellerBalanceAfter,
+          sellerBalanceBefore + orderPrice,
+          'Seller balance was not updated correctly',
+        );
+        assert.equal(
+          dxBalanceAfter,
+          initialBudgetForAudits - notarizationFee,
+          'DataExchange balance was not updated correctly',
+        );
       });
 
       it('does not allow buyer to transfer tokens before closing a DataResponse', async () => {
         const orderAddress = extractAddress(await newOrder(dataExchange, {
-          price: orderPrice, initialBudgetForAudits, from: buyer
+          price: orderPrice, initialBudgetForAudits, from: buyer,
         }));
         await addNotaryToOrder(dataExchange, {
-          orderAddress, notary, notarizationFee, from: buyer
+          orderAddress, notary, notarizationFee, from: buyer,
         });
         await addDataResponseToOrder(dataExchange, {
           orderAddress, seller, notary, from: buyer,
@@ -328,7 +340,7 @@ contract('DataExchange', async (accounts) => {
           assert.fail();
         } catch (error) {
           // Can not send a transaction as a contract
-          assert.equal(error.message, 'sender account not recognized')
+          assert.equal(error.message, 'sender account not recognized');
         }
       });
     });
