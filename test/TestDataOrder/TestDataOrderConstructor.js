@@ -5,7 +5,44 @@ contract('DataOrder', async (accounts) => {
   const owner = accounts[0];
   const buyer = accounts[4];
 
-  describe('Constructor', async () => {
+  const buyerLongUrl = () =>
+    [
+      'https://buyr.co/dat/eylhqusnlzhjmwngsoiikgbymcodwfctlvxmigmd',
+      'rjknuinutuvdjzhdyixexvkfjyqntxxfuyghdncgfxezmqtmitbpzugyqhgw',
+      'khunprrdktlgjtioazctzjosrxsmhgyomdfxwtxvfiorcrwpfokabowxdbxz',
+      'dnxhjglcuxxwrgmspqfktellzgjjsqcovlsrlxwpbsbbjdzgbnurtsjvkofd',
+      'ptrgygjpjmginrfckoszxvwpiqakdxkosumedoidlwenlmovctsnugdpvqcm',
+      'hkiqwzqyzghrdcofooolpfcbpzlbgqognbuwkngmwysvatygczvfggekijxm',
+      'fehzcndcaanlgwlzsghvwropkaynjovmdgvwhjrnfwvbyfjgmzlskqkauzua',
+      'lgmpmtqsfbyijvgoouaizvhgsxodlhtlrjafxdgdenijvvyixgggtggnqkfy',
+      'hgplyvffyozytnertfjhzpnapbpptdbmjcrzqnmbhwbxcunpprfginzczgxd',
+      'zujwlsgsukovhodflcvotxwlyrkzlkryxvxicblapycqldymrqtmlcqvhagu',
+      'lnfatztanyosyotrqzvqmkdubaalveowmeflejkyqwexddacopxryerqrrnr',
+      'vsczeesmgtzvkqkcdwoolzxtwaxqvyzrdstxmopkbswopuyyjedthaxzrpop',
+      'jcfvahlvqfcojsotcoqfcmpssloymskcpcfaxjlbemcflvhlbmrocomlganc',
+      'biojhkldvltdaznmmnijwlgvxvlhwjnykzfmteqecegrlunawqljigenznnd',
+      'xqrzvhgshjnkwcwynufnlqxkseksviskqyxuxtqctzpnylngamuxyzyjmxha',
+      'qcvuhbawqcjflgusughjruquqwkedfdqsdgazwymvwiefwgutbbbgcsdapsu',
+      'achrrhckaysobkzckzctaznqwobkkbizojbqmmwkagdbjvuudkmbcaygrnnc',
+      'ccbkxgajqcmosisrhhfvnfvbjakxdmnvpmfyivzwpfsbkuttfitlfebmotbn',
+      'ngyvcojbnvfktqpkcfgboajyqbyqvlupvpqunedgftmmhdcmxflgbpafkdew',
+      'qdceltukbqtgnlbwtcvkpgpmghqlizxnirxqxtysbvzondjczovoklwwdrle',
+      'ujkllzzbffpstyragoblwreyjlxjbzfekkiudguoixrhkxxomlafuarssbwf',
+      'czqkkcliiusjeuhwwytvytpgqreykpefownjceqxaljlcpmonetwmzscovgt',
+      'jukybiazrpbkaxktfanzmadelgrorqijjsoyabboayinjmfsvzepryfjlich',
+      'uzjecggftuvsyycvvxlrmlhtnupeaisjfltaddnzfsccddcmltzcpovojysx',
+      'tfijyyqktwhgqtzegxgqeinnybbxfcgkxkzdzbzqbdfsgnkcysquetjegyza',
+      'qexhcfbsnkqxgxbtzxcjpiwgqysusumyppykdcyzfjpaxkryorlabdmtohuf',
+      'krvlzuogxmqrujjnrmhspbgrykjvuxlzqilyxhroplppgudodmppagxaxpht',
+      'xxalkwgbivkzcsxydekgabjmfmluvsxlmjdslrmmqdbywsgfnhvdxzyblzzb',
+      'ascqozfulserpbxlsegrhlribvwkubkyzsbggkyonouiczjfhozmtemtuast',
+      'binsuyaxsbwmjvatufgbsekmzacpgveikichjfynthqgldpqttcyckdzsrev',
+      'moqwggxycdejszfrjvgxdvsuhmdyprnmebgvgfclxdgfqaiyacazstogytyz',
+      'rbmgnhdwrlfoselanushcfztpkptfyucdadrdosqhnbvkccbpktnekeaeila',
+      'kheozchodqrdohstaezboojaagxndsxvqwrbygtccwczjczjnvgucrqghkhm',
+    ].join('');
+
+  describe('Constructor', () => {
     it('creates a DataOrder', async () => {
       const dataOrder = await createDataOrder({ buyer, from: owner });
       assert(dataOrder, 'DataOrder was not created properly');
@@ -77,41 +114,3 @@ contract('DataOrder', async (accounts) => {
     });
   });
 });
-
-function buyerLongUrl() {
-  return [
-    'https://buyr.co/dat/eylhqusnlzhjmwngsoiikgbymcodwfctlvxmigmd',
-    'rjknuinutuvdjzhdyixexvkfjyqntxxfuyghdncgfxezmqtmitbpzugyqhgw',
-    'khunprrdktlgjtioazctzjosrxsmhgyomdfxwtxvfiorcrwpfokabowxdbxz',
-    'dnxhjglcuxxwrgmspqfktellzgjjsqcovlsrlxwpbsbbjdzgbnurtsjvkofd',
-    'ptrgygjpjmginrfckoszxvwpiqakdxkosumedoidlwenlmovctsnugdpvqcm',
-    'hkiqwzqyzghrdcofooolpfcbpzlbgqognbuwkngmwysvatygczvfggekijxm',
-    'fehzcndcaanlgwlzsghvwropkaynjovmdgvwhjrnfwvbyfjgmzlskqkauzua',
-    'lgmpmtqsfbyijvgoouaizvhgsxodlhtlrjafxdgdenijvvyixgggtggnqkfy',
-    'hgplyvffyozytnertfjhzpnapbpptdbmjcrzqnmbhwbxcunpprfginzczgxd',
-    'zujwlsgsukovhodflcvotxwlyrkzlkryxvxicblapycqldymrqtmlcqvhagu',
-    'lnfatztanyosyotrqzvqmkdubaalveowmeflejkyqwexddacopxryerqrrnr',
-    'vsczeesmgtzvkqkcdwoolzxtwaxqvyzrdstxmopkbswopuyyjedthaxzrpop',
-    'jcfvahlvqfcojsotcoqfcmpssloymskcpcfaxjlbemcflvhlbmrocomlganc',
-    'biojhkldvltdaznmmnijwlgvxvlhwjnykzfmteqecegrlunawqljigenznnd',
-    'xqrzvhgshjnkwcwynufnlqxkseksviskqyxuxtqctzpnylngamuxyzyjmxha',
-    'qcvuhbawqcjflgusughjruquqwkedfdqsdgazwymvwiefwgutbbbgcsdapsu',
-    'achrrhckaysobkzckzctaznqwobkkbizojbqmmwkagdbjvuudkmbcaygrnnc',
-    'ccbkxgajqcmosisrhhfvnfvbjakxdmnvpmfyivzwpfsbkuttfitlfebmotbn',
-    'ngyvcojbnvfktqpkcfgboajyqbyqvlupvpqunedgftmmhdcmxflgbpafkdew',
-    'qdceltukbqtgnlbwtcvkpgpmghqlizxnirxqxtysbvzondjczovoklwwdrle',
-    'ujkllzzbffpstyragoblwreyjlxjbzfekkiudguoixrhkxxomlafuarssbwf',
-    'czqkkcliiusjeuhwwytvytpgqreykpefownjceqxaljlcpmonetwmzscovgt',
-    'jukybiazrpbkaxktfanzmadelgrorqijjsoyabboayinjmfsvzepryfjlich',
-    'uzjecggftuvsyycvvxlrmlhtnupeaisjfltaddnzfsccddcmltzcpovojysx',
-    'tfijyyqktwhgqtzegxgqeinnybbxfcgkxkzdzbzqbdfsgnkcysquetjegyza',
-    'qexhcfbsnkqxgxbtzxcjpiwgqysusumyppykdcyzfjpaxkryorlabdmtohuf',
-    'krvlzuogxmqrujjnrmhspbgrykjvuxlzqilyxhroplppgudodmppagxaxpht',
-    'xxalkwgbivkzcsxydekgabjmfmluvsxlmjdslrmmqdbywsgfnhvdxzyblzzb',
-    'ascqozfulserpbxlsegrhlribvwkubkyzsbggkyonouiczjfhozmtemtuast',
-    'binsuyaxsbwmjvatufgbsekmzacpgveikichjfynthqgldpqttcyckdzsrev',
-    'moqwggxycdejszfrjvgxdvsuhmdyprnmebgvgfclxdgfqaiyacazstogytyz',
-    'rbmgnhdwrlfoselanushcfztpkptfyucdadrdosqhnbvkccbpktnekeaeila',
-    'kheozchodqrdohstaezboojaagxndsxvqwrbygtccwczjczjnvgucrqghkhm',
-  ].join('');
-}

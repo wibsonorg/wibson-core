@@ -1,5 +1,5 @@
-import { assertRevert, signMessage } from '../helpers';
-import { newOrder } from './helpers';
+import { assertRevert } from '../helpers';
+import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -9,6 +9,7 @@ contract('DataExchange', async (accounts) => {
   const owner = accounts[2];
   const other = accounts[3];
   const buyer = accounts[4];
+  const seller = accounts[5];
   const tokenAddress = Wibcoin.address;
   const token = Wibcoin.at(tokenAddress);
 
@@ -20,12 +21,93 @@ contract('DataExchange', async (accounts) => {
   });
 
   describe('getOrdersForNotary', async () => {
-    it('', async () => {
+    it('should fail if passed an invalid address', async () => {
+      try {
+        await dataExchange.getOrdersForNotary(
+          '0x0',
+          { from: other },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('returns no orders if there are none for the notary', async () => {
+      const res = await dataExchange.getOrdersForNotary(notary);
+
+      assert.equal(res.length, 0, 'orders for notary is not empty');
+    });
+
+    it('returns orders for notary', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress, seller, notary, from: buyer,
+      });
+
+      const res = await dataExchange.getOrdersForNotary(
+        notary,
+        { from: other },
+      );
+
+      assert.equal(res.length, 1, 'did not return list of addresses');
+      assert.equal(res[0], orderAddress, 'did not return order for seller');
     });
   });
 
   describe('getOrdersForSeller', async () => {
-    it('', async () => {
+    it('should fail if passed an invalid address', async () => {
+      try {
+        await dataExchange.getOrdersForSeller(
+          '0x0',
+          { from: other },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('should return no orders if passed an inexistent seller address', async () => {
+      const res = await dataExchange.getOrdersForSeller(
+        other,
+        { from: other },
+      );
+
+      assert.equal(res.length, 0, 'did not return empty list of addresses');
+    });
+
+    it('should return orders for seller', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress, seller, notary, from: buyer,
+      });
+
+      const res = await dataExchange.getOrdersForSeller(
+        seller,
+        { from: other },
+      );
+
+      assert.equal(res.length, 1, 'did not return list of addresses');
+      assert.equal(res[0], orderAddress, 'did not return order for seller');
     });
   });
 
@@ -34,7 +116,7 @@ contract('DataExchange', async (accounts) => {
       try {
         await dataExchange.getOrdersForBuyer(
           '0x0',
-          { from: owner },
+          { from: other },
         );
         assert.fail();
       } catch (error) {
@@ -45,7 +127,7 @@ contract('DataExchange', async (accounts) => {
     it('should return no orders if passed an inexistent buyer address', async () => {
       const res = await dataExchange.getOrdersForBuyer(
         other,
-        { from: owner },
+        { from: other },
       );
 
       assert.equal(res.length, 0, 'did not return empty list of addresses');
@@ -60,7 +142,7 @@ contract('DataExchange', async (accounts) => {
 
       const res = await dataExchange.getOrdersForBuyer(
         buyer,
-        { from: owner },
+        { from: other },
       );
 
       assert.equal(res.length, 2, 'did not return the list of addresses');
@@ -87,37 +169,13 @@ contract('DataExchange', async (accounts) => {
 
       const tx1 = await newOrder(dataExchange, { from: buyer });
       const order1 = tx1.logs[0].args.orderAddr;
-      await dataExchange.addNotaryToOrder(
-        order1,
-        notary,
-        50,
-        10,
-        'TOS',
-        signMessage([
-          order1,
-          50,
-          10,
-          'TOS',
-        ], notary),
-        { from: buyer },
-      );
+      let orderAddress = order1;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       const tx2 = await newOrder(dataExchange, { from: buyer });
       const order2 = tx2.logs[0].args.orderAddr;
-      await dataExchange.addNotaryToOrder(
-        order2,
-        notary,
-        50,
-        10,
-        'TOS',
-        signMessage([
-          order2,
-          50,
-          10,
-          'TOS',
-        ], notary),
-        { from: buyer },
-      );
+      orderAddress = order2;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       const res = await dataExchange.getOpenOrders();
       assert.equal(res.length, 2, 'open orders is not correct length');
@@ -190,7 +248,7 @@ contract('DataExchange', async (accounts) => {
       try {
         await dataExchange.getNotaryInfo(
           other,
-          { from: owner },
+          { from: other },
         );
         assert.fail();
       } catch (error) {
