@@ -56,7 +56,6 @@ contract DataOrder is Ownable {
   string public buyerURL;
   string public publicKey;
   uint32 public createdAt;
-  uint32 public dataAddedAt;
   uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
 
@@ -102,6 +101,7 @@ contract DataOrder is Ownable {
     publicKey = _publicKey;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = uint32(block.timestamp);
+    transactionCompletedAt = 0;
   }
 
   /**
@@ -121,6 +121,7 @@ contract DataOrder is Ownable {
     string notarizationTermsOfService
   ) public onlyOwner validAddress(notary) returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
+    require(transactionCompletedAt == 0);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
 
@@ -200,6 +201,7 @@ contract DataOrder is Ownable {
    */
   function close() public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
+    require(transactionCompletedAt == 0);
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = uint32(block.timestamp);
     return true;
