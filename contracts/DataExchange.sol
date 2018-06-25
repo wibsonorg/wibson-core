@@ -82,7 +82,9 @@ contract DataExchange is TokenDestructible, Pausable {
   constructor(
     address tokenAddress,
     address ownerAddress
-  ) public validAddress(tokenAddress) {
+  ) public validAddress(tokenAddress) validAddress(ownerAddress) {
+    require(tokenAddress != ownerAddress);
+
     token = Wibcoin(tokenAddress);
     minimumInitialBudgetForAudits = 0;
     transferOwnership(ownerAddress);
