@@ -85,11 +85,8 @@ contract('DataExchange', (accounts) => {
 
     orderAddress = await setUpDataOrder(2);
     orderAddressWithoutBudget = await setUpDataOrder(0);
-    signature = signMessage([orderAddress, sellerA, notary, dataHash], sellerA);
-    signatureWithoutBudget = signMessage(
-      [orderAddressWithoutBudget, sellerA, notary, dataHash],
-      sellerA,
-    );
+    signature = signMessage([orderAddress, notary, dataHash], sellerA);
+    signatureWithoutBudget = signMessage([orderAddressWithoutBudget, notary, dataHash], sellerA);
   });
 
   describe('addDataResponse', () => {
@@ -114,8 +111,7 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if seller is 0x0', async () => {
       try {
-        const sig = signMessage([orderAddress, 0x0, notary, dataHash], sellerA);
-        await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, sig, {
+        await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, signature, {
           from: buyer,
         });
         assert.fail();
@@ -126,13 +122,12 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if seller has same address as Data Order', async () => {
       try {
-        const sig = signMessage([orderAddress, orderAddress, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           orderAddress,
           notary,
           dataHash,
-          sig,
+          signature,
           {
             from: buyer,
           },
@@ -145,13 +140,12 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if seller has same address as Data Exchange', async () => {
       try {
-        const sig = signMessage([orderAddress, dataExchange.address, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           dataExchange.address,
           notary,
           dataHash,
-          sig,
+          signature,
           {
             from: buyer,
           },
@@ -163,8 +157,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary is 0x0', async () => {
+      const sig = signMessage([orderAddress, 0x0, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, 0x0, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(orderAddress, sellerA, 0x0, dataHash, sig, {
           from: buyer,
         });
@@ -175,8 +169,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary has same address as Data Order', async () => {
+      const sig = signMessage([orderAddress, orderAddress, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, orderAddress, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -194,8 +188,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary has same address as Data Exchange', async () => {
+      const sig = signMessage([orderAddress, dataExchange.address, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, dataExchange.address, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -213,8 +207,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary was not added to Data Order', async () => {
+      const sig = signMessage([orderAddress, inexistentNotary, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, inexistentNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -232,8 +226,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary was not registered in Data Exchange', async () => {
+      const sig = signMessage([orderAddress, unregisteredNotary, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, unregisteredNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -378,7 +372,7 @@ contract('DataExchange', (accounts) => {
             from: buyer,
           });
           const seller = sellers[i];
-          const sig = signMessage([orderAddress, seller, notary, dataHash], seller);
+          const sig = signMessage([orderAddress, notary, dataHash], seller);
           const tx = await dataExchange.addDataResponseToOrder(
             orderAddress,
             seller,
@@ -448,8 +442,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('should add a data response even if dataHash is empty', async () => {
+      const sig = signMessage([orderAddress, notary], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, notary, ''], sellerA);
         const tx = await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
@@ -466,7 +460,7 @@ contract('DataExchange', (accounts) => {
           'Data Response should be added even with an empty data hash',
         );
       } catch (error) {
-        assert.fail();
+        assert.fail(error);
       }
     });
   });
