@@ -52,10 +52,14 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('does not affect an active DataOrder', async () => {
+    it.only('does not affect an active DataOrder', async () => {
       const budgetForAudits = 5;
       const orderPrice = 20;
       const notarizationFee = 5;
+
+      const notaryBalanceBefore = await balanceOf(notary);
+      const sellerBalanceBefore = await balanceOf(seller);
+      const buyerBalanceBefore = await balanceOf(buyer);
 
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits, { from: owner });
       const { orderAddr: orderAddress } = extractEventArgs(await newOrder(dataExchange, {
@@ -72,9 +76,6 @@ contract('DataExchange', async (accounts) => {
         orderAddress, seller, notary, from: buyer,
       });
 
-      const notaryBalanceBefore = await balanceOf(notary);
-      const sellerBalanceBefore = await balanceOf(seller);
-
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 4, { from: owner });
       await closeDataResponse(dataExchange, {
         orderAddress, seller, notary, from: buyer,
@@ -82,6 +83,7 @@ contract('DataExchange', async (accounts) => {
 
       const notaryBalanceAfter = await balanceOf(notary);
       const sellerBalanceAfter = await balanceOf(seller);
+      const buyerBalanceAfter = await balanceOf(buyer);
       const dxBalanceAfter = await balanceOf(dataExchange.address);
 
       assert.equal(
@@ -98,6 +100,11 @@ contract('DataExchange', async (accounts) => {
         sellerBalanceAfter,
         sellerBalanceBefore + orderPrice,
         'Seller balance was not updated correctly',
+      );
+      assert.equal(
+        buyerBalanceAfter,
+        buyerBalanceBefore - (notarizationFee + orderPrice),
+        'Buyer balance was not updated correctly',
       );
       assert.equal(
         dxBalanceAfter,
