@@ -40,8 +40,7 @@ contract DataOrder is Ownable {
   // --- Seller Information ---
   struct SellerInfo {
     address notary;
-    string hash;
-    bytes signature;
+    string dataHash;
     uint32 createdAt;
     uint32 closedAt;
     DataResponseStatus status;
@@ -142,24 +141,22 @@ contract DataOrder is Ownable {
     * @param notary Notary address that the Seller chooses to use as notary,
     *        this must be one within the allowed notaries and within the
     *        `DataOrder`'s notaries.
-    * @param hash Hash of the data that must be sent, this is a SHA256.
-    * @param signature Signature of DataResponse.
+    * @param dataHash Hash of the data that must be sent, this is a SHA256.
     * @return Whether the DataResponse was set successfully or not.
     */
   function addDataResponse(
     address seller,
     address notary,
-    string hash,
-    bytes signature
+    string dataHash
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
+    require(orderStatus == OrderStatus.NotaryAdded);
+    require(transactionCompletedAt == 0);
     require(!hasSellerBeenAccepted(seller));
     require(hasNotaryBeenAdded(notary));
-    require(orderStatus == OrderStatus.NotaryAdded);
 
     sellerInfo[seller] = SellerInfo(
       notary,
-      hash,
-      signature,
+      dataHash,
       uint32(block.timestamp),
       0,
       DataResponseStatus.DataResponseAdded
@@ -183,6 +180,7 @@ contract DataOrder is Ownable {
     bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
+    require(transactionCompletedAt == 0);
     require(hasSellerBeenAccepted(seller));
     require(sellerInfo[seller].status == DataResponseStatus.DataResponseAdded);
 
@@ -266,7 +264,6 @@ contract DataOrder is Ownable {
     address,
     address,
     string,
-    bytes,
     uint32,
     uint32,
     bytes32
@@ -276,8 +273,7 @@ contract DataOrder is Ownable {
     return (
       seller,
       info.notary,
-      info.hash,
-      info.signature,
+      info.dataHash,
       uint32(info.createdAt),
       uint32(info.closedAt),
       getDataResponseStatusAsString(info.status)

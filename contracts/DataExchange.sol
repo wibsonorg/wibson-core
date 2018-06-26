@@ -254,7 +254,7 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param notary Notary address that the Seller chose to use as notarizer,
    *        this must be one within the allowed notaries and within the
    *        `DataOrder`'s notaries.
-   * @param hash Hash of the data that must be sent, this is a SHA256.
+   * @param dataHash Hash of the data that must be sent, this is a SHA256.
    * @param signature Signature of DataResponse.
    * @return Whether the DataResponse was set successfully or not.
    */
@@ -262,7 +262,7 @@ contract DataExchange is TokenDestructible, Pausable {
     address orderAddr,
     address seller,
     address notary,
-    string hash,
+    string dataHash,
     bytes signature
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
@@ -279,11 +279,20 @@ contract DataExchange is TokenDestructible, Pausable {
     );
     require(order.hasNotaryBeenAdded(notary));
 
+    require(
+      CryptoUtils.isDataResponseValid(
+        orderAddr,
+        seller,
+        notary,
+        dataHash,
+        signature
+      )
+    );
+
     bool okay = order.addDataResponse(
       seller,
       notary,
-      hash,
-      signature
+      dataHash
     );
     require(okay);
 
@@ -453,11 +462,12 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Requires that five addresses are distinct between themselves.
+   * @dev Requires that five addresses are distinct between themselves and zero.
    * @param addresses array of five addresses to explore.
    */
   function allDistinct(address[5] addresses) private pure {
     for (uint i = 0; i < addresses.length; i = i.add(1)) {
+      require(addresses[i] != address(0));
       for (uint j = i.add(1); j < addresses.length; j = j.add(1)) {
         require(addresses[i] != addresses[j]);
       }
