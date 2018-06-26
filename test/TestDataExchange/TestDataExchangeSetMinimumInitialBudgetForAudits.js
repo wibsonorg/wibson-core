@@ -52,7 +52,7 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it.only('does not affect an active DataOrder', async () => {
+    it('does not affect an active DataOrder', async () => {
       const budgetForAudits = 5;
       const orderPrice = 20;
       const notarizationFee = 5;
