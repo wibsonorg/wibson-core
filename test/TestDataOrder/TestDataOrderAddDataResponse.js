@@ -22,16 +22,6 @@ contract('DataOrder', (accounts) => {
   });
 
   describe('addDataResponse', () => {
-    it('can not add a data response if order is closed', async () => {
-      await order.close({ from: owner });
-      try {
-        await order.addDataResponse(seller, notary, dataHash, { from: owner });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('can not add a data response if seller is 0x0', async () => {
       try {
         await order.addDataResponse('0x0', notary, dataHash, { from: owner });
@@ -83,6 +73,31 @@ contract('DataOrder', (accounts) => {
       } catch (error) {
         assert.fail();
       }
+      try {
+        await order.addDataResponse(seller, notary, dataHash, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add an already-closed data response', async () => {
+      try {
+        await order.addDataResponse(seller, notary, dataHash, { from: owner });
+        await order.closeDataResponse(seller, true, { from: owner });
+      } catch (error) {
+        assert.fail();
+      }
+      try {
+        await order.addDataResponse(seller, notary, dataHash, { from: owner });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add a data response if order is closed', async () => {
+      await order.close({ from: owner });
       try {
         await order.addDataResponse(seller, notary, dataHash, { from: owner });
         assert.fail();

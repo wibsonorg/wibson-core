@@ -90,25 +90,6 @@ contract('DataExchange', (accounts) => {
   });
 
   describe('addDataResponse', () => {
-    it('can not add a data response if order is closed', async () => {
-      await dataExchange.closeOrder(orderAddress, { from: buyer });
-      try {
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          {
-            from: buyer,
-          },
-        );
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('can not add a data response if seller is 0x0', async () => {
       try {
         await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, signature, {
@@ -128,9 +109,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -146,9 +125,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -177,9 +154,7 @@ contract('DataExchange', (accounts) => {
           orderAddress,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -196,9 +171,7 @@ contract('DataExchange', (accounts) => {
           dataExchange.address,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -215,9 +188,7 @@ contract('DataExchange', (accounts) => {
           inexistentNotary,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -234,9 +205,7 @@ contract('DataExchange', (accounts) => {
           unregisteredNotary,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -256,9 +225,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
       } catch (error) {
         assert.fail();
@@ -270,9 +237,65 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add an already-closed data response', async () => {
+      try {
+        await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+          from: buyer,
+        });
+
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+
+        await dataExchange.closeDataResponse(
+          orderAddress,
+          sellerA,
+          true,
+          true,
+          signMessage([orderAddress, sellerA, true, true], notary),
+          { from: buyer },
+        );
+      } catch (error) {
+        assert.fail();
+      }
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add a data response if order is closed', async () => {
+      await dataExchange.closeOrder(orderAddress, { from: buyer });
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -288,9 +311,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           '0x4931ac3b001414eeff2c',
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -306,9 +327,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: notBuyer,
-          },
+          { from: notBuyer },
         );
         assert.fail();
       } catch (error) {
@@ -327,9 +346,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -348,9 +365,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signatureWithoutBudget,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -379,9 +394,7 @@ contract('DataExchange', (accounts) => {
             notary,
             dataHash,
             sig,
-            {
-              from: buyer,
-            },
+            { from: buyer },
           );
           const wasEventEmitted = tx.logs[0].event === 'DataAdded';
           txOk += wasEventEmitted ? 1 : 0;
@@ -404,9 +417,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         const finalBalance = await wibcoin.balanceOf(buyer);
         assert.equal(
@@ -427,9 +438,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.equal(
           tx.logs[0].event,
@@ -450,9 +459,7 @@ contract('DataExchange', (accounts) => {
           notary,
           '',
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.equal(
           tx.logs[0].event,
