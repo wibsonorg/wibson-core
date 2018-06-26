@@ -303,6 +303,23 @@ contract('DataExchange', (accounts) => {
       }
     });
 
+    it('can not add a data response if data exchange is paused', async () => {
+      await dataExchange.pause({ from: owner });
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
     it('can not add a data response with invalid signature', async () => {
       try {
         await dataExchange.addDataResponseToOrder(
