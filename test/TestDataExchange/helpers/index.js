@@ -62,8 +62,30 @@ const addDataResponseToOrder = async (dataExchange, {
   { from },
 );
 
+const closeDataResponse = async (dataExchange, {
+  orderAddress,
+  seller,
+  notary,
+  wasAudited = true,
+  isDataValid = true,
+  from,
+}) => dataExchange.closeDataResponse(
+  orderAddress,
+  seller,
+  wasAudited,
+  isDataValid,
+  signMessage([
+    orderAddress,
+    seller,
+    wasAudited,
+    isDataValid,
+  ], notary),
+  { from },
+);
+
 export {
   newOrder,
   addNotaryToOrder,
   addDataResponseToOrder,
+  closeDataResponse,
 };
