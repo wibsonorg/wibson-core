@@ -94,6 +94,11 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('should transfer remaining budget to audit', async () => {
+      const originalBuyerBalance = await token.balanceOf.call(buyer);
+      await dataExchange.closeOrder(order, { from: buyer });
+
+      const newBuyerBalance = await token.balanceOf.call(buyer);
+      assert.equal(newBuyerBalance.toNumber(), originalBuyerBalance.toNumber() + 10, 'did not transfer remaining budget');
     });
 
     it('should emit an `OrderClosed` event', async () => {
