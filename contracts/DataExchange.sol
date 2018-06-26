@@ -214,9 +214,8 @@ contract DataExchange is TokenDestructible, Pausable {
     address buyer = order.buyer();
     require(msg.sender == buyer);
 
-    if (order.hasNotaryBeenAdded(notary) || !allowedNotaries.exist(notary)) {
-      return false;
-    }
+    require(!order.hasNotaryBeenAdded(notary));
+    require(allowedNotaries.exist(notary));
 
     require(
       CryptoUtils.isNotaryAdditionValid(
