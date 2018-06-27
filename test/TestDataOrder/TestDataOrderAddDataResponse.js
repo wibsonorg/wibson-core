@@ -107,7 +107,7 @@ contract('DataOrder', (accounts) => {
       }
     });
 
-    it('should add a data response if notary is in Data Order and signature is valid', async () => {
+    it('should add a data response if notary is in Data Order', async () => {
       await order.addDataResponse(seller, notary, dataHash, { from: owner });
       const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
       assert(sellerWasAdded, 'Seller was not added correctly');

@@ -1,16 +1,28 @@
-import { createHardcodedDataOrder } from './helpers/dataOrderCreation';
+import { createDataOrder } from './helpers/dataOrderCreation';
 import { assertRevert } from '../helpers';
 
 contract('DataOrder', (accounts) => {
   const notary = accounts[1];
-  const buyer = accounts[2];
+  const other = accounts[2];
   const owner = accounts[3];
-  const other = accounts[4];
-
+  const buyer = accounts[4];
+  const seller = accounts[5];
 
   let order;
+
+  const assertClosed = async (anOrder) => {
+    const orderStatus = await anOrder.orderStatus();
+    const transactionCompletedAt = await anOrder.transactionCompletedAt();
+    assert.equal(orderStatus.toNumber(), 2, 'order status is not TransactionCompleted');
+    assert.notEqual(
+      transactionCompletedAt,
+      0,
+      'transactionCompletedAt timestamp should be different from zero',
+    );
+  };
+
   beforeEach('setup DataOrder for each test', async () => {
-    order = await createHardcodedDataOrder(owner, buyer);
+    order = await createDataOrder({ buyer, from: owner });
   });
 
   it('can not close an order if caller is not the owner', async () => {
@@ -32,13 +44,7 @@ contract('DataOrder', (accounts) => {
   });
 
   it('can not close an order if caller is the notary', async () => {
-    await order.addNotary(
-      notary,
-      1,
-      10,
-      'Sample TOS',
-      { from: owner },
-    );
+    await order.addNotary(notary, 1, 10, 'Sample TOS', { from: owner });
 
     try {
       await order.close({ from: notary });
@@ -59,28 +65,36 @@ contract('DataOrder', (accounts) => {
   });
 
   it('can close an open order without a notary', async () => {
-    const res = await order.close({ from: owner });
-    assert(res, 'Could not close an open order without a notary');
+    await order.close({ from: owner });
+    await assertClosed(order);
   });
 
   it('can close an open order with a notary', async () => {
-    await order.addNotary(
-      notary,
-      1,
-      10,
-      'Sample TOS',
-      { from: owner },
-    );
+    await order.addNotary(notary, 1, 10, 'Sample TOS', { from: owner });
 
-    const res = await order.close({ from: owner });
-    assert(res, 'Could not close an open order with a notary');
+    await order.close({ from: owner });
+    await assertClosed(order);
   });
 
   it('should succesfully close an order', async () => {
-    const res = await order.close({ from: owner });
-    assert(res, 'close() did not return true');
+    await order.close({ from: owner });
+    await assertClosed(order);
+  });
 
-    const orderStatus = await order.orderStatus();
-    assert.equal(orderStatus.toNumber(), 2, 'order status is not TransactionCompleted');
+  it('should succesfully close an order with an opened data response', async () => {
+    await order.addNotary(notary, 1, 10, 'Sample TOS', { from: owner });
+    const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
+    await order.addDataResponse(seller, notary, dataHash, { from: owner });
+    await order.close({ from: owner });
+    await assertClosed(order);
+  });
+
+  it('should succesfully close an order with a closed data response', async () => {
+    await order.addNotary(notary, 1, 10, 'Sample TOS', { from: owner });
+    const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
+    await order.addDataResponse(seller, notary, dataHash, { from: owner });
+    await order.closeDataResponse(seller, true, { from: owner });
+    await order.close({ from: owner });
+    await assertClosed(order);
   });
 });
