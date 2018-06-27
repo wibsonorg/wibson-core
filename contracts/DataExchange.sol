@@ -23,6 +23,10 @@ contract DataExchange is TokenDestructible, Pausable {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
+  event NotaryRegistered(address indexed notary);
+  event NotaryUpdated(address indexed notary);
+  event NotaryUnregistered(address indexed notary);
+
   event NewOrder(address indexed orderAddr);
   event NotaryAdded(address indexed orderAddr, address indexed notary);
   event DataAdded(address indexed orderAddr, address indexed seller);
@@ -105,13 +109,21 @@ contract DataExchange is TokenDestructible, Pausable {
     string notaryUrl,
     string publicKey
   ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
-    allowedNotaries.insert(notary);
+    bool isNew = notaryInfo[notary].addr == address(0);
+
+    require(allowedNotaries.insert(notary));
     notaryInfo[notary] = NotaryInfo(
       notary,
       name,
       notaryUrl,
       publicKey
     );
+
+    if (isNew) {
+      emit NotaryRegistered(notary);
+    } else {
+      emit NotaryUpdated(notary);
+    }
     return true;
   }
 
@@ -125,7 +137,10 @@ contract DataExchange is TokenDestructible, Pausable {
   function unregisterNotary(
     address notary
   ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
-    return allowedNotaries.remove(notary);
+    require(allowedNotaries.remove(notary));
+
+    emit NotaryUnregistered(notary);
+    return true;
   }
 
   /**

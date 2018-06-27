@@ -42,7 +42,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-      assert(res, 'Could not be called by owner');
+      assertEvent(res, 'NotaryUnregistered', 'Could not be called by owner');
     });
 
     it('should be called only when not paused', async () => {
@@ -64,7 +64,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-      assert(res, 'Could not be called when unpaused');
+      assertEvent(res, 'NotaryUnregistered', 'Could not be called when unpaused');
     });
 
     it('should fail when passed an invalid notary address', async () => {
@@ -79,13 +79,16 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('should return false when passed an inexistent notary address', async () => {
-      const res = await dataExchange.unregisterNotary.call(
-        other,
-        { from: owner },
-      );
-
-      assert.isNotOk(res, 'Unregistered an inexistent notary');
+    it('should fail when passed an inexistent notary address', async () => {
+      try {
+        await dataExchange.unregisterNotary(
+          other,
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
 
     it('should unregister a notary', async () => {
@@ -93,8 +96,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-
-      assert(res, 'Could not unregister notary');
+      assertEvent(res, 'NotaryUnregistered', 'Could not unregister notary');
     });
 
     it('should unregister a notary', async () => {
