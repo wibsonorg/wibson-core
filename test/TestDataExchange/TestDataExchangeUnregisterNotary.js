@@ -119,5 +119,55 @@ contract('DataExchange', async (accounts) => {
       const res = await dataExchange.closeOrder(orderAddress, { from: buyer });
       assertEvent(res, 'OrderClosed', 'did not close an order with an unregistered notary');
     });
+
+    it('should be able to unregister another notary after adding notary to an order', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary A URL',
+        'Notary A Public Key',
+        { from: owner },
+      );
+
+      const tx = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      await dataExchange.registerNotary(
+        other,
+        'Notary B',
+        'Notary B URL',
+        'Notary B Public Key',
+        { from: owner },
+      );
+
+      const res = await dataExchange.unregisterNotary(other, { from: owner });
+      assert(res, 'failed unregistering another notary after adding notary to an order');
+    });
+
+    it('should be able to unregister an existing notary after adding that notary to an order', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary A URL',
+        'Notary A Public Key',
+        { from: owner },
+      );
+
+      const tx = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      const res = await dataExchange.unregisterNotary(notary, { from: owner });
+      assert(res, 'failed unregistering  notary after adding that notary to an order');
+    });
   });
 });
