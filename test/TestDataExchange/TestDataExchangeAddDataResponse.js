@@ -214,22 +214,19 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response twice', async () => {
-      try {
-        await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
-          from: buyer,
-        });
+      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+        from: buyer,
+      });
 
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          { from: buyer },
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+
       try {
         await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -246,31 +243,28 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add an already-closed data response', async () => {
-      try {
-        await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
-          from: buyer,
-        });
+      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+        from: buyer,
+      });
 
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          { from: buyer },
-        );
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
 
-        await dataExchange.closeDataResponse(
-          orderAddress,
-          sellerA,
-          true,
-          true,
-          signMessage([orderAddress, sellerA, true, true], notary),
-          { from: buyer },
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      await dataExchange.closeDataResponse(
+        orderAddress,
+        sellerA,
+        true,
+        true,
+        signMessage([orderAddress, sellerA, true, true], notary),
+        { from: buyer },
+      );
+
       try {
         await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -426,83 +420,62 @@ contract('DataExchange', (accounts) => {
     });
 
     it('should not pay the notarization fee if there still is initial budget available', async () => {
-      try {
-        const initialBalance = await wibcoin.balanceOf(buyer);
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          { from: buyer },
-        );
-        const finalBalance = await wibcoin.balanceOf(buyer);
-        assert.equal(
-          Number(initialBalance),
-          Number(finalBalance) + orderPrice,
-          'Buyer should not spend more than the order price',
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      const initialBalance = await wibcoin.balanceOf(buyer);
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      const finalBalance = await wibcoin.balanceOf(buyer);
+      assert.equal(
+        Number(initialBalance),
+        Number(finalBalance) + orderPrice,
+        'Buyer should not spend more than the order price',
+      );
     });
 
     it('should add the data response if the notary is in the Data Order and the Data Exchange', async () => {
-      try {
-        const tx = await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          { from: buyer },
-        );
-        assertEvent(
-          tx,
-          'DataAdded',
-          'Data Response should be added if notary is in DataOrder and DataExchange',
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      const tx = await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      assertEvent(
+        tx,
+        'DataAdded',
+        'Data Response should be added if notary is in DataOrder and DataExchange',
+      );
     });
 
     it('should add a data response even if dataHash is empty', async () => {
       const sig = signMessage([orderAddress, notary], sellerA);
-      try {
-        const tx = await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          '',
-          sig,
-          { from: buyer },
-        );
-        assertEvent(tx, 'DataAdded', 'Data Response should be added even with an empty data hash');
-      } catch (error) {
-        assert.fail(error);
-      }
+      const tx = await dataExchange.addDataResponseToOrder(orderAddress, sellerA, notary, '', sig, {
+        from: buyer,
+      });
+      assertEvent(tx, 'DataAdded', 'Data Response should be added even with an empty data hash');
     });
 
     it('should add a data response even if the notary was unregistered after it was added to the Data Order', async () => {
       await dataExchange.unregisterNotary(notary, { from: owner });
-      try {
-        const tx = await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          { from: buyer },
-        );
-        assertEvent(
-          tx,
-          'DataAdded',
-          'Data Response should be added even if the notary was unregistered',
-        );
-      } catch (error) {
-        assert.fail(error);
-      }
+      const tx = await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      assertEvent(
+        tx,
+        'DataAdded',
+        'Data Response should be added even if the notary was unregistered',
+      );
     });
   });
 });
