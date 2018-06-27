@@ -13,15 +13,19 @@ import "./lib/CryptoUtils.sol";
 
 /**
  * @title DataExchange
- * @author Cristian Adamo <cristian@wibson.org>
- * @dev `DataExchange` is the core contract of the Wibson's Protocol. This
- *      allows the creation, management, and tracking of `DataOrder`s. Also,
- *      such has some helper methods to access the data needed by the different
+ * @author Wibson Development Team <developers@wibson.org>
+ * @dev `DataExchange` is the core contract of the Wibson Protocol.
+ *      This allows the creation, management, and tracking of `DataOrder`s.
+ *      Also, such has some helper methods to access the data needed by the different
  *      parties involved in the Protocol.
  */
 contract DataExchange is TokenDestructible, Pausable {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
+
+  event NotaryRegistered(address indexed notary);
+  event NotaryUpdated(address indexed notary);
+  event NotaryUnregistered(address indexed notary);
 
   event NewOrder(address indexed orderAddr);
   event NotaryAdded(address indexed orderAddr, address indexed notary);
@@ -48,7 +52,7 @@ contract DataExchange is TokenDestructible, Pausable {
   mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
-  // TODO(cristian): Is there any better way to do this?
+  // TODO: Is there a better way to do this?
   mapping(
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;
@@ -59,6 +63,7 @@ contract DataExchange is TokenDestructible, Pausable {
 
   modifier validAddress(address addr) {
     require(addr != address(0));
+    require(addr != address(this));
     _;
   }
 
@@ -74,21 +79,23 @@ contract DataExchange is TokenDestructible, Pausable {
   uint256 public minimumInitialBudgetForAudits;
 
   /**
-   * @dev Contract costructor.
+   * @dev Contract constructor.
    * @param tokenAddress Address of the Wibcoin token address (ERC20).
    * @param ownerAddress Address of the DataExchange owner.
    */
   constructor(
     address tokenAddress,
     address ownerAddress
-  ) public validAddress(tokenAddress) {
+  ) public validAddress(tokenAddress) validAddress(ownerAddress) {
+    require(tokenAddress != ownerAddress);
+
     token = Wibcoin(tokenAddress);
     minimumInitialBudgetForAudits = 0;
     transferOwnership(ownerAddress);
   }
 
   /**
-   * @dev Registers a new notary or replaces a already existing one.
+   * @dev Registers a new notary or replaces an already existing one.
    * @notice At least one notary is needed to enable `DataExchange` operation.
    * @param notary Address of a Notary to add.
    * @param name Name Of the Notary.
@@ -102,13 +109,21 @@ contract DataExchange is TokenDestructible, Pausable {
     string notaryUrl,
     string publicKey
   ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
-    allowedNotaries.insert(notary);
+    bool isNew = notaryInfo[notary].addr == address(0);
+
+    require(allowedNotaries.insert(notary));
     notaryInfo[notary] = NotaryInfo(
       notary,
       name,
       notaryUrl,
       publicKey
     );
+
+    if (isNew) {
+      emit NotaryRegistered(notary);
+    } else {
+      emit NotaryUpdated(notary);
+    }
     return true;
   }
 
@@ -122,7 +137,10 @@ contract DataExchange is TokenDestructible, Pausable {
   function unregisterNotary(
     address notary
   ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
-    return allowedNotaries.remove(notary);
+    require(allowedNotaries.remove(notary));
+
+    emit NotaryUnregistered(notary);
+    return true;
   }
 
   /**
@@ -208,14 +226,13 @@ contract DataExchange is TokenDestructible, Pausable {
     uint256 notarizationFee,
     string notarizationTermsOfService,
     bytes notarySignature
-  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) validAddress(notary) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
 
-    if (order.hasNotaryBeenAdded(notary) || !allowedNotaries.exist(notary)) {
-      return false;
-    }
+    require(!order.hasNotaryBeenAdded(notary));
+    require(allowedNotaries.exist(notary));
 
     require(
       CryptoUtils.isNotaryAdditionValid(
@@ -238,10 +255,7 @@ contract DataExchange is TokenDestructible, Pausable {
     if (okay) {
       openOrders.insert(orderAddr);
       ordersByNotary[notary].push(orderAddr);
-      emit NotaryAdded(
-        order,
-        notary
-      );
+      emit NotaryAdded(order, notary);
     }
     return okay;
   }
@@ -256,7 +270,7 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param notary Notary address that the Seller chose to use as notarizer,
    *        this must be one within the allowed notaries and within the
    *        `DataOrder`'s notaries.
-   * @param hash Hash of the data that must be sent, this is a SHA256.
+   * @param dataHash Hash of the data that must be sent, this is a SHA256.
    * @param signature Signature of DataResponse.
    * @return Whether the DataResponse was set successfully or not.
    */
@@ -264,19 +278,37 @@ contract DataExchange is TokenDestructible, Pausable {
     address orderAddr,
     address seller,
     address notary,
-    string hash,
+    string dataHash,
     bytes signature
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
     require(msg.sender == buyer);
+    allDistinct(
+      [
+        orderAddr,
+        buyer,
+        seller,
+        notary,
+        address(this)
+      ]
+    );
     require(order.hasNotaryBeenAdded(notary));
+
+    require(
+      CryptoUtils.isDataResponseValid(
+        orderAddr,
+        seller,
+        notary,
+        dataHash,
+        signature
+      )
+    );
 
     bool okay = order.addDataResponse(
       seller,
       notary,
-      hash,
-      signature
+      dataHash
     );
     require(okay);
 
@@ -323,10 +355,10 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
-    address notary = order.getNotaryForSeller(seller);
-
-    require(msg.sender == buyer || msg.sender == notary);
     require(order.hasSellerBeenAccepted(seller));
+
+    address notary = order.getNotaryForSeller(seller);
+    require(msg.sender == buyer || msg.sender == notary);
     require(
       CryptoUtils.isNotaryVeredictValid(
         orderAddr,
@@ -390,7 +422,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForNotary(
     address notary
-  ) public view returns (address[]) {
+  ) public view validAddress(notary) returns (address[]) {
     return ordersByNotary[notary];
   }
 
@@ -401,7 +433,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForSeller(
     address seller
-  ) public view returns (address[]) {
+  ) public view validAddress(seller) returns (address[]) {
     return ordersBySeller[seller];
   }
 
@@ -412,7 +444,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function getOrdersForBuyer(
     address buyer
-  ) public view returns (address[]) {
+  ) public view validAddress(buyer) returns (address[]) {
     return ordersByBuyer[buyer];
   }
 
@@ -436,27 +468,33 @@ contract DataExchange is TokenDestructible, Pausable {
   /**
    * @dev Gets information about a give notary.
    * @param notary Notary address to get info for.
-   * @return Notary information (address, name, notaryUrl, publicKey).
+   * @return Notary information (address, name, notaryUrl, publicKey, isActive).
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (address, string, string, string) {
+  ) public view validAddress(notary) returns (address, string, string, string, bool) {
     NotaryInfo memory info = notaryInfo[notary];
-    return (info.addr, info.name, info.notaryUrl, info.publicKey);
+
+    return (
+      info.addr,
+      info.name,
+      info.notaryUrl,
+      info.publicKey,
+      allowedNotaries.exist(notary)
+    );
   }
 
   /**
-   * @dev Gets whether a `DataResponse` for a given the seller (the caller of
-   *      this function) has been accepted or not.
-   * @notice The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was accepted or not.
+   * @dev Requires that five addresses are distinct between themselves and zero.
+   * @param addresses array of five addresses to explore.
    */
-  function hasDataResponseBeenAccepted(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender);
+  function allDistinct(address[5] addresses) private pure {
+    for (uint i = 0; i < addresses.length; i = i.add(1)) {
+      require(addresses[i] != address(0));
+      for (uint j = i.add(1); j < addresses.length; j = j.add(1)) {
+        require(addresses[i] != addresses[j]);
+      }
+    }
   }
 
   /**
