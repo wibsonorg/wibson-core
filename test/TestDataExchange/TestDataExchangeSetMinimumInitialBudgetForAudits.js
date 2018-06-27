@@ -103,7 +103,7 @@ contract('DataExchange', async (accounts) => {
       );
       assert.equal(
         buyerBalanceAfter,
-        buyerBalanceBefore - (notarizationFee + orderPrice),
+        buyerBalanceBefore - (budgetForAudits + orderPrice),
         'Buyer balance was not updated correctly',
       );
       assert.equal(
