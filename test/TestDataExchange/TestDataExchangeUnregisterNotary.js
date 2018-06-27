@@ -76,13 +76,16 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('should return false when passed an inexistent notary address', async () => {
-      const res = await dataExchange.unregisterNotary.call(
-        other,
-        { from: owner },
-      );
-
-      assert.isNotOk(res, 'Unregistered an inexistent notary');
+    it('should fail when passed an inexistent notary address', async () => {
+      try {
+        await dataExchange.unregisterNotary(
+          other,
+          { from: owner },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
 
     it('should unregister a notary', async () => {

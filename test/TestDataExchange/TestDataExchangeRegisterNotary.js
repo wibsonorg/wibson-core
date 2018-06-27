@@ -1,13 +1,17 @@
-import { assertRevert } from '../helpers';
+import { assertEvent, assertRevert, extractAddress } from '../helpers';
+import { newOrder, addNotaryToOrder, addDataResponseToOrder, closeDataResponse } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
 
 contract('DataExchange', async (accounts) => {
+  const owner = accounts[0];
   const notary = accounts[1];
-  const owner = accounts[2];
-  const other = accounts[3];
+  const other = accounts[2];
+  const buyer = accounts[4];
+  const seller = accounts[5];
   const tokenAddress = Wibcoin.address;
+  const token = Wibcoin.at(tokenAddress);
 
   let dataExchange;
 
@@ -18,13 +22,9 @@ contract('DataExchange', async (accounts) => {
   describe('registerNotary', async () => {
     it('should be called only by the owner', async () => {
       try {
-        await dataExchange.registerNotary(
-          notary,
-          'Notary A',
-          'Notary URL',
-          'Notary Public Key',
-          { from: other },
-        );
+        await dataExchange.registerNotary(notary, 'Notary A', 'Notary URL', 'Notary Public Key', {
+          from: other,
+        });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -37,20 +37,16 @@ contract('DataExchange', async (accounts) => {
         'Notary Public Key',
         { from: owner },
       );
-      assert(res, 'Could not be called by owner');
+      assertEvent(res, 'NotaryRegistered', 'Could not be called by owner');
     });
 
     it('should be called only when not paused', async () => {
       await dataExchange.pause({ from: owner });
 
       try {
-        await dataExchange.registerNotary(
-          notary,
-          'Notary A',
-          'Notary URL',
-          'Notary Public Key',
-          { from: owner },
-        );
+        await dataExchange.registerNotary(notary, 'Notary A', 'Notary URL', 'Notary Public Key', {
+          from: owner,
+        });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -65,18 +61,14 @@ contract('DataExchange', async (accounts) => {
         'Notary Public Key',
         { from: owner },
       );
-      assert(res, 'Could not be called when unpaused');
+      assertEvent(res, 'NotaryRegistered', 'Could not be called when unpaused');
     });
 
     it('should fail when passed an invalid notary address', async () => {
       try {
-        await dataExchange.registerNotary(
-          '0x0',
-          'Notary A',
-          'Notary URL',
-          'Notary Public Key',
-          { from: owner },
-        );
+        await dataExchange.registerNotary('0x0', 'Notary A', 'Notary URL', 'Notary Public Key', {
+          from: owner,
+        });
         assert.fail();
       } catch (error) {
         assertRevert(error);
@@ -92,17 +84,86 @@ contract('DataExchange', async (accounts) => {
         { from: owner },
       );
 
-      assert(res, 'Could not add a new notary');
+      assertEvent(res, 'NotaryRegistered', 'Could not add a new notary');
     });
 
-    it('should replace a notary', async () => {
-      await dataExchange.registerNotary(
+    it('should register a new notary even after a data response was added', async () => {
+      const resA = await dataExchange.registerNotary(
         notary,
         'Notary A',
         'Notary URL',
         'Notary Public Key',
         { from: owner },
       );
+      assertEvent(resA, 'NotaryRegistered', 'Could not add a new notary');
+
+      await token.approve(dataExchange.address, 3000, { from: buyer });
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const resB = await dataExchange.registerNotary(
+        other,
+        'Notary B',
+        'Notary B URL',
+        'Notary B Public Key',
+        { from: owner },
+      );
+      assertEvent(resB, 'NotaryRegistered', 'Could not add a new notary');
+    });
+
+    it('should register a new notary even after a data response was closed', async () => {
+      const resA = await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+      assertEvent(resA, 'NotaryRegistered', 'Could not add a new notary');
+
+      await token.approve(dataExchange.address, 3000, { from: buyer });
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+      await closeDataResponse(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const resB = await dataExchange.registerNotary(
+        other,
+        'Notary B',
+        'Notary B URL',
+        'Notary B Public Key',
+        { from: owner },
+      );
+      assertEvent(resB, 'NotaryRegistered', 'Could not add a new notary');
+    });
+
+    it('should replace a notary', async () => {
+      const creation = await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+      assertEvent(creation, 'NotaryRegistered', 'Could not replace a notary');
 
       const res = await dataExchange.registerNotary(
         notary,
@@ -111,7 +172,7 @@ contract('DataExchange', async (accounts) => {
         'Notary Public Key 2',
         { from: owner },
       );
-      assert(res, 'Could not replace a notary');
+      assertEvent(res, 'NotaryUpdated', 'Could not replace a notary');
     });
   });
 });
