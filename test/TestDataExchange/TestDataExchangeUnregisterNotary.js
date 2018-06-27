@@ -1,4 +1,4 @@
-import { assertRevert } from '../helpers';
+import { assertRevert, assertEvent } from '../helpers';
 import { addNotaryToOrder, newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -107,6 +107,17 @@ contract('DataExchange', async (accounts) => {
       } catch (error) {
         assertRevert(error);
       }
+    });
+
+    it('should be able to close an order with an unregistered notary', async () => {
+      await token.approve(dataExchange.address, 3000, { from: buyer });
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await dataExchange.unregisterNotary(notary, { from: owner });
+
+      const res = await dataExchange.closeOrder(orderAddress, { from: buyer });
+      assertEvent(res, 'OrderClosed', 'did not close an order with an unregistered notary');
     });
   });
 });
