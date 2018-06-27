@@ -12,6 +12,13 @@ export function assertEvent(transaction, eventName, message = '') {
 }
 
 /**
+ * @param {Object} transaction the transaction where the event was emitted.
+ */
+export function extractEventArgs(transaction) {
+  return transaction.logs[0].args;
+}
+
+/**
  * @param {Error} error the error where the assertion is made.
  * @throws {AssertionError} when the error is not originated from a revert.
  */

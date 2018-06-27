@@ -82,7 +82,9 @@ contract DataExchange is TokenDestructible, Pausable {
   constructor(
     address tokenAddress,
     address ownerAddress
-  ) public validAddress(tokenAddress) {
+  ) public validAddress(tokenAddress) validAddress(ownerAddress) {
+    require(tokenAddress != ownerAddress);
+
     token = Wibcoin(tokenAddress);
     minimumInitialBudgetForAudits = 0;
     transferOwnership(ownerAddress);
@@ -214,9 +216,8 @@ contract DataExchange is TokenDestructible, Pausable {
     address buyer = order.buyer();
     require(msg.sender == buyer);
 
-    if (order.hasNotaryBeenAdded(notary) || !allowedNotaries.exist(notary)) {
-      return false;
-    }
+    require(!order.hasNotaryBeenAdded(notary));
+    require(allowedNotaries.exist(notary));
 
     require(
       CryptoUtils.isNotaryAdditionValid(
@@ -457,6 +458,8 @@ contract DataExchange is TokenDestructible, Pausable {
   function getNotaryInfo(
     address notary
   ) public view validAddress(notary) returns (address, string, string, string) {
+    require(allowedNotaries.exist(notary));
+
     NotaryInfo memory info = notaryInfo[notary];
     return (info.addr, info.name, info.notaryUrl, info.publicKey);
   }
