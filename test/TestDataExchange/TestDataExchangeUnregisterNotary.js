@@ -115,7 +115,7 @@ contract('DataExchange', async (accounts) => {
         'Notary A Public Key',
         { from: owner },
       );
-      assert(ret, 'Could not register notary after unregistering it');
+      assertEvent(ret, 'NotaryUpdated', 'Could not update notary');
 
       const res = await dataExchange.getNotaryInfo(notary);
       assert.equal(res[0], notary, 'notary address differs');
