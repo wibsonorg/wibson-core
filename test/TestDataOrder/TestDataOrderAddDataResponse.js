@@ -22,20 +22,10 @@ contract('DataOrder', (accounts) => {
   });
 
   describe('addDataResponse', () => {
-    it('can not add a data response if order is closed', async () => {
-      await order.close({ from: owner });
-      try {
-        await order.addDataResponse(seller, notary, dataHash, { from: owner });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('can not add a data response if seller is 0x0', async () => {
       try {
         await order.addDataResponse('0x0', notary, dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail for 0x0 seller');
       } catch (error) {
         assertRevert(error);
       }
@@ -44,7 +34,7 @@ contract('DataOrder', (accounts) => {
     it('can not add a data response if seller has same address as Data Order', async () => {
       try {
         await order.addDataResponse(order.address, notary, dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail for seller with same address as Data Order');
       } catch (error) {
         assertRevert(error);
       }
@@ -53,7 +43,7 @@ contract('DataOrder', (accounts) => {
     it('can not add a data response if notary is 0x0', async () => {
       try {
         await order.addDataResponse(seller, '0x0', dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail for 0x0 notary');
       } catch (error) {
         assertRevert(error);
       }
@@ -62,7 +52,7 @@ contract('DataOrder', (accounts) => {
     it('can not add a data response if notary has same address as Data Order', async () => {
       try {
         await order.addDataResponse(seller, order.address, dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail for notary with same address as Data Order');
       } catch (error) {
         assertRevert(error);
       }
@@ -71,21 +61,38 @@ contract('DataOrder', (accounts) => {
     it('can not add a data response if notary was not added to Data Order', async () => {
       try {
         await order.addDataResponse(seller, inexistentNotary, dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail with inexistent notary');
       } catch (error) {
         assertRevert(error);
       }
     });
 
     it('can not add a data response twice', async () => {
+      await order.addDataResponse(seller, notary, dataHash, { from: owner });
       try {
         await order.addDataResponse(seller, notary, dataHash, { from: owner });
+        assert.fail('Did not fail when added the seller twice');
       } catch (error) {
-        assert.fail();
+        assertRevert(error);
       }
+    });
+
+    it('can not add an already-closed data response', async () => {
+      await order.addDataResponse(seller, notary, dataHash, { from: owner });
+      await order.closeDataResponse(seller, true, { from: owner });
       try {
         await order.addDataResponse(seller, notary, dataHash, { from: owner });
-        assert.fail();
+        assert.fail('Did not fail when added the seller after closing the Data Response');
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add a data response if order is closed', async () => {
+      await order.close({ from: owner });
+      try {
+        await order.addDataResponse(seller, notary, dataHash, { from: owner });
+        assert.fail('Did not fail when added the seller after closing the Data Order');
       } catch (error) {
         assertRevert(error);
       }
@@ -94,30 +101,22 @@ contract('DataOrder', (accounts) => {
     it('can not add a data response if caller is not owner', async () => {
       try {
         await order.addDataResponse(seller, notary, dataHash, { from: notOwner });
-        assert.fail();
+        assert.fail('Did not fail when caller was not owner');
       } catch (error) {
         assertRevert(error);
       }
     });
 
     it('should add a data response if notary is in Data Order and signature is valid', async () => {
-      try {
-        await order.addDataResponse(seller, notary, dataHash, { from: owner });
-        const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
-        assert(sellerWasAdded, 'Seller was not added correctly');
-      } catch (error) {
-        assert.fail();
-      }
+      await order.addDataResponse(seller, notary, dataHash, { from: owner });
+      const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
+      assert(sellerWasAdded, 'Seller was not added correctly');
     });
 
     it('should add a data response even if dataHash is empty', async () => {
-      try {
-        await order.addDataResponse(seller, notary, '', { from: owner });
-        const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
-        assert(sellerWasAdded, 'Seller was not added correctly');
-      } catch (error) {
-        assert.fail();
-      }
+      await order.addDataResponse(seller, notary, '', { from: owner });
+      const sellerWasAdded = await order.hasSellerBeenAccepted(seller);
+      assert(sellerWasAdded, 'Seller was not added correctly');
     });
 
     it('should check if seller has been accepted', async () => {
