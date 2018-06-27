@@ -28,6 +28,16 @@ contract('DataExchange', async (accounts) => {
       assertEvent(newOrderTransaction, 'NewOrder', 'DataOrder was not created properly');
     });
 
+    it('can not create a DataOrder if DataExchange is paused', async () => {
+      try {
+        await dataExchange.pause({ from: owner });
+        await newOrder(dataExchange, { price: 0, initialBudgetForAudits: 0, from: buyer });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
     it('can not create a DataOrder with an initial budget for audits lower than the minimum', async () => {
       try {
         await dataExchange.setMinimumInitialBudgetForAudits(10, { from: owner });
