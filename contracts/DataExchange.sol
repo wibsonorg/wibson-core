@@ -453,15 +453,20 @@ contract DataExchange is TokenDestructible, Pausable {
   /**
    * @dev Gets information about a give notary.
    * @param notary Notary address to get info for.
-   * @return Notary information (address, name, notaryUrl, publicKey).
+   * @return Notary information (address, name, notaryUrl, publicKey, isActive).
    */
   function getNotaryInfo(
     address notary
-  ) public view validAddress(notary) returns (address, string, string, string) {
-    require(allowedNotaries.exist(notary));
-
+  ) public view validAddress(notary) returns (address, string, string, string, bool) {
     NotaryInfo memory info = notaryInfo[notary];
-    return (info.addr, info.name, info.notaryUrl, info.publicKey);
+
+    return (
+      info.addr,
+      info.name,
+      info.notaryUrl,
+      info.publicKey,
+      allowedNotaries.exist(notary)
+    );
   }
 
   /**
