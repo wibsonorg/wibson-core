@@ -106,5 +106,26 @@ contract('DataOrder', (accounts) => {
         'SellerInfo status does not match',
       );
     });
+
+    describe('unexpected cases', async () => {
+      it('can not close a data response immediately after order is created', async () => {
+        const anOrder = await createDataOrder({ buyer, from: owner });
+        try {
+          await anOrder.closeDataResponse(seller, true, { from: owner });
+          assert.fail();
+        } catch (error) {
+          assertRevert(error);
+        }
+      });
+
+      it('can not close a data response after notary is added to order', async () => {
+        try {
+          await order.closeDataResponse(seller, true, { from: owner });
+          assert.fail();
+        } catch (error) {
+          assertRevert(error);
+        }
+      });
+    });
   });
 });

@@ -20,7 +20,6 @@ const closeDataResponse = (dataExchange, {
 
 contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
-  const anotherNotary = accounts[2];
   const buyer = accounts[4];
   const seller = accounts[5];
   const owner = accounts[6];
@@ -222,7 +221,10 @@ contract('DataExchange', async (accounts) => {
     it('can not close a DataResponse when contract is paused', async () => {
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
-        orderAddress, seller, notary, from: buyer,
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
       });
       await dataExchange.pause({ from: owner });
 
@@ -307,11 +309,39 @@ contract('DataExchange', async (accounts) => {
       );
     });
 
+    it('closes a data response even if the notary was unregistered after it was added to the Data Order', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+      await dataExchange.unregisterNotary(notary, { from: owner });
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        true,
+        signMessage([orderAddress, seller, true, true], notary),
+        { from: notary },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
     describe('unexpected cases', async () => {
       it('can not close a data response as buyer immediately after order is created', async () => {
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: buyer,
+            orderAddress,
+            seller,
+            notary,
+            from: buyer,
           });
           assert.fail();
         } catch (error) {
@@ -322,7 +352,10 @@ contract('DataExchange', async (accounts) => {
       it('can not close a data response as notary immediately after order is created', async () => {
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: notary,
+            orderAddress,
+            seller,
+            notary,
+            from: notary,
           });
           assert.fail();
         } catch (error) {
@@ -335,7 +368,10 @@ contract('DataExchange', async (accounts) => {
 
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: buyer,
+            orderAddress,
+            seller,
+            notary,
+            from: buyer,
           });
           assert.fail();
         } catch (error) {
@@ -348,7 +384,10 @@ contract('DataExchange', async (accounts) => {
 
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: notary,
+            orderAddress,
+            seller,
+            notary,
+            from: notary,
           });
           assert.fail();
         } catch (error) {
@@ -364,13 +403,21 @@ contract('DataExchange', async (accounts) => {
 
       it('transfers tokens to players', async () => {
         orderAddress = extractAddress(await newOrder(dataExchange, {
-          price: orderPrice, initialBudgetForAudits, from: buyer,
+          price: orderPrice,
+          initialBudgetForAudits,
+          from: buyer,
         }));
         await addNotaryToOrder(dataExchange, {
-          orderAddress, notary, notarizationFee, from: buyer,
+          orderAddress,
+          notary,
+          notarizationFee,
+          from: buyer,
         });
         await addDataResponseToOrder(dataExchange, {
-          orderAddress, seller, notary, from: buyer,
+          orderAddress,
+          seller,
+          notary,
+          from: buyer,
         });
 
         const notaryBalanceBefore = await balanceOf(notary);
@@ -409,13 +456,21 @@ contract('DataExchange', async (accounts) => {
 
       it('does not allow buyer to transfer tokens before closing a DataResponse', async () => {
         orderAddress = extractAddress(await newOrder(dataExchange, {
-          price: orderPrice, initialBudgetForAudits, from: buyer,
+          price: orderPrice,
+          initialBudgetForAudits,
+          from: buyer,
         }));
         await addNotaryToOrder(dataExchange, {
-          orderAddress, notary, notarizationFee, from: buyer,
+          orderAddress,
+          notary,
+          notarizationFee,
+          from: buyer,
         });
         await addDataResponseToOrder(dataExchange, {
-          orderAddress, seller, notary, from: buyer,
+          orderAddress,
+          seller,
+          notary,
+          from: buyer,
         });
 
         const dxBalanceBefore = await balanceOf(dataExchange.address);
