@@ -11,7 +11,7 @@ contract('DataExchange', async (accounts) => {
   const buyer = accounts[4];
   const seller = accounts[5];
   const tokenAddress = Wibcoin.address;
-  const token = await Wibcoin.at(tokenAddress);
+  const token = Wibcoin.at(tokenAddress);
 
   let dataExchange;
   let order;
