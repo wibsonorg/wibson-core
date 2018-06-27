@@ -34,7 +34,7 @@ contract('DataExchange', async (accounts) => {
   });
 
   describe('closeOrder', async () => {
-    it('should fail if is paused', async () => {
+    it('should fail if it is paused', async () => {
       await dataExchange.pause({ from: owner });
 
       try {
@@ -43,6 +43,10 @@ contract('DataExchange', async (accounts) => {
       } catch (error) {
         assertRevert(error);
       }
+
+      await dataExchange.unpause({ from: owner });
+      const res = await dataExchange.closeOrder(order, { from: owner });
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
     });
 
     it('should fail when passed an invalid order address', async () => {
@@ -85,12 +89,12 @@ contract('DataExchange', async (accounts) => {
 
     it('should be called by the contract owner', async () => {
       const res = await dataExchange.closeOrder(order, { from: owner });
-      assert(res, 'failed when called by owner');
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
     });
 
     it('should be called by the buyer', async () => {
       const res = await dataExchange.closeOrder(order, { from: buyer });
-      assert(res, 'failed when called by buyer');
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
     });
 
     it('should transfer remaining budget to audit', async () => {
@@ -113,12 +117,53 @@ contract('DataExchange', async (accounts) => {
       });
 
       const res = await dataExchange.closeOrder(order, { from: owner });
-      assert(res, 'failed when closing an order with a response');
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
     });
 
     it('should close an open order', async () => {
       const res = await dataExchange.closeOrder(order, { from: owner });
-      assert(res, 'failed when closing an order');
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
+    });
+
+    it('should close an open order even if a notary is registered', async () => {
+      await dataExchange.registerNotary(
+        other,
+        'Another Notary',
+        'Another Notary URL',
+        'Another Notary Public Key',
+        { from: owner },
+      );
+
+      const res = await dataExchange.closeOrder(order, { from: owner });
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
+    });
+
+    it('should close an open order even if a notary is unregistered', async () => {
+      await dataExchange.unregisterNotary(notary, { from: owner });
+
+      const res = await dataExchange.closeOrder(order, { from: owner });
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
+    });
+
+    it('should close an open order even if another order is created', async () => {
+      await newOrder(dataExchange, { from: buyer });
+
+      const res = await dataExchange.closeOrder(order, { from: owner });
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
+    });
+
+    it('should close an open order even if another notary is added to the same order', async () => {
+      await dataExchange.registerNotary(
+        other,
+        'Another Notary',
+        'Another Notary URL',
+        'Another Notary Public Key',
+        { from: owner },
+      );
+      await addNotaryToOrder(dataExchange, { orderAddress: order, notary: other, from: buyer });
+
+      const res = await dataExchange.closeOrder(order, { from: owner });
+      assertEvent(res, 'OrderClosed', 'did not emit `OrderClosed` event');
     });
   });
 });
