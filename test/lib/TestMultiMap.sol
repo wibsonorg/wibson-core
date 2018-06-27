@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "truffle/Assert.sol";
-import { MultiMap } from "../contracts/lib/MultiMap.sol";
+import { MultiMap } from "../../contracts/lib/MultiMap.sol";
 
 
 contract TestMultiMap {
