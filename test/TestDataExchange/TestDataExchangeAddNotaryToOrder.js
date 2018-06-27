@@ -193,5 +193,27 @@ contract('DataExchange', async (accounts) => {
       assert.equal(res[2], 'Notary A URL', 'notary url differs');
       assert.equal(res[3], 'Notary A Public Key', 'notary public key differs');
     });
+
+    it('should be able to unregister another notary after adding notary to an order', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      await dataExchange.registerNotary(
+        other,
+        'Notary B',
+        'Notary B URL',
+        'Notary B Public Key',
+        { from: owner },
+      );
+
+      const res = await dataExchange.unregisterNotary(other, { from: owner });
+      assert(res, 'failed unregistering another notary after adding notary to an order');
+    });
+
+    it('should be able to unregister an existing notary after adding that notary to an order', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      const res = await dataExchange.unregisterNotary(notary, { from: owner });
+      assert(res, 'failed unregistering  notary after adding that notary to an order');
+    });
   });
 });
