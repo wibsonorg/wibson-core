@@ -215,5 +215,12 @@ contract('DataExchange', async (accounts) => {
       const res = await dataExchange.unregisterNotary(notary, { from: owner });
       assert(res, 'failed unregistering  notary after adding that notary to an order');
     });
+
+    it('should be able to create a new order after adding a notary to another order', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      const tx = await newOrder(dataExchange, { from: buyer });
+      assertEvent(tx, 'NewOrder', 'could not create a new order after adding a notary');
+    });
   });
 });
