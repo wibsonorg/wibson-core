@@ -52,6 +52,33 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
+    it('does not affect notary registration and unregistration', async () => {
+      const budgetForAudits = 5;
+
+      await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits, { from: owner });
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'https://notary-a.com/data',
+        'public-key-a',
+        { from: owner },
+      );
+
+      await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 2, { from: owner });
+      await dataExchange.unregisterNotary(notary, { from: owner });
+
+      await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 3, { from: owner });
+
+      const allowedNotaries = await dataExchange.getAllowedNotaries();
+      assert.equal(allowedNotaries.length, 0, 'There should not be any registered notaries');
+
+      assert.equal(
+        (await dataExchange.minimumInitialBudgetForAudits()).toNumber(),
+        budgetForAudits * 3,
+        'minimumInitialBudgetForAudits was not updated correctly',
+      );
+    });
+
     it('does not affect an active DataOrder', async () => {
       const budgetForAudits = 5;
       const orderPrice = 20;
@@ -63,23 +90,39 @@ contract('DataExchange', async (accounts) => {
 
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits, { from: owner });
       const { orderAddr: orderAddress } = extractEventArgs(await newOrder(dataExchange, {
-        price: orderPrice, initialBudgetForAudits: budgetForAudits, from: buyer,
+        price: orderPrice,
+        initialBudgetForAudits: budgetForAudits,
+        from: buyer,
       }));
 
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 2, { from: owner });
       await addNotaryToOrder(dataExchange, {
-        orderAddress, notary, notarizationFee, from: buyer,
+        orderAddress,
+        notary,
+        notarizationFee,
+        from: buyer,
       });
 
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 3, { from: owner });
       await addDataResponseToOrder(dataExchange, {
-        orderAddress, seller, notary, from: buyer,
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
       });
 
       await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 4, { from: owner });
       await closeDataResponse(dataExchange, {
-        orderAddress, seller, notary, from: buyer,
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
       });
+
+      await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 5, { from: owner });
+      await dataExchange.closeOrder(orderAddress, { from: buyer });
+
+      await dataExchange.setMinimumInitialBudgetForAudits(budgetForAudits * 6, { from: owner });
 
       const notaryBalanceAfter = await balanceOf(notary);
       const sellerBalanceAfter = await balanceOf(seller);
@@ -88,7 +131,7 @@ contract('DataExchange', async (accounts) => {
 
       assert.equal(
         (await dataExchange.minimumInitialBudgetForAudits()).toNumber(),
-        budgetForAudits * 4,
+        budgetForAudits * 6,
         'minimumInitialBudgetForAudits was not updated correctly',
       );
       assert.equal(
