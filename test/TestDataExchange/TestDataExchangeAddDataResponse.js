@@ -1,4 +1,4 @@
-import { assertRevert, signMessage } from '../helpers';
+import { assertEvent, assertRevert, signMessage } from '../helpers';
 import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -85,37 +85,14 @@ contract('DataExchange', (accounts) => {
 
     orderAddress = await setUpDataOrder(2);
     orderAddressWithoutBudget = await setUpDataOrder(0);
-    signature = signMessage([orderAddress, sellerA, notary, dataHash], sellerA);
-    signatureWithoutBudget = signMessage(
-      [orderAddressWithoutBudget, sellerA, notary, dataHash],
-      sellerA,
-    );
+    signature = signMessage([orderAddress, notary, dataHash], sellerA);
+    signatureWithoutBudget = signMessage([orderAddressWithoutBudget, notary, dataHash], sellerA);
   });
 
   describe('addDataResponse', () => {
-    it('can not add a data response if order is closed', async () => {
-      await dataExchange.closeOrder(orderAddress, { from: buyer });
-      try {
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          {
-            from: buyer,
-          },
-        );
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
-    });
-
     it('can not add a data response if seller is 0x0', async () => {
       try {
-        const sig = signMessage([orderAddress, 0x0, notary, dataHash], sellerA);
-        await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, sig, {
+        await dataExchange.addDataResponseToOrder(orderAddress, 0x0, notary, dataHash, signature, {
           from: buyer,
         });
         assert.fail();
@@ -126,16 +103,13 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if seller has same address as Data Order', async () => {
       try {
-        const sig = signMessage([orderAddress, orderAddress, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           orderAddress,
           notary,
           dataHash,
-          sig,
-          {
-            from: buyer,
-          },
+          signature,
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -145,16 +119,13 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if seller has same address as Data Exchange', async () => {
       try {
-        const sig = signMessage([orderAddress, dataExchange.address, notary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           dataExchange.address,
           notary,
           dataHash,
-          sig,
-          {
-            from: buyer,
-          },
+          signature,
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -163,8 +134,8 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary is 0x0', async () => {
+      const sig = signMessage([orderAddress, 0x0, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, 0x0, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(orderAddress, sellerA, 0x0, dataHash, sig, {
           from: buyer,
         });
@@ -175,17 +146,15 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary has same address as Data Order', async () => {
+      const sig = signMessage([orderAddress, orderAddress, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, orderAddress, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           orderAddress,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -194,17 +163,15 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary has same address as Data Exchange', async () => {
+      const sig = signMessage([orderAddress, dataExchange.address, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, dataExchange.address, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           dataExchange.address,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -213,17 +180,15 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary was not added to Data Order', async () => {
+      const sig = signMessage([orderAddress, inexistentNotary, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, inexistentNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           inexistentNotary,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -232,17 +197,15 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response if notary was not registered in Data Exchange', async () => {
+      const sig = signMessage([orderAddress, unregisteredNotary, dataHash], sellerA);
       try {
-        const sig = signMessage([orderAddress, sellerA, unregisteredNotary, dataHash], sellerA);
         await dataExchange.addDataResponseToOrder(
           orderAddress,
           sellerA,
           unregisteredNotary,
           dataHash,
           sig,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -251,24 +214,19 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response twice', async () => {
-      try {
-        await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
-          from: buyer,
-        });
+      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+        from: buyer,
+      });
 
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          {
-            from: buyer,
-          },
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+
       try {
         await dataExchange.addDataResponseToOrder(
           orderAddress,
@@ -276,9 +234,79 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add an already-closed data response', async () => {
+      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+        from: buyer,
+      });
+
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+
+      await dataExchange.closeDataResponse(
+        orderAddress,
+        sellerA,
+        true,
+        true,
+        signMessage([orderAddress, sellerA, true, true], notary),
+        { from: buyer },
+      );
+
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add a data response if order is closed', async () => {
+      await dataExchange.closeOrder(orderAddress, { from: buyer });
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
+    });
+
+    it('can not add a data response if data exchange is paused', async () => {
+      await dataExchange.pause({ from: owner });
+      try {
+        await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -294,9 +322,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           '0x4931ac3b001414eeff2c',
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -312,9 +338,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: notBuyer,
-          },
+          { from: notBuyer },
         );
         assert.fail();
       } catch (error) {
@@ -333,9 +357,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signature,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -354,9 +376,7 @@ contract('DataExchange', (accounts) => {
           notary,
           dataHash,
           signatureWithoutBudget,
-          {
-            from: buyer,
-          },
+          { from: buyer },
         );
         assert.fail();
       } catch (error) {
@@ -378,16 +398,14 @@ contract('DataExchange', (accounts) => {
             from: buyer,
           });
           const seller = sellers[i];
-          const sig = signMessage([orderAddress, seller, notary, dataHash], seller);
+          const sig = signMessage([orderAddress, notary, dataHash], seller);
           const tx = await dataExchange.addDataResponseToOrder(
             orderAddress,
             seller,
             notary,
             dataHash,
             sig,
-            {
-              from: buyer,
-            },
+            { from: buyer },
           );
           const wasEventEmitted = tx.logs[0].event === 'DataAdded';
           txOk += wasEventEmitted ? 1 : 0;
@@ -402,72 +420,62 @@ contract('DataExchange', (accounts) => {
     });
 
     it('should not pay the notarization fee if there still is initial budget available', async () => {
-      try {
-        const initialBalance = await wibcoin.balanceOf(buyer);
-        await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          {
-            from: buyer,
-          },
-        );
-        const finalBalance = await wibcoin.balanceOf(buyer);
-        assert.equal(
-          Number(initialBalance),
-          Number(finalBalance) + orderPrice,
-          'Buyer should not spend more than the order price',
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      const initialBalance = await wibcoin.balanceOf(buyer);
+      await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      const finalBalance = await wibcoin.balanceOf(buyer);
+      assert.equal(
+        Number(initialBalance),
+        Number(finalBalance) + orderPrice,
+        'Buyer should not spend more than the order price',
+      );
     });
 
     it('should add the data response if the notary is in the Data Order and the Data Exchange', async () => {
-      try {
-        const tx = await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          dataHash,
-          signature,
-          {
-            from: buyer,
-          },
-        );
-        assert.equal(
-          tx.logs[0].event,
-          'DataAdded',
-          'Seller should be able to pick a notary that is in the Data Order and Data Exchange',
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      const tx = await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      assertEvent(
+        tx,
+        'DataAdded',
+        'Data Response should be added if notary is in DataOrder and DataExchange',
+      );
     });
 
     it('should add a data response even if dataHash is empty', async () => {
-      try {
-        const sig = signMessage([orderAddress, sellerA, notary, ''], sellerA);
-        const tx = await dataExchange.addDataResponseToOrder(
-          orderAddress,
-          sellerA,
-          notary,
-          '',
-          sig,
-          {
-            from: buyer,
-          },
-        );
-        assert.equal(
-          tx.logs[0].event,
-          'DataAdded',
-          'Data Response should be added even with an empty data hash',
-        );
-      } catch (error) {
-        assert.fail();
-      }
+      const sig = signMessage([orderAddress, notary], sellerA);
+      const tx = await dataExchange.addDataResponseToOrder(orderAddress, sellerA, notary, '', sig, {
+        from: buyer,
+      });
+      assertEvent(tx, 'DataAdded', 'Data Response should be added even with an empty data hash');
+    });
+
+    it('should add a data response even if the notary was unregistered after it was added to the Data Order', async () => {
+      await dataExchange.unregisterNotary(notary, { from: owner });
+      const tx = await dataExchange.addDataResponseToOrder(
+        orderAddress,
+        sellerA,
+        notary,
+        dataHash,
+        signature,
+        { from: buyer },
+      );
+      assertEvent(
+        tx,
+        'DataAdded',
+        'Data Response should be added even if the notary was unregistered',
+      );
     });
   });
 });

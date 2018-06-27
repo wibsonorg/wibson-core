@@ -1,4 +1,5 @@
-const web3Utils = require('web3-utils');
+import web3Utils from 'web3-utils';
+import { signMessage } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const DataOrder = artifacts.require('./DataOrder.sol');
@@ -19,10 +20,17 @@ contract('DataExchange', (accounts) => {
       meta.wib = wib;
     });
 
-    return DataExchange.deployed().then((dx) => {
-      meta.dx = dx;
-      return meta.dx.registerNotary(NOTARY_A, 'Notary A', 'https://notary-a.com/data', NOTARY_A_PK, { from: OWNER });
-    })
+    return DataExchange.deployed()
+      .then((dx) => {
+        meta.dx = dx;
+        return meta.dx.registerNotary(
+          NOTARY_A,
+          'Notary A',
+          'https://notary-a.com/data',
+          NOTARY_A_PK,
+          { from: OWNER },
+        );
+      })
       .then((res) => {
         assert.ok(res, "couldn't register Notary");
       })
@@ -46,7 +54,7 @@ contract('DataExchange', (accounts) => {
       })
       .then((newOrder) => {
         meta.order = newOrder;
-        assert.equal((newOrder.logs[0].event), 'NewOrder');
+        assert.equal(newOrder.logs[0].event, 'NewOrder');
       })
       .then(() => {
         let newOrderAddress;
@@ -64,13 +72,10 @@ contract('DataExchange', (accounts) => {
 
         const responsesPercentage = 30;
         const notarizationTermsOfService = 'Notary Terms and Conditions';
-        const hash = web3Utils.soliditySha3(
-          newOrderAddress,
-          responsesPercentage,
-          meta.notarizationFee,
-          notarizationTermsOfService,
+        const sig = signMessage(
+          [newOrderAddress, responsesPercentage, meta.notarizationFee, notarizationTermsOfService],
+          NOTARY_A,
         );
-        const sig = web3.eth.sign(NOTARY_A, hash);
 
         return meta.dx.addNotaryToOrder(
           newOrderAddress,
@@ -83,7 +88,7 @@ contract('DataExchange', (accounts) => {
         );
       })
       .then((res) => {
-        assert.equal((res.logs[0].event), 'NotaryAdded');
+        assert.equal(res.logs[0].event, 'NotaryAdded');
         assert.ok(res, 'Notary was not added');
       })
       .then(() => DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A))
@@ -96,26 +101,20 @@ contract('DataExchange', (accounts) => {
       })
       .then(() => meta.dx.getOpenOrders())
       .then((openOrders) => {
-        assert.ok((openOrders.indexOf(meta.newOrderAddress) >= 0), 'Order not in Open Orders');
+        assert.ok(openOrders.indexOf(meta.newOrderAddress) >= 0, 'Order not in Open Orders');
       })
       .then(() => meta.dx.getOrdersForNotary(NOTARY_A))
       .then((ordersForNotary) => {
-        assert.ok((ordersForNotary.length >= 1), 'Order not in orders for Notary');
+        assert.ok(ordersForNotary.length >= 1, 'Order not in orders for Notary');
       })
       .then(() => meta.dx.getOrdersForBuyer(BUYER))
       .then((ordersForBuyer) => {
-        assert.ok((ordersForBuyer.length >= 1), 'Order not in orders for Buyer');
+        assert.ok(ordersForBuyer.length >= 1, 'Order not in orders for Buyer');
       })
       .then(() => meta.wib.approve(meta.dx.address, 100, { from: BUYER }))
       .then(() => {
-        const dataHash = web3.sha3('0x40932840983001', { encoding: 'hex' });
-        const hash = web3Utils.soliditySha3(
-          meta.newOrderAddress,
-          SELLER,
-          NOTARY_A,
-          dataHash,
-        );
-        const sig = web3.eth.sign(SELLER, hash);
+        const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
+        const sig = signMessage([meta.newOrderAddress, NOTARY_A, dataHash], SELLER);
 
         return meta.dx.addDataResponseToOrder(
           meta.newOrderAddress,
@@ -127,7 +126,7 @@ contract('DataExchange', (accounts) => {
         );
       })
       .then((res) => {
-        assert.equal((res.logs[0].event), 'DataAdded');
+        assert.equal(res.logs[0].event, 'DataAdded');
         assert.ok(res, 'Buyer could not add data response to order');
       })
       .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
@@ -136,15 +135,10 @@ contract('DataExchange', (accounts) => {
       })
       .then(() => meta.dx.getOrdersForSeller(SELLER))
       .then((ordersForSeller) => {
-        assert.ok((ordersForSeller.length >= 1), 'Order not in orders for Seller');
+        assert.ok(ordersForSeller.length >= 1, 'Order not in orders for Seller');
       })
       .then(() => {
-        const hash = web3Utils.soliditySha3(
-          meta.newOrderAddress,
-          SELLER,
-          true,
-          true,
-        );
+        const hash = web3Utils.soliditySha3(meta.newOrderAddress, SELLER, true, true);
         const sig = web3.eth.sign(NOTARY_A, hash);
 
         return meta.dx.closeDataResponse(
@@ -161,11 +155,15 @@ contract('DataExchange', (accounts) => {
       })
       .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
       .then((res) => {
-        assert.equal(web3Utils.hexToUtf8(res[6]), 'TransactionCompleted', 'SellerInfo status does not match');
+        assert.equal(
+          web3Utils.hexToUtf8(res[5]),
+          'TransactionCompleted',
+          'SellerInfo status does not match',
+        );
       })
       .then(() => meta.dx.closeOrder(meta.newOrderAddress, { from: BUYER }))
       .then((res) => {
-        assert.equal((res.logs[0].event), 'OrderClosed');
+        assert.equal(res.logs[0].event, 'OrderClosed');
         assert.ok(res, 'Buyer could not close Data Order');
       });
   });

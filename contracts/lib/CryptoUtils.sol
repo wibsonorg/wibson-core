@@ -65,6 +65,33 @@ library CryptoUtils {
   }
 
   /**
+   * @dev Checks if the parameters passed correspond to the seller's signature used.
+   * @param order Order address.
+   * @param seller Seller address.
+   * @param notary Notary address.
+   * @param dataHash Hash of the data that must be sent, this is a SHA256.
+   * @param signature Signature of DataResponse.
+   */
+  function isDataResponseValid(
+    address order,
+    address seller,
+    address notary,
+    string dataHash,
+    bytes signature
+  ) public pure returns (bool) {
+    require(order != address(0));
+    require(seller != address(0));
+    require(notary != address(0));
+
+    bytes memory packed = bytes(dataHash).length > 0
+      ? abi.encodePacked(order, notary, dataHash)
+      : abi.encodePacked(order, notary);
+
+    bytes32 hash = keccak256(packed);
+    return isSignedBy(hash, seller, signature);
+  }
+
+  /**
    * @dev Checks if the notary's signature to close the `DataResponse` is valid.
    * @param order Order address.
    * @param seller Seller address.

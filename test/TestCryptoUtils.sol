@@ -20,7 +20,7 @@ contract TestCryptoUtils {
     Assert.isTrue(result, "Notary addition signature should be valid");
   }
 
-  function testNotaryAdditionInValidSignature() public {
+  function testNotaryAdditionInvalidSignature() public {
     bool result = CryptoUtils.isNotaryAdditionValid(
       0X28955C3CF5FF9CD9DC557D5A4B90730031775743,
       0xe0F5206bcD039e7B1392e8918821224E2A7437B9,
@@ -30,6 +30,30 @@ contract TestCryptoUtils {
       "notASignature"
     );
     Assert.isFalse(result, "Notary addition signature should be invalid");
+  }
+
+  function testDataResponseValidSignature() public {
+    bytes memory sig = hex"d9eb02dd4ed39dcc14f052c7bf5203626ae608250f4e0af4efbc979c4e008d532e35704cce86ae395bfede776daae7f408fdbd1b942ee75cf9a8f2203683695d01";
+
+    bool result = CryptoUtils.isDataResponseValid(
+      0x23b282e363D766831c3E94217bB16Ec7ce31a93D,
+      0xc58d64b0f59F0b81591b6A81F61e6A52b2013338,
+      0xdD7140a3657eF6B497E9612dACAd594338B7Fa15,
+      "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d",
+      sig
+    );
+    Assert.isTrue(result, "Data Response signature should be valid");
+  }
+
+  function testDataResponseInvalidSignature() public {
+    bool result = CryptoUtils.isDataResponseValid(
+      0x23b282e363D766831c3E94217bB16Ec7ce31a93D,
+      0xc58d64b0f59F0b81591b6A81F61e6A52b2013338,
+      0xdD7140a3657eF6B497E9612dACAd594338B7Fa15,
+      "9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d",
+      "notASignature"
+    );
+    Assert.isFalse(result, "Data Response signature should be invalid");
   }
 
   function testNotaryVeredictValidSignature() public {
@@ -46,7 +70,7 @@ contract TestCryptoUtils {
     Assert.isTrue(result, "Notary veredict signature should be valid");
   }
 
-  function testNotaryVeredictInValidSignature() public {
+  function testNotaryVeredictInvalidSignature() public {
     bool result = CryptoUtils.isNotaryVeredictValid(
       0X28955C3CF5FF9CD9DC557D5A4B90730031775743,
       0xe0F5206bcD039e7B1392e8918821224E2A7437B9,
