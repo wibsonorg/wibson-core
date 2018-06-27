@@ -343,7 +343,6 @@ contract('DataExchange', async (accounts) => {
       );
     });
 
-
     it('closes a DataResponse after closing a another DataOrder', async () => {
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
@@ -354,7 +353,11 @@ contract('DataExchange', async (accounts) => {
       });
 
       const anotherOrderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
-      await addNotaryToOrder(dataExchange, { orderAddress: anotherOrderAddress, notary, from: buyer });
+      await addNotaryToOrder(dataExchange, {
+        orderAddress: anotherOrderAddress,
+        notary,
+        from: buyer,
+      });
       await dataExchange.closeOrder(anotherOrderAddress, { from: buyer });
 
       const closeTransaction = await dataExchange.closeDataResponse(
@@ -383,7 +386,11 @@ contract('DataExchange', async (accounts) => {
       });
 
       const anotherOrderAddress = extractAddress(await newOrder(dataExchange, { from: buyer }));
-      await addNotaryToOrder(dataExchange, { orderAddress: anotherOrderAddress, notary, from: buyer });
+      await addNotaryToOrder(dataExchange, {
+        orderAddress: anotherOrderAddress,
+        notary,
+        from: buyer,
+      });
       await dataExchange.closeOrder(anotherOrderAddress, { from: buyer });
 
       const closeTransaction = await dataExchange.closeDataResponse(
@@ -712,7 +719,10 @@ contract('DataExchange', async (accounts) => {
 
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: buyer,
+            orderAddress,
+            seller,
+            notary,
+            from: buyer,
           });
           assert.fail();
         } catch (error) {
@@ -725,7 +735,10 @@ contract('DataExchange', async (accounts) => {
 
         try {
           await closeDataResponse(dataExchange, {
-            orderAddress, seller, notary, from: notary,
+            orderAddress,
+            seller,
+            notary,
+            from: notary,
           });
           assert.fail();
         } catch (error) {
