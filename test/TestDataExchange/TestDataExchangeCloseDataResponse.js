@@ -334,6 +334,31 @@ contract('DataExchange', async (accounts) => {
       );
     });
 
+    it('closes a data response even if the minimum initial budget for audits changed', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+      await dataExchange.setMinimumInitialBudgetForAudits(10, { from: owner });
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        true,
+        signMessage([orderAddress, seller, true, true], notary),
+        { from: notary },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
     describe('unexpected cases', async () => {
       it('can not close a data response as buyer immediately after order is created', async () => {
         try {
