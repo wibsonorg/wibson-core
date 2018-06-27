@@ -6,6 +6,7 @@ const Wibcoin = artifacts.require('./Wibcoin.sol');
 
 contract('DataExchange', async (accounts) => {
   const owner = accounts[0];
+  const notary = accounts[1];
   const buyer = accounts[4];
   const anotherBuyer = accounts[5];
   const tokenAddress = Wibcoin.address;
@@ -20,6 +21,41 @@ contract('DataExchange', async (accounts) => {
 
   describe('newOrder', () => {
     it('creates a new DataOrder', async () => {
+      const newOrderTransaction = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+      assertEvent(newOrderTransaction, 'NewOrder', 'DataOrder was not created properly');
+    });
+
+    it('creates a new DataOrder even if a notary was registered', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'https://notary-a.com/data',
+        'public-key-a',
+        { from: owner },
+      );
+
+      const newOrderTransaction = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+      assertEvent(newOrderTransaction, 'NewOrder', 'DataOrder was not created properly');
+    });
+
+    it('creates a new DataOrder even if a notary was unregistered', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'https://notary-a.com/data',
+        'public-key-a',
+        { from: owner },
+      );
+      await dataExchange.unregisterNotary(notary, { from: owner });
+
       const newOrderTransaction = await newOrder(dataExchange, {
         price: 0,
         initialBudgetForAudits: 0,
