@@ -1,4 +1,5 @@
 import { assertRevert } from '../helpers';
+import { addNotaryToOrder, newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -7,7 +8,9 @@ contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
   const owner = accounts[2];
   const other = accounts[3];
+  const buyer = accounts[4];
   const tokenAddress = Wibcoin.address;
+  const token = Wibcoin.at(tokenAddress);
 
   let dataExchange;
 
@@ -90,6 +93,20 @@ contract('DataExchange', async (accounts) => {
       assert.equal(res[1], 'Notary A', 'notary name differs');
       assert.equal(res[2], 'Notary A URL', 'notary url differs');
       assert.equal(res[3], 'Notary A Public Key', 'notary public key differs');
+    });
+
+    it('should fail to add an unregistered notary to an order', async () => {
+      await dataExchange.unregisterNotary(notary, { from: owner });
+      await token.approve(dataExchange.address, 3000, { from: buyer });
+      const tx = await newOrder(dataExchange, { from: buyer });
+      const orderAddress = tx.logs[0].args.orderAddr;
+
+      try {
+        await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error);
+      }
     });
   });
 });
