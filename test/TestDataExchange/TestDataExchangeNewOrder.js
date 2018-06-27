@@ -1,5 +1,5 @@
 import { assertRevert, assertEvent } from '../helpers';
-import { newOrder } from './helpers';
+import { newOrder, addNotaryToOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -121,6 +121,32 @@ contract('DataExchange', async (accounts) => {
       } catch (error) {
         assertRevert(error);
       }
+    });
+
+    it('can create a new order after adding a notary to another order', async () => {
+      await dataExchange.registerNotary(
+        notary,
+        'Notary A',
+        'Notary URL',
+        'Notary Public Key',
+        { from: owner },
+      );
+
+      const tx = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+
+      const orderAddress = tx.logs[0].args.orderAddr;
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+
+      const newOrderTx = await newOrder(dataExchange, {
+        price: 0,
+        initialBudgetForAudits: 0,
+        from: buyer,
+      });
+      assertEvent(newOrderTx, 'NewOrder', 'could not create a new order after adding a notary');
     });
   });
 });
