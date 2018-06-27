@@ -176,22 +176,22 @@ contract('DataExchange', async (accounts) => {
       assert(res, 'failed registering another notary after adding notary to an order');
     });
 
-    it('should not be able to update an existing notary after adding notary to an order', async () => {
+    it('should be able to update an existing notary after adding notary to an order', async () => {
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       await dataExchange.registerNotary(
         notary,
-        'Notary A',
-        'Notary A URL',
-        'Notary A Public Key',
+        'Changed Notary name',
+        'Changed Notary URL',
+        'Changed Notary PK',
         { from: owner },
       );
 
       const res = await dataExchange.getNotaryInfo(notary);
       assert.equal(res[0], notary, 'notary address differs');
-      assert.equal(res[1], 'Notary A', 'notary name differs');
-      assert.equal(res[2], 'Notary A URL', 'notary url differs');
-      assert.equal(res[3], 'Notary A Public Key', 'notary public key differs');
+      assert.equal(res[1], 'Changed Notary name', 'notary name differs');
+      assert.equal(res[2], 'Changed Notary URL', 'notary url differs');
+      assert.equal(res[3], 'Changed Notary PK', 'notary public key differs');
     });
 
     it('should be able to unregister another notary after adding notary to an order', async () => {
