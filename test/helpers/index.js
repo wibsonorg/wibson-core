@@ -7,7 +7,8 @@ const web3Utils = require('web3-utils');
  * @throws {AssertionError} when the error is not originated from a revert.
  */
 export function assertEvent(transaction, eventName, message = '') {
-  assert.equal(transaction.logs[0].event, eventName, message);
+  const hasEvent = transaction.logs.some(log => log.event === eventName);
+  assert(hasEvent, message);
 }
 
 /**

@@ -1,4 +1,4 @@
-import { assertRevert, signMessage } from '../helpers';
+import { assertEvent, assertRevert, signMessage } from '../helpers';
 import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -457,10 +457,10 @@ contract('DataExchange', (accounts) => {
           signature,
           { from: buyer },
         );
-        assert.equal(
-          tx.logs[0].event,
+        assertEvent(
+          tx,
           'DataAdded',
-          'Seller should be able to pick a notary that is in the Data Order and Data Exchange',
+          'Data Response should be added if notary is in DataOrder and DataExchange',
         );
       } catch (error) {
         assert.fail();
@@ -478,10 +478,27 @@ contract('DataExchange', (accounts) => {
           sig,
           { from: buyer },
         );
-        assert.equal(
-          tx.logs[0].event,
+        assertEvent(tx, 'DataAdded', 'Data Response should be added even with an empty data hash');
+      } catch (error) {
+        assert.fail(error);
+      }
+    });
+
+    it('should add a data response even if the notary was unregistered after it was added to the Data Order', async () => {
+      await dataExchange.unregisterNotary(notary, { from: owner });
+      try {
+        const tx = await dataExchange.addDataResponseToOrder(
+          orderAddress,
+          sellerA,
+          notary,
+          dataHash,
+          signature,
+          { from: buyer },
+        );
+        assertEvent(
+          tx,
           'DataAdded',
-          'Data Response should be added even with an empty data hash',
+          'Data Response should be added even if the notary was unregistered',
         );
       } catch (error) {
         assert.fail(error);
