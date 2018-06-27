@@ -244,16 +244,14 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('fails when passed an inexistent notary', async () => {
-      try {
-        await dataExchange.getNotaryInfo(
-          other,
-          { from: other },
-        );
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
+    it('returns `null values` when passed an inexistent notary', async () => {
+      const res = await dataExchange.getNotaryInfo(other);
+
+      assert.equal(res[0], '0x0000000000000000000000000000000000000000', 'notary address is not 0');
+      assert.equal(res[1], '', 'notary name is not empty');
+      assert.equal(res[2], '', 'notary url is not empty');
+      assert.equal(res[3], '', 'notary public key is not empty');
+      assert.equal(res[4], false, 'isActive flag is not false');
     });
 
     it('gets notary info', async () => {
@@ -270,6 +268,15 @@ contract('DataExchange', async (accounts) => {
       assert.equal(res[1], 'Notary A', 'notary name differs');
       assert.equal(res[2], 'Notary URL', 'notary url differs');
       assert.equal(res[3], 'Notary Public Key', 'notary public key differs');
+      assert.equal(res[4], true, 'isActive flag differs');
+
+      await dataExchange.unregisterNotary(notary, { from: owner });
+      const res2 = await dataExchange.getNotaryInfo(notary);
+      assert.equal(res2[0], notary, 'notary address differs');
+      assert.equal(res2[1], 'Notary A', 'notary name differs');
+      assert.equal(res2[2], 'Notary URL', 'notary url differs');
+      assert.equal(res2[3], 'Notary Public Key', 'notary public key differs');
+      assert.equal(res2[4], false, 'isActive flag differs');
     });
   });
 });
