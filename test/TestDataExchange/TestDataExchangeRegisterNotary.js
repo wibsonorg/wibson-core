@@ -1,4 +1,4 @@
-import { assertEvent, assertRevert, extractAddress } from '../helpers';
+import { assertEvent, assertRevert } from '../helpers';
 import { newOrder, addNotaryToOrder, addDataResponseToOrder, closeDataResponse } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');

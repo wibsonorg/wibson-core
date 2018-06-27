@@ -1,4 +1,4 @@
-import { assertRevert } from '../helpers';
+import { assertEvent, assertRevert } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
@@ -39,7 +39,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-      assert(res, 'Could not be called by owner');
+      assertEvent(res, 'NotaryUnregistered', 'Could not be called by owner');
     });
 
     it('should be called only when not paused', async () => {
@@ -61,7 +61,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-      assert(res, 'Could not be called when unpaused');
+      assertEvent(res, 'NotaryUnregistered', 'Could not be called when unpaused');
     });
 
     it('should fail when passed an invalid notary address', async () => {
@@ -93,8 +93,7 @@ contract('DataExchange', async (accounts) => {
         notary,
         { from: owner },
       );
-
-      assert(res, 'Could not unregister notary');
+      assertEvent(res, 'NotaryUnregistered', 'Could not unregister notary');
     });
   });
 });
