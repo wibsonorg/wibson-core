@@ -102,7 +102,7 @@ contract('DataExchange', async (accounts) => {
     it('should unregister a notary', async () => {
       const res = await dataExchange.unregisterNotary(notary, { from: owner });
 
-      assert(res, 'Could not unregister notary');
+      assertEvent(res, 'NotaryUnregistered', 'Could not unregister notary');
     });
 
     it('should register notary after unregistering it', async () => {
@@ -175,7 +175,11 @@ contract('DataExchange', async (accounts) => {
       );
 
       const res = await dataExchange.unregisterNotary(other, { from: owner });
-      assert(res, 'failed unregistering another notary after adding notary to an order');
+      assertEvent(
+        res,
+        'NotaryUnregistered',
+        'failed unregistering another notary after adding notary to an order',
+      );
     });
 
     it('should be able to unregister an existing notary after adding that notary to an order', async () => {
@@ -196,7 +200,11 @@ contract('DataExchange', async (accounts) => {
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
 
       const res = await dataExchange.unregisterNotary(notary, { from: owner });
-      assert(res, 'failed unregistering  notary after adding that notary to an order');
+      assertEvent(
+        res,
+        'NotaryUnregistered',
+        'failed unregistering  notary after adding that notary to an order',
+      );
     });
   });
 });

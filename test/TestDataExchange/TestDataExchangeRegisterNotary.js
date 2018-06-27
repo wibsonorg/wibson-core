@@ -201,7 +201,11 @@ contract('DataExchange', async (accounts) => {
       'Notary B Public Key',
       { from: owner },
     );
-    assert(res, 'failed registering another notary after adding notary to an order');
+    assertEvent(
+      res,
+      'NotaryRegistered',
+      'failed registering another notary after adding notary to an order',
+    );
   });
 
   it('should be able to update an existing notary after adding notary to an order', async () => {
