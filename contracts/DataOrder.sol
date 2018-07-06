@@ -307,7 +307,7 @@ contract DataOrder is Ownable {
       return bytes32("TransactionCompleted");
     }
 
-    revert();
+    throw;
   }
 
 }
