@@ -53,7 +53,7 @@ contract DataOrder is Ownable {
   uint256 public initialBudgetForAudits;
   string public termsAndConditions;
   string public buyerURL;
-  string public publicKey;
+  string public buyerPublicKey;
   uint32 public createdAt;
   uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
@@ -73,7 +73,7 @@ contract DataOrder is Ownable {
    * @param _initialBudgetForAudits The initial budget set for future audits.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
-   * @param _publicKey Public Key of the buyer, which will be used to encrypt the
+   * @param _buyerPublicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
    * @return The address of the newly created order.
    */
@@ -85,10 +85,10 @@ contract DataOrder is Ownable {
     uint256 _initialBudgetForAudits,
     string _termsAndConditions,
     string _buyerURL,
-    string _publicKey
+    string _buyerPublicKey
   ) public validAddress(_buyer) {
     require(bytes(_buyerURL).length > 0);
-    require(bytes(_publicKey).length > 0);
+    require(bytes(_buyerPublicKey).length > 0);
 
     buyer = _buyer;
     filters = _filters;
@@ -97,7 +97,7 @@ contract DataOrder is Ownable {
     initialBudgetForAudits = _initialBudgetForAudits;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
-    publicKey = _publicKey;
+    buyerPublicKey = _buyerPublicKey;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = uint32(block.timestamp);
     transactionCompletedAt = 0;
