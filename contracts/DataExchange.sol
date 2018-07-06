@@ -489,9 +489,9 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param addresses array of five addresses to explore.
    */
   function allDistinct(address[5] addresses) private pure {
-    for (uint i = 0; i < addresses.length; i = i.add(1)) {
+    for (uint i = 0; i < addresses.length; i++) {
       require(addresses[i] != address(0));
-      for (uint j = i.add(1); j < addresses.length; j = j.add(1)) {
+      for (uint j = i + 1; j < addresses.length; j++) { // solium-disable-line zeppelin/no-arithmetic-operations
         require(addresses[i] != addresses[j]);
       }
     }
