@@ -267,8 +267,8 @@ contract DataOrder is Ownable {
     uint32,
     bytes32
   ) {
+    require(hasSellerBeenAccepted(seller));
     SellerInfo memory info = sellerInfo[seller];
-    require(info.createdAt != 0);
     return (
       seller,
       info.notary,
@@ -287,8 +287,8 @@ contract DataOrder is Ownable {
   function getNotaryForSeller(
     address seller
   ) public view validAddress(seller) returns (address) {
+    require(hasSellerBeenAccepted(seller));
     SellerInfo memory info = sellerInfo[seller];
-    require(info.createdAt != 0);
     return info.notary;
   }
 
