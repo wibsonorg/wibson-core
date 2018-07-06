@@ -119,7 +119,6 @@ contract DataOrder is Ownable {
     uint256 notarizationFee,
     string notarizationTermsOfService
   ) public onlyOwner validAddress(notary) returns (bool) {
-    require(orderStatus != OrderStatus.TransactionCompleted);
     require(transactionCompletedAt == 0);
     require(responsesPercentage <= 100);
     require(!hasNotaryBeenAdded(notary));
