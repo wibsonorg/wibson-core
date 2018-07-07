@@ -28,7 +28,7 @@ contract DataExchange is TokenDestructible, Pausable {
   event NotaryUnregistered(address indexed notary);
 
   event NewOrder(address indexed orderAddr);
-  event NotaryAdded(address indexed orderAddr, address indexed notary);
+  event NotaryAddedToOrder(address indexed orderAddr, address indexed notary);
   event DataAdded(address indexed orderAddr, address indexed seller);
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
   event OrderClosed(address indexed orderAddr);
@@ -254,7 +254,7 @@ contract DataExchange is TokenDestructible, Pausable {
     if (okay) {
       openOrders.insert(orderAddr);
       ordersByNotary[notary].push(orderAddr);
-      emit NotaryAdded(order, notary);
+      emit NotaryAddedToOrder(order, notary);
     }
     return okay;
   }
