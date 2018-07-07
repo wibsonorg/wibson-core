@@ -65,10 +65,9 @@ library MultiMap {
     }
 
     self.addressToIndex[_key] = self.addresses.length;
-    uint currentLength = self.addresses.length;
-    uint newLength = self.addresses.push(_key);
+    self.addresses.push(_key);
 
-    return newLength == (SafeMath.add(currentLength, 1));
+    return true;
   }
 
   /**
