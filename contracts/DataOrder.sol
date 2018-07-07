@@ -307,7 +307,7 @@ contract DataOrder is Ownable {
       return bytes32("TransactionCompleted");
     }
 
-    throw;
+    throw; // solium-disable-line security/no-throw
   }
 
 }
