@@ -41,7 +41,6 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   MultiMap.MapStorage openOrders;
-  MultiMap.MapStorage validNotaries;
   MultiMap.MapStorage allowedNotaries;
 
   mapping(address => address[]) public ordersBySeller;
