@@ -526,7 +526,6 @@ contract DataExchange is TokenDestructible, Pausable {
     uint256 finalCharges = totalCharges.sub(prePaid);
 
     buyerRemainingBudgetForAudits[buyer][order] = remainingBudget.sub(prePaid);
-    require(token.allowance(buyer, this) >= finalCharges);
     require(token.transferFrom(buyer, this, finalCharges));
 
     // Bookkeeping of the available tokens paid by the Buyer and now in control
