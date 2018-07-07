@@ -153,7 +153,7 @@ contract DataExchange is TokenDestructible, Pausable {
    */
   function setMinimumInitialBudgetForAudits(
     uint256 _minimumInitialBudgetForAudits
-  ) public onlyOwner returns (bool) {
+  ) public onlyOwner whenNotPaused returns (bool) {
     minimumInitialBudgetForAudits = _minimumInitialBudgetForAudits;
     return true;
   }
