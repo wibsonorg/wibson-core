@@ -88,8 +88,8 @@ contract('DataExchange', (accounts) => {
         );
       })
       .then((res) => {
-        assert.equal(res.logs[0].event, 'NotaryAdded');
-        assert.ok(res, 'Notary was not added');
+        assert.equal(res.logs[0].event, 'NotaryAddedToOrder');
+        assert.ok(res, 'Notary was not added to order');
       })
       .then(() => DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A))
       .then((res) => {
