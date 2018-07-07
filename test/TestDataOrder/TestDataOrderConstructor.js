@@ -1,4 +1,4 @@
-import { createDataOrder } from './helpers/dataOrderCreation';
+import createDataOrder from './helpers/dataOrderCreation';
 import { assertRevert } from '../helpers';
 
 contract('DataOrder', async (accounts) => {

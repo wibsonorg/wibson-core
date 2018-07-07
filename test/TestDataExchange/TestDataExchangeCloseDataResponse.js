@@ -1,4 +1,4 @@
-import { createDataOrder } from '../TestDataOrder/helpers/dataOrderCreation';
+import createDataOrder from '../TestDataOrder/helpers/dataOrderCreation';
 import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 import { assertEvent, assertRevert, signMessage } from '../helpers';
 

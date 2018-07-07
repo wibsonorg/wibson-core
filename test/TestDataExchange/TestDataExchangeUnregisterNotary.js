@@ -92,14 +92,6 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('should unregister a notary', async () => {
-      const res = await dataExchange.unregisterNotary(
-        notary,
-        { from: owner },
-      );
-      assertEvent(res, 'NotaryUnregistered', 'Could not unregister notary');
-    });
-
-    it('should unregister a notary', async () => {
       const res = await dataExchange.unregisterNotary(notary, { from: owner });
 
       assertEvent(res, 'NotaryUnregistered', 'Could not unregister notary');

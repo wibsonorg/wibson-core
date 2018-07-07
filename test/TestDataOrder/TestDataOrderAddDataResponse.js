@@ -1,4 +1,4 @@
-import { createDataOrder } from './helpers/dataOrderCreation';
+import createDataOrder from './helpers/dataOrderCreation';
 import { assertRevert } from '../helpers';
 
 const web3Utils = require('web3-utils');

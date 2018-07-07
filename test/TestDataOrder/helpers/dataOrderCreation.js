@@ -1,18 +1,5 @@
 const DataOrder = artifacts.require('./DataOrder.sol');
 
-// TODO: to be deprecated
-const createHardcodedDataOrder = async (owner, buyer) => DataOrder.new(
-  buyer,
-  'age:20,gender:male',
-  'data request',
-  20,
-  10,
-  'Order T&C',
-  'https://buyer.example.com/data',
-  'public-key',
-  { from: owner },
-);
-
 const createDataOrder = async ({
   buyer,
   filters = 'age:20,gender:male',
@@ -35,7 +22,4 @@ const createDataOrder = async ({
   { from },
 );
 
-export {
-  createDataOrder,
-  createHardcodedDataOrder,
-};
+export default createDataOrder;
