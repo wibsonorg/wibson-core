@@ -496,17 +496,17 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Charges a buyer the orderPrice and notary fee for a given `DataResponse`.
-   * @notice 1. Tokens are held in the DataExchange contract until players must
-   *            be paid.
+   * @dev Charges a buyer the final charges for a given `DataResponse`.
+   * @notice 1. Tokens are held in the DataExchange contract until players are paid.
    *         2. This function follows a basic invoice flow:
-   *             base price
-   *           + extra fees
-   *             ---------
-   *             total charges
-   *           - pre paid charges
-   *             ---------
-   *             final charges
+   *
+   *               DataOrder price
+   *            + Notarization fee
+   *            ------------------
+   *                 Total charges
+   *            -  Prepaid charges (Minimum between Notarization fee and Buyer remaining budget)
+   *            ------------------
+   *                 Final charges
    *
    * @param order DataOrder to which the DataResponse applies.
    * @param seller Address of the Seller.
