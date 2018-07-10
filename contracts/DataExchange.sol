@@ -188,7 +188,6 @@ contract DataExchange is TokenDestructible, Pausable {
       filters,
       dataRequest,
       price,
-      initialBudgetForAudits,
       termsAndConditions,
       buyerURL,
       publicKey

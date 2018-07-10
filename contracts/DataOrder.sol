@@ -50,7 +50,6 @@ contract DataOrder is Ownable {
   string public filters;
   string public dataRequest;
   uint256 public price;
-  uint256 public initialBudgetForAudits;
   string public termsAndConditions;
   string public buyerURL;
   string public buyerPublicKey;
@@ -70,7 +69,6 @@ contract DataOrder is Ownable {
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param _price Price per added Data Response.
-   * @param _initialBudgetForAudits The initial budget set for future audits.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _buyerPublicKey Public Key of the buyer, which will be used to encrypt the
@@ -82,7 +80,6 @@ contract DataOrder is Ownable {
     string _filters,
     string _dataRequest,
     uint256 _price,
-    uint256 _initialBudgetForAudits,
     string _termsAndConditions,
     string _buyerURL,
     string _buyerPublicKey
@@ -94,7 +91,6 @@ contract DataOrder is Ownable {
     filters = _filters;
     dataRequest = _dataRequest;
     price = _price;
-    initialBudgetForAudits = _initialBudgetForAudits;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
     buyerPublicKey = _buyerPublicKey;
