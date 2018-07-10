@@ -31,6 +31,7 @@ contract DataExchange is TokenDestructible, Pausable {
   event NotaryAddedToOrder(address indexed orderAddr, address indexed notary);
   event DataAdded(address indexed orderAddr, address indexed seller);
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
+  event RefundedToBuyer(address indexed orderAddr, address indexed buyer);
   event OrderClosed(address indexed orderAddr);
 
   struct NotaryInfo {
@@ -378,7 +379,11 @@ contract DataExchange is TokenDestructible, Pausable {
       isDataValid
     );
 
-    emit TransactionCompleted(order, seller);
+    if (transactionCompleted) {
+      emit TransactionCompleted(order, seller);
+    } else {
+      emit RefundedToBuyer(order, buyer);
+    }
     return true;
   }
 

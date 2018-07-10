@@ -523,6 +523,81 @@ contract('DataExchange', async (accounts) => {
       );
     });
 
+    it('closes a DataResponse that was not audited', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        false,
+        true,
+        signMessage([orderAddress, seller, false, true], notary),
+        { from: buyer },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
+    it('closes a DataResponse with invalid data', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        false,
+        signMessage([orderAddress, seller, true, false], notary),
+        { from: buyer },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'RefundedToBuyer',
+        'DataResponse was not closed correctly',
+      );
+    });
+
+    it('closes a DataResponse with invalid data and not audited', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        false,
+        false,
+        signMessage([orderAddress, seller, false, false], notary),
+        { from: buyer },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
     it('closes a data response even if the notary was unregistered after it was added to the Data Order', async () => {
       await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
       await addDataResponseToOrder(dataExchange, {
