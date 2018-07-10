@@ -558,8 +558,8 @@ contract DataExchange is TokenDestructible, Pausable {
     // if no notarization was done, notarization fee tokens go back to buyer.
     address notarizationFeeReceiver = wasAudited ? notary : buyer;
 
-    // if no notarization was done or data is invalid, order price tokens go back to buyer.
-    address orderPriceReceiver = (!wasAudited || !isDataValid) ? buyer : seller;
+    // if no notarization was done or data is valid, tokens go to the seller
+    address orderPriceReceiver = (!wasAudited || isDataValid) ? seller : buyer;
 
     require(token.transfer(notarizationFeeReceiver, notarizationFee));
     require(token.transfer(orderPriceReceiver, orderPrice));
