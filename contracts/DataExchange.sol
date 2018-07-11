@@ -14,10 +14,10 @@ import "./lib/CryptoUtils.sol";
 /**
  * @title DataExchange
  * @author Wibson Development Team <developers@wibson.org>
- * @dev `DataExchange` is the core contract of the Wibson Protocol.
- *      This allows the creation, management, and tracking of `DataOrder`s.
- *      Also, such has some helper methods to access the data needed by the different
- *      parties involved in the Protocol.
+ * @notice `DataExchange` is the core contract of the Wibson Protocol.
+ *         This allows the creation, management, and tracking of DataOrders.
+ * @dev This contract also contains some helper methods to access the data
+ *      needed by the different parties involved in the Protocol.
  */
 contract DataExchange is TokenDestructible, Pausable {
   using SafeMath for uint256;
@@ -79,8 +79,8 @@ contract DataExchange is TokenDestructible, Pausable {
   uint256 public minimumInitialBudgetForAudits;
 
   /**
-   * @dev Contract constructor.
-   * @param tokenAddress Address of the Wibcoin token address (ERC20).
+   * @notice Contract constructor.
+   * @param tokenAddress Address of the Wibcoin token address.
    * @param ownerAddress Address of the DataExchange owner.
    */
   constructor(
@@ -95,13 +95,13 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Registers a new notary or replaces an already existing one.
-   * @notice At least one notary is needed to enable `DataExchange` operation.
+   * @notice Registers a new notary or replaces an already existing one.
+   * @dev At least one notary is needed to enable `DataExchange` operation.
    * @param notary Address of a Notary to add.
    * @param name Name Of the Notary.
    * @param notaryUrl Public URL of the notary where the data must be sent.
    * @param publicKey PublicKey used by the Notary.
-   * @return Whether the notary was successfully registered or not.
+   * @return true if the notary was successfully registered, reverts otherwise.
    */
   function registerNotary(
     address notary,
@@ -128,11 +128,9 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Unregisters an existing notary.
-   * @notice At least one notary is needed to enable `DataExchange` operation.
+   * @notice Unregisters an existing notary.
    * @param notary Address of a Notary to unregister.
-   * @return Whether the notary was successfully unregistered. False if not
-   * existed.
+   * @return true if the notary was successfully unregistered, reverts otherwise.
    */
   function unregisterNotary(
     address notary
@@ -144,13 +142,13 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Sets the minimum initial budget for audits to be placed by a buyer
-   * on `DataOrder` creation.
-   * @notice The initial budget for audit is used as a preventive method to reduce
-   * spam `DataOrders` in the network.
+   * @notice Sets the minimum initial budget for audits to be placed by a buyer
+   * on DataOrder creation.
+   * @dev The initial budget for audit is used as a preventive method to reduce
+   *      spam DataOrders in the network.
    * @param _minimumInitialBudgetForAudits The new minimum for initial budget for
-   * audits per `DataOrder`.
-   * @return Whether the new value was successfully modified or not.
+   * audits per DataOrder.
+   * @return true if the value was successfully set, reverts otherwise.
    */
   function setMinimumInitialBudgetForAudits(
     uint256 _minimumInitialBudgetForAudits
@@ -160,8 +158,8 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Creates a New Order.
-   * @notice The `msg.sender` will become the buyer of the order.
+   * @notice Creates a new DataOrder.
+   * @dev The `msg.sender` will become the buyer of the order.
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
    * @param price Price per added Data Response.
@@ -170,7 +168,8 @@ contract DataExchange is TokenDestructible, Pausable {
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
-   * @return The address of the newly created order.
+   * @return The address of the newly created DataOrder. If the DataOrder could
+   *         not be created, reverts.
    */
   function newOrder(
     string filters,
@@ -205,18 +204,16 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev The buyer adds a notary to the Data Order with the percentage of
-   * responses to audit, the notarization fee and the notary's signature
-   * over these arguments.
-   * @notice The `msg.sender` must be the buyer.
+   * @notice Adds a notary to the Data Order.
+   * @dev The `msg.sender` must be the buyer.
    * @param orderAddr Order Address to accept notarize.
-   * @param notary Notary's address.
-   * @param responsesPercentage Percentage of `DataResponses` to audit per
-   * `DataOrder`. Value must be between 0 and 100.
+   * @param notary Notary address.
+   * @param responsesPercentage Percentage of `DataResponses` to audit per DataOrder.
+   *        Value must be between 0 and 100.
    * @param notarizationFee Fee to be charged per validation done.
    * @param notarizationTermsOfService Notary's terms and conditions for the order.
    * @param notarySignature Notary's signature over the other arguments.
-   * @return Whether the Notary was added successfully or not.
+   * @return true if the Notary was added successfully, reverts otherwise.
    */
   function addNotaryToOrder(
     address orderAddr,
@@ -260,18 +257,18 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Adds a new DataResponse to the given order.
-   * @notice 1. The `msg.sender` must be the buyer of the order.
-   *         2. The buyer must allow the `DataExchange` to withdraw the price of
-   *            the order.
+   * @notice Adds a new DataResponse to the given order.
+   * @dev 1. The `msg.sender` must be the buyer of the order.
+   *      2. The buyer must allow the DataExchange to withdraw the price of the
+   *         order.
    * @param orderAddr Order address where the DataResponse must be added.
    * @param seller Address of the Seller.
    * @param notary Notary address that the Seller chose to use as notarizer,
    *        this must be one within the allowed notaries and within the
-   *        `DataOrder`'s notaries.
+   *        DataOrder's notaries.
    * @param dataHash Hash of the data that must be sent, this is a SHA256.
    * @param signature Signature of DataResponse.
-   * @return Whether the DataResponse was set successfully or not.
+   * @return true if the DataResponse was set successfully, reverts otherwise.
    */
   function addDataResponseToOrder(
     address orderAddr,
@@ -319,31 +316,31 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
-   *      the seller's data and checks that it is valid or not, he must close
-   *      the DataResponse signaling the result.
-   * @notice 1. This method requires an offline signature from the notary set in
-   *         the DataResponse, which will indicate the audit result or if
-   *         the data was not audited at all.
-   *           - If the notary did not audit the data or it verifies that it was
-   *             valid, funds will be sent to the Seller.
-   *           - If the notary signals the data as invalid, funds will be
-   *             handed back to the Buyer.
-   *           - Otherwise, funds will be locked at the `DataExchange` contract
-   *             until the issue is solved.
-   *         2. This also works as a pause mechanism in case the system is
-   *         working under abnormal scenarios while allowing the parties to keep
-   *         exchanging information without losing their funds until the system
-   *         is back up.
-   *         3. The `msg.sender` must be the buyer or the notary in case the
-   *         former does not show up. Only through the notary's signature it is
-   *         decided who must receive the funds.
+   * @notice Closes a DataResponse.
+   * @dev Once the buyer receives the seller's data and checks that it is valid
+   *      or not, he must close the DataResponse signaling the result.
+   *        1. This method requires an offline signature from the notary set in
+   *           the DataResponse, which will indicate the audit result or if
+   *           the data was not audited at all.
+   *             - If the notary did not audit the data or it verifies that it was
+   *               valid, funds will be sent to the Seller.
+   *             - If the notary signals the data as invalid, funds will be
+   *               handed back to the Buyer.
+   *             - Otherwise, funds will be locked at the `DataExchange` contract
+   *               until the issue is solved.
+   *        2. This also works as a pause mechanism in case the system is
+   *           working under abnormal scenarios while allowing the parties to keep
+   *           exchanging information without losing their funds until the system
+   *           is back up.
+   *        3. The `msg.sender` must be the buyer or the notary in case the
+   *           former does not show up. Only through the notary's signature it is
+   *           decided who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
    * @param wasAudited Indicates whether the data was audited or not.
    * @param isDataValid Indicates the result of the audit, if happened.
    * @param notarySignature Off-chain Notary signature
-   * @return Whether the DataResponse was successfully closed or not.
+   * @return true if the DataResponse was successfully closed, reverts otherwise.
    */
   function closeDataResponse(
     address orderAddr,
@@ -388,13 +385,12 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Closes the Data order.
-   * @notice Onces the data is closed it will no longer accepts new
-   *         DataResponse anymore.
-   *         The `msg.sender` must be the buyer of the order or the owner of the
-   *         contract in a emergency case.
+   * @notice Closes the DataOrder.
+   * @dev Onces the data is closed it will no longer accept new DataResponses.
+   *      The `msg.sender` must be the buyer of the order or the owner of the
+   *      contract in a emergency case.
    * @param orderAddr Order address to close.
-   * @return Whether the DataOrder was successfully closed or not.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
    */
   function closeOrder(
     address orderAddr
@@ -419,9 +415,9 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Gets all the data orders associated with a notary.
+   * @notice Gets all the data orders associated with a notary.
    * @param notary Notary address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return A list of DataOrder addresses.
    */
   function getOrdersForNotary(
     address notary
@@ -430,9 +426,9 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Gets all the data orders associated with a seller.
+   * @notice Gets all the data orders associated with a seller.
    * @param seller Seller address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return List of DataOrder addresses.
    */
   function getOrdersForSeller(
     address seller
@@ -441,9 +437,9 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Gets all the data orders associated with a buyer.
+   * @notice Gets all the data orders associated with a buyer.
    * @param buyer Buyer address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return List of DataOrder addresses.
    */
   function getOrdersForBuyer(
     address buyer
@@ -452,9 +448,9 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   /**
-   * @dev Gets all the open data orders, that is all the `DataOrder`s that still
-   *      are receiving new `DataResponse`.
-   * @return A list of `DataOrder` addresses.
+   * @notice Gets all the open data orders, that is all the DataOrders that are
+   *         still receiving new DataResponses.
+   * @return List of DataOrder addresses.
    */
   function getOpenOrders() public view returns (address[]) {
     return openOrders.addresses;

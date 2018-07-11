@@ -6,8 +6,8 @@ import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 /**
  * @title Wibcoin
  * @author Wibson Development Team <developers@wibson.org>
- * @dev Wibson Oficial Token, this is an ERC20 standard compliant token.
- *      Wibcoin token has an initial supply of 9 billion tokens with 9 decimals.
+ * @notice Wibson Oficial Token, this is an ERC20 standard compliant token.
+ * @dev Wibcoin token has an initial supply of 9 billion tokens with 9 decimals.
  */
 contract Wibcoin is StandardToken {
   string public constant name = "Wibcoin"; // solium-disable-line uppercase

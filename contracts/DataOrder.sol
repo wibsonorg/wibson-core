@@ -6,9 +6,9 @@ import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 /**
  * @title DataOrder
  * @author Wibson Development Team <developers@wibson.org>
- * @dev `DataOrder` is the contract between a given buyer and a set of sellers.
- *      This holds the information about the "deal" between them and how the
- *      transaction has evolved.
+ * @notice `DataOrder` is the contract between a given buyer and a set of sellers.
+ *         This holds the information about the "deal" between them and how the
+ *         transaction has evolved.
  */
 contract DataOrder is Ownable {
   modifier validAddress(address addr) {
@@ -64,7 +64,7 @@ contract DataOrder is Ownable {
   address[] public notaries;
 
   /**
-   * @dev Contract's constructor.
+   * @notice Contract's constructor.
    * @param _buyer Buyer address
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
@@ -73,7 +73,6 @@ contract DataOrder is Ownable {
    * @param _buyerURL Public URL of the buyer where the data must be sent.
    * @param _buyerPublicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
-   * @return The address of the newly created order.
    */
   constructor(
     address _buyer,
@@ -100,14 +99,13 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev The buyer adds a notary to the Data Order with the percentage of
-   * responses to audit and the notarization fee.
+   * @notice Adds a notary to the Data Order.
    * @param notary Notary's address.
-   * @param responsesPercentage Percentage of `DataResponses` to audit per
-   * `DataOrder`. Value must be between 0 and 100.
+   * @param responsesPercentage Percentage of DataResponses to audit per DataOrder.
+            Value must be between 0 and 100.
    * @param notarizationFee Fee to be charged per validation done.
    * @param notarizationTermsOfService Notary's terms and conditions for the order.
-   * @return Whether the Notary was added successfully or not.
+   * @return true if the Notary was added successfully, reverts otherwise.
    */
   function addNotary(
     address notary,
@@ -131,13 +129,13 @@ contract DataOrder is Ownable {
   }
 
    /**
-    * @dev Adds a new DataResponse.
+    * @notice Adds a new DataResponse.
     * @param seller Address of the Seller.
     * @param notary Notary address that the Seller chooses to use as notary,
     *        this must be one within the allowed notaries and within the
-    *        `DataOrder`'s notaries.
+    *         DataOrder's notaries.
     * @param dataHash Hash of the data that must be sent, this is a SHA256.
-    * @return Whether the DataResponse was set successfully or not.
+    * @return true if the DataResponse was added successfully, reverts otherwise.
     */
   function addDataResponse(
     address seller,
@@ -163,12 +161,12 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
-   *      the seller's data and checks that it is valid or not, he must signal
-   *      DataResponse as completed.
+   * @notice Closes a DataResponse.
+   * @dev Once the buyer receives the seller's data and checks that it is valid
+   *      or not, he must signal  DataResponse as completed.
    * @param seller Seller address.
    * @param transactionCompleted True, if the seller got paid for his/her data.
-   * @return Whether the DataResponse was successfully closed or not.
+   * @return true if DataResponse was successfully closed, reverts otherwise.
    */
   function closeDataResponse(
     address seller,
@@ -187,10 +185,9 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Closes the Data order.
-   * @notice Once the `DataOrder` is closed it will no longer accepts new
-   *         `DataResponses` anymore.
-   * @return Whether the DataOrder was successfully closed or not.
+   * @notice Closes the Data order.
+   * @dev Once the DataOrder is closed it will no longer accept new DataResponses.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
    */
   function close() public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
@@ -201,10 +198,9 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Gets wheater a `DataResponse` for a given the seller has been accepted
-   *      or not.
+   * @notice Checks if a DataResponse for a given seller has been accepted.
    * @param seller Seller address.
-   * @return Whether the `DataResponse` was accepted or not.
+   * @return true if the DataResponse was accepted, false otherwise.
    */
   function hasSellerBeenAccepted(
     address seller
@@ -213,9 +209,9 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Checks if the given notary was added to notarize this `DataOrder`.
+   * @notice Checks if the given notary was added to notarize this DataOrder.
    * @param notary Notary address to check.
-   * @return Whether the notary was added or not.
+   * @return true if the Notary was added, false otherwise.
    */
   function hasNotaryBeenAdded(
     address notary
@@ -224,9 +220,10 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Gets the notary information.
+   * @notice Gets the notary information.
    * @param notary Notary address to get info for.
-   * @return Notary Information.
+   * @return Notary information (address, responsesPercentage, notarizationFee,
+   *         notarizationTermsOfService, addedAt)
    */
   function getNotaryInfo(
     address notary
@@ -249,9 +246,10 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Gets the seller information.
+   * @notice Gets the seller information.
    * @param seller Seller address to get info for.
-   * @return Seller Information.
+   * @return Seller information (address, notary, dataHash, createdAt, closedAt,
+   *         status)
    */
   function getSellerInfo(
     address seller
@@ -276,7 +274,7 @@ contract DataOrder is Ownable {
   }
 
   /**
-   * @dev Gets the selected notary for the given seller.
+   * @notice Gets the selected notary for the given seller.
    * @param seller Seller address.
    * @return Address of the notary assigned to the given seller.
    */
