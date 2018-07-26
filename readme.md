@@ -8,7 +8,7 @@
 ## Deployment with Truffle
 ### Local
 1. Deploy with truffle: `truffle migrate --reset --compile-all`
-2. Test withing the console: `truffle console`
+2. Test within the console: `truffle console`
 
 ### Ropsten
 
@@ -34,10 +34,8 @@ npm run test:coverage
 
 -   Wibcoin: `0x`
 -   DataExchange: `0x`
--   IdentityManager: `0x`
 -   Migrations `0x`
 -   MultiMap `0x`
--   ArrayUtils `0x`
 -   ECRecovery `0x`
 -   CryptoUtils `0x`
 

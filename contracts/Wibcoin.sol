@@ -1,13 +1,13 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 
 
 /**
  * @title Wibcoin
- * @author Cristian Adamo <cristian@wibson.org>
- * @dev Wibson Oficial Token, this is an ERC20 standard compliant token.
- *      Wibcoin token has an initial supply of 9 billion tokens with 9 decimals.
+ * @author Wibson Development Team <developers@wibson.org>
+ * @notice Wibson Oficial Token, this is an ERC20 standard compliant token.
+ * @dev Wibcoin token has an initial supply of 9 billion tokens with 9 decimals.
  */
 contract Wibcoin is StandardToken {
   string public constant name = "Wibcoin"; // solium-disable-line uppercase
@@ -17,9 +17,9 @@ contract Wibcoin is StandardToken {
   // solium-disable-next-line zeppelin/no-arithmetic-operations
   uint256 public constant INITIAL_SUPPLY = 9000000000 * (10 ** uint256(decimals));
 
-  function Wibcoin() public {
+  constructor() public {
     totalSupply_ = INITIAL_SUPPLY;
     balances[msg.sender] = INITIAL_SUPPLY;
-    emit Transfer(0x0, msg.sender, INITIAL_SUPPLY);
+    emit Transfer(address(0), msg.sender, INITIAL_SUPPLY);
   }
 }

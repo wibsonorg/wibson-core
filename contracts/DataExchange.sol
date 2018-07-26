@@ -1,37 +1,43 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/lifecycle/TokenDestructible.sol";
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "zeppelin-solidity/contracts/math/Math.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./DataOrder.sol";
 import "./Wibcoin.sol";
 import "./lib/MultiMap.sol";
-import "./lib/ModifierUtils.sol";
 import "./lib/CryptoUtils.sol";
 
 
 /**
  * @title DataExchange
- * @author Cristian Adamo <cristian@wibson.org>
- * @dev `DataExchange` is the core contract of the Wibson's Protocol. This
- *      allows the creation, management, and tracking of `DataOrder`s. Also,
- *      such has some helper methods to access the data needed by the different
- *      parties involved in the Protocol.
+ * @author Wibson Development Team <developers@wibson.org>
+ * @notice `DataExchange` is the core contract of the Wibson Protocol.
+ *         This allows the creation, management, and tracking of DataOrders.
+ * @dev This contract also contains some helper methods to access the data
+ *      needed by the different parties involved in the Protocol.
  */
-contract DataExchange is TokenDestructible, ModifierUtils {
+contract DataExchange is TokenDestructible, Pausable {
   using SafeMath for uint256;
   using MultiMap for MultiMap.MapStorage;
 
+  event NotaryRegistered(address indexed notary);
+  event NotaryUpdated(address indexed notary);
+  event NotaryUnregistered(address indexed notary);
+
   event NewOrder(address indexed orderAddr);
-  event NotaryAccepted(address indexed orderAddr);
+  event NotaryAddedToOrder(address indexed orderAddr, address indexed notary);
   event DataAdded(address indexed orderAddr, address indexed seller);
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
+  event RefundedToBuyer(address indexed orderAddr, address indexed buyer);
   event OrderClosed(address indexed orderAddr);
 
   struct NotaryInfo {
     address addr;
     string name;
+    string notaryUrl;
     string publicKey;
   }
 
@@ -46,10 +52,20 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   mapping(address => bool) private orders;
 
   // @dev buyerBalance Keeps track of the buyer's balance per order-seller.
-  // TODO(cristian): Is there any batter way to do this?
+  // TODO: Is there a better way to do this?
   mapping(
     address => mapping(address => mapping(address => uint256))
   ) public buyerBalance;
+
+  // @dev buyerRemainingBudgetForAudits Keeps track of the buyer's remaining
+  // budget from the initial one set on the `DataOrder`
+  mapping(address => mapping(address => uint256)) public buyerRemainingBudgetForAudits;
+
+  modifier validAddress(address addr) {
+    require(addr != address(0));
+    require(addr != address(this));
+    _;
+  }
 
   modifier isOrderLegit(address order) {
     require(orders[order]);
@@ -59,88 +75,126 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   // @dev token A Wibcoin implementation of an ERC20 standard token.
   Wibcoin token;
 
+  // @dev The minimum for initial budget for audits per `DataOrder`.
+  uint256 public minimumInitialBudgetForAudits;
+
   /**
-   * @dev Contract costructor.
-   * @param tokenAddress Address of the Wibcoin token address (ERC20).
+   * @notice Contract constructor.
+   * @param tokenAddress Address of the Wibcoin token address.
+   * @param ownerAddress Address of the DataExchange owner.
    */
-  function DataExchange(
-    address tokenAddress
-  ) public validAddress(tokenAddress) {
+  constructor(
+    address tokenAddress,
+    address ownerAddress
+  ) public validAddress(tokenAddress) validAddress(ownerAddress) {
+    require(tokenAddress != ownerAddress);
+
     token = Wibcoin(tokenAddress);
+    minimumInitialBudgetForAudits = 0;
+    transferOwnership(ownerAddress);
   }
 
   /**
-   * @dev Adds a new notary or replace a already existing one.
-   * @notice At least one notary is needed to enable `DataExchange` operation.
+   * @notice Registers a new notary or replaces an already existing one.
+   * @dev At least one notary is needed to enable `DataExchange` operation.
    * @param notary Address of a Notary to add.
    * @param name Name Of the Notary.
+   * @param notaryUrl Public URL of the notary where the data must be sent.
    * @param publicKey PublicKey used by the Notary.
-   * @return Whether the notary was successfully added or not.
+   * @return true if the notary was successfully registered, reverts otherwise.
    */
-  function addNotary(
+  function registerNotary(
     address notary,
     string name,
+    string notaryUrl,
     string publicKey
-  ) public onlyOwner validAddress(notary) returns (bool) {
-    allowedNotaries.insert(notary);
-    notaryInfo[notary] = NotaryInfo(notary, name, publicKey);
+  ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
+    bool isNew = notaryInfo[notary].addr == address(0);
+
+    require(allowedNotaries.insert(notary));
+    notaryInfo[notary] = NotaryInfo(
+      notary,
+      name,
+      notaryUrl,
+      publicKey
+    );
+
+    if (isNew) {
+      emit NotaryRegistered(notary);
+    } else {
+      emit NotaryUpdated(notary);
+    }
     return true;
   }
 
   /**
-   * @dev Creates a New Order.
-   * @notice The `msg.sender` will become the buyer of the order.
-   * @param notaries List of notaries that will be able to notarize the order,
-   *        at least one must be provided
+   * @notice Unregisters an existing notary.
+   * @param notary Address of a Notary to unregister.
+   * @return true if the notary was successfully unregistered, reverts otherwise.
+   */
+  function unregisterNotary(
+    address notary
+  ) public onlyOwner whenNotPaused validAddress(notary) returns (bool) {
+    require(allowedNotaries.remove(notary));
+
+    emit NotaryUnregistered(notary);
+    return true;
+  }
+
+  /**
+   * @notice Sets the minimum initial budget for audits to be placed by a buyer
+   * on DataOrder creation.
+   * @dev The initial budget for audit is used as a preventive method to reduce
+   *      spam DataOrders in the network.
+   * @param _minimumInitialBudgetForAudits The new minimum for initial budget for
+   * audits per DataOrder.
+   * @return true if the value was successfully set, reverts otherwise.
+   */
+  function setMinimumInitialBudgetForAudits(
+    uint256 _minimumInitialBudgetForAudits
+  ) public onlyOwner whenNotPaused returns (bool) {
+    minimumInitialBudgetForAudits = _minimumInitialBudgetForAudits;
+    return true;
+  }
+
+  /**
+   * @notice Creates a new DataOrder.
+   * @dev The `msg.sender` will become the buyer of the order.
    * @param filters Target audience of the order.
    * @param dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
-   * @param termsAndConditions Copy of the terms and conditions for the order.
+   * @param price Price per added Data Response.
+   * @param initialBudgetForAudits The initial budget set for future audits.
+   * @param termsAndConditions Buyer's terms and conditions for the order.
    * @param buyerURL Public URL of the buyer where the data must be sent.
    * @param publicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
-   * @return The address of the newly created order.
+   * @return The address of the newly created DataOrder. If the DataOrder could
+   *         not be created, reverts.
    */
   function newOrder(
-    address[] notaries,
     string filters,
     string dataRequest,
-    bool notarizeDataUpfront,
+    uint256 price,
+    uint256 initialBudgetForAudits,
     string termsAndConditions,
     string buyerURL,
     string publicKey
-  ) public returns (address) {
-    require(notaries.length > 0);
-    require(allowedNotaries.length() > 0);
-
-    MultiMap.MapStorage storage validNotaries;
-    for (uint i = 0; i < notaries.length; i++) {
-      if (!allowedNotaries.exist(notaries[i]) ||
-          MultiMap.exist(validNotaries, notaries[i])) {
-        continue;
-      }
-      MultiMap.insert(validNotaries, notaries[i]);
-    }
-
-    address[] memory validNotariesList = MultiMap.toArray(validNotaries);
-    require(validNotariesList.length > 0);
+  ) public whenNotPaused returns (address) {
+    require(initialBudgetForAudits >= minimumInitialBudgetForAudits);
+    require(token.allowance(msg.sender, this) >= initialBudgetForAudits);
 
     address newOrderAddr = new DataOrder(
       msg.sender,
-      validNotariesList,
       filters,
       dataRequest,
-      notarizeDataUpfront,
+      price,
       termsAndConditions,
       buyerURL,
       publicKey
     );
 
-    for (uint vi = 0; vi < validNotariesList.length; vi++) {
-      ordersByNotary[validNotariesList[vi]].push(newOrderAddr);
-    }
+    token.transferFrom(msg.sender, this, initialBudgetForAudits);
+    buyerRemainingBudgetForAudits[msg.sender][newOrderAddr] = initialBudgetForAudits;
 
     ordersByBuyer[msg.sender].push(newOrderAddr);
     orders[newOrderAddr] = true;
@@ -150,176 +204,209 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   /**
-   * @dev A notary accepts to notarize the given order.
-   * @notice The `msg.sender` must be the notary.
+   * @notice Adds a notary to the Data Order.
+   * @dev The `msg.sender` must be the buyer.
    * @param orderAddr Order Address to accept notarize.
-   * @return Whether the Notary was set successfully or not.
+   * @param notary Notary address.
+   * @param responsesPercentage Percentage of `DataResponses` to audit per DataOrder.
+   *        Value must be between 0 and 100.
+   * @param notarizationFee Fee to be charged per validation done.
+   * @param notarizationTermsOfService Notary's terms and conditions for the order.
+   * @param notarySignature Notary's signature over the other arguments.
+   * @return true if the Notary was added successfully, reverts otherwise.
    */
-  function acceptToBeNotary(
-    address orderAddr
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  function addNotaryToOrder(
+    address orderAddr,
+    address notary,
+    uint256 responsesPercentage,
+    uint256 notarizationFee,
+    string notarizationTermsOfService,
+    bytes notarySignature
+  ) public whenNotPaused isOrderLegit(orderAddr) validAddress(notary) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
-    if (order.hasNotaryAccepted(msg.sender)) {
-      return true;
-    }
+    address buyer = order.buyer();
+    require(msg.sender == buyer);
 
-    bool okay = order.acceptToBeNotary(msg.sender);
+    require(!order.hasNotaryBeenAdded(notary));
+    require(allowedNotaries.exist(notary));
+
+    require(
+      CryptoUtils.isNotaryAdditionValid(
+        orderAddr,
+        notary,
+        responsesPercentage,
+        notarizationFee,
+        notarizationTermsOfService,
+        notarySignature
+      )
+    );
+
+    bool okay = order.addNotary(
+      notary,
+      responsesPercentage,
+      notarizationFee,
+      notarizationTermsOfService
+    );
+
     if (okay) {
       openOrders.insert(orderAddr);
-      emit NotaryAccepted(order);
+      ordersByNotary[notary].push(orderAddr);
+      emit NotaryAddedToOrder(order, notary);
     }
     return okay;
   }
 
   /**
-   * @dev Sets the price of the given order, once set this can't be changed.
-   * @notice The `msg.sender` must be the buyer of the order.
-   * @param orderAddr Order Address were price must be set.
-   * @param price Price amount.
-   * @return Whether the Price was set successfully or not.
-   */
-  function setOrderPrice(
-    address orderAddr,
-    uint256 price
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    require(msg.sender == order.buyer());
-    return order.setPrice(price);
-  }
-
-  /**
-   * @dev Adds a new DataResponse to the given order.
-   * @notice 1. The `msg.sender` must be the buyer of the order.
-   *         2. The buyer must allow the `DataExchange` to withdraw the price of
-   *            the order.
+   * @notice Adds a new DataResponse to the given order.
+   * @dev 1. The `msg.sender` must be the buyer of the order.
+   *      2. The buyer must allow the DataExchange to withdraw the price of the
+   *         order.
    * @param orderAddr Order address where the DataResponse must be added.
    * @param seller Address of the Seller.
    * @param notary Notary address that the Seller chose to use as notarizer,
    *        this must be one within the allowed notaries and within the
-   *        `DataOrder`'s notaries.
-   * @param hash Hash of the data that must be sent, this is a SHA256.
+   *        DataOrder's notaries.
+   * @param dataHash Hash of the data that must be sent, this is a SHA256.
    * @param signature Signature of DataResponse.
-   * @return Whether the DataResponse was set successfully or not.
+   * @return true if the DataResponse was set successfully, reverts otherwise.
    */
   function addDataResponseToOrder(
     address orderAddr,
     address seller,
     address notary,
-    string hash,
-    string signature
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+    string dataHash,
+    bytes signature
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
     address buyer = order.buyer();
-    uint256 orderPrice = order.price();
-
     require(msg.sender == buyer);
-    require(order.hasNotaryAccepted(notary));
-    require(token.allowance(buyer, this) >= orderPrice);
+    allDistinct(
+      [
+        orderAddr,
+        buyer,
+        seller,
+        notary,
+        address(this)
+      ]
+    );
+    require(order.hasNotaryBeenAdded(notary));
+
+    require(
+      CryptoUtils.isDataResponseValid(
+        orderAddr,
+        seller,
+        notary,
+        dataHash,
+        signature
+      )
+    );
 
     bool okay = order.addDataResponse(
       seller,
       notary,
-      hash,
-      signature
+      dataHash
     );
+    require(okay);
 
-    if (okay) {
-      buyerBalance[buyer][orderAddr][seller].add(orderPrice);
-      ordersBySeller[seller].push(orderAddr);
-      token.transferFrom(buyer, this, orderPrice);
-      emit DataAdded(order, seller);
-    }
-    return okay;
+    chargeBuyer(order, seller);
+
+    ordersBySeller[seller].push(orderAddr);
+    emit DataAdded(order, seller);
+    return true;
   }
 
   /**
-   * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
-   *      the seller's data and checks that it is valid or not, he must signal
-   *      DataResponse as completed, either the data was OK or not.
-   * @notice 1. This method requires an offline signature of the DataResponse's
-   *         notary, such will decides wheater the data was Ok or not.
-   *           - If the notary verify that the data was OK funds will be sent to
-   *             the Seller.
-   *           - If notary signals the data as wrong, funds will be handed back
-   *             to the Buyer.
-   *           - Otherwise funds will be locked at the `DataExchange` contract
-   *             until the issue is solved.
-   *         2. This also works as a pause mechanism in case the system is
-   *         working under abnormal scenarios while allowing the parties to keep
-   *         exchanging information without losing their funds until the system
-   *         is back up.
-   *         3. The `msg.sender` must be the buyer or in case the buyer do not
-   *         show up, a notary can call this method in order to resolve the
-   *         transaction, and decides who must receive the funds.
+   * @notice Closes a DataResponse.
+   * @dev Once the buyer receives the seller's data and checks that it is valid
+   *      or not, he must close the DataResponse signaling the result.
+   *        1. This method requires an offline signature from the notary set in
+   *           the DataResponse, which will indicate the audit result or if
+   *           the data was not audited at all.
+   *             - If the notary did not audit the data or it verifies that it was
+   *               valid, funds will be sent to the Seller.
+   *             - If the notary signals the data as invalid, funds will be
+   *               handed back to the Buyer.
+   *             - Otherwise, funds will be locked at the `DataExchange` contract
+   *               until the issue is solved.
+   *        2. This also works as a pause mechanism in case the system is
+   *           working under abnormal scenarios while allowing the parties to keep
+   *           exchanging information without losing their funds until the system
+   *           is back up.
+   *        3. The `msg.sender` must be the buyer or the notary in case the
+   *           former does not show up. Only through the notary's signature it is
+   *           decided who must receive the funds.
    * @param orderAddr Order address where the DataResponse belongs to.
    * @param seller Seller address.
-   * @param isOrderVerified Set wheater the order's data was OK or not.
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
    * @param notarySignature Off-chain Notary signature
-   * @return Whether the DataResponse was successfully closed or not.
+   * @return true if the DataResponse was successfully closed, reverts otherwise.
    */
   function closeDataResponse(
     address orderAddr,
     address seller,
-    bool isOrderVerified,
+    bool wasAudited,
+    bool isDataValid,
     bytes notarySignature
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
     DataOrder order = DataOrder(orderAddr);
-    uint256 orderPrice = order.price();
     address buyer = order.buyer();
-    // Note: Commented out since the method throw `Stack too deep` error.
-    // address notary = order.getNotaryForSeller(seller);
-
-    require(msg.sender == buyer || msg.sender == order.getNotaryForSeller(seller));
     require(order.hasSellerBeenAccepted(seller));
 
-    bytes32 hash = CryptoUtils.hashData(
-      orderAddr,
-      seller,
-      msg.sender,
-      isOrderVerified
-    );
-
+    address notary = order.getNotaryForSeller(seller);
+    require(msg.sender == buyer || msg.sender == notary);
     require(
-      CryptoUtils.isSignedBy(
-        hash,
-        order.getNotaryForSeller(seller),
+      CryptoUtils.isNotaryVeredictValid(
+        orderAddr,
+        seller,
+        notary,
+        wasAudited,
+        isDataValid,
         notarySignature
       )
     );
+    bool transactionCompleted = !wasAudited || isDataValid;
+    require(order.closeDataResponse(seller, transactionCompleted));
+    payPlayers(
+      order,
+      buyer,
+      seller,
+      notary,
+      wasAudited,
+      isDataValid
+    );
 
-    if (order.closeDataResponse(seller)) {
-      require(buyerBalance[buyer][orderAddr][seller] >= orderPrice);
-
-      address dest = seller;
-      if (!isOrderVerified) {
-        dest = buyer;
-      }
-      buyerBalance[buyer][orderAddr][seller] = buyerBalance[buyer][orderAddr][seller].sub(orderPrice);
-      token.transfer(dest, orderPrice);
-
+    if (transactionCompleted) {
       emit TransactionCompleted(order, seller);
-      return true;
+    } else {
+      emit RefundedToBuyer(order, buyer);
     }
-    return false;
+    return true;
   }
 
   /**
-   * @dev Closes the Data order.
-   * @notice Onces the data is closed it will no longer accepts new
-   *         DataResponse anymore.
-   *         The `msg.sender` must be the buyer of the order or the owner of the
-   *         contract in a emergency case.
+   * @notice Closes the DataOrder.
+   * @dev Onces the data is closed it will no longer accept new DataResponses.
+   *      The `msg.sender` must be the buyer of the order or the owner of the
+   *      contract in a emergency case.
    * @param orderAddr Order address to close.
-   * @return Whether the DataOrder was successfully closed or not.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
    */
-  function close(
+  function closeOrder(
     address orderAddr
-  ) public validAddress(orderAddr) isOrderLegit(orderAddr) returns (bool) {
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
+    require(openOrders.exist(orderAddr));
     DataOrder order = DataOrder(orderAddr);
-    require(msg.sender == order.buyer() || msg.sender == owner);
+    address buyer = order.buyer();
+    require(msg.sender == buyer || msg.sender == owner);
 
     bool okay = order.close();
     if (okay) {
+      // remaining budget for audits go back to buyer.
+      uint256 remainingBudget = buyerRemainingBudgetForAudits[buyer][order];
+      buyerRemainingBudgetForAudits[buyer][order] = 0;
+      require(token.transfer(buyer, remainingBudget));
+
       openOrders.remove(orderAddr);
       emit OrderClosed(orderAddr);
     }
@@ -328,45 +415,45 @@ contract DataExchange is TokenDestructible, ModifierUtils {
   }
 
   /**
-   * @dev Gets all the data orders associated with a notary.
+   * @notice Gets all the data orders associated with a notary.
    * @param notary Notary address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return A list of DataOrder addresses.
    */
   function getOrdersForNotary(
     address notary
-  ) public view returns (address[]) {
+  ) public view validAddress(notary) returns (address[]) {
     return ordersByNotary[notary];
   }
 
   /**
-   * @dev Gets all the data orders associated with a seller.
+   * @notice Gets all the data orders associated with a seller.
    * @param seller Seller address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return List of DataOrder addresses.
    */
   function getOrdersForSeller(
     address seller
-  ) public view returns (address[]) {
+  ) public view validAddress(seller) returns (address[]) {
     return ordersBySeller[seller];
   }
 
   /**
-   * @dev Gets all the data orders associated with a buyer.
+   * @notice Gets all the data orders associated with a buyer.
    * @param buyer Buyer address to get orders for.
-   * @return A list of `DataOrder` addresses.
+   * @return List of DataOrder addresses.
    */
   function getOrdersForBuyer(
     address buyer
-  ) public view returns (address[]) {
+  ) public view validAddress(buyer) returns (address[]) {
     return ordersByBuyer[buyer];
   }
 
   /**
-   * @dev Gets all the open data orders, that is all the `DataOrder`s that still
-   *      are receiving new `DataResponse`.
-   * @return A list of `DataOrder` addresses.
+   * @notice Gets all the open data orders, that is all the DataOrders that are
+   *         still receiving new DataResponses.
+   * @return List of DataOrder addresses.
    */
   function getOpenOrders() public view returns (address[]) {
-    return openOrders.toArray();
+    return openOrders.addresses;
   }
 
   /**
@@ -374,33 +461,109 @@ contract DataExchange is TokenDestructible, ModifierUtils {
    * @return List of notary addresses.
    */
   function getAllowedNotaries() public view returns (address[]) {
-    return allowedNotaries.toArray();
+    return allowedNotaries.addresses;
   }
 
   /**
    * @dev Gets information about a give notary.
    * @param notary Notary address to get info for.
-   * @return Notary information (address, name, publicKey).
+   * @return Notary information (address, name, notaryUrl, publicKey, isActive).
    */
   function getNotaryInfo(
     address notary
-  ) public view returns (address, string, string) {
+  ) public view validAddress(notary) returns (address, string, string, string, bool) {
     NotaryInfo memory info = notaryInfo[notary];
-    return (info.addr, info.name, info.publicKey);
+
+    return (
+      info.addr,
+      info.name,
+      info.notaryUrl,
+      info.publicKey,
+      allowedNotaries.exist(notary)
+    );
   }
 
   /**
-   * @dev Gets wheater a `DataResponse` for a given the seller (the caller of
-   *      this function) has been accepted or not.
-   * @notice The `msg.sender` must be the seller of the order.
-   * @param orderAddr Order address where the DataResponse had been sent.
-   * @return Whether the `DataResponse` was accepted or not.
+   * @dev Requires that five addresses are distinct between themselves and zero.
+   * @param addresses array of five addresses to explore.
    */
-  function hasDataResponseBeenAccepted(
-    address orderAddr
-  ) public view validAddress(orderAddr) returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    return order.hasSellerBeenAccepted(msg.sender);
+  function allDistinct(address[5] addresses) private pure {
+    for (uint i = 0; i < addresses.length; i++) {
+      require(addresses[i] != address(0));
+      for (uint j = i + 1; j < addresses.length; j++) { // solium-disable-line zeppelin/no-arithmetic-operations
+        require(addresses[i] != addresses[j]);
+      }
+    }
+  }
+
+  /**
+   * @dev Charges a buyer the final charges for a given `DataResponse`.
+   * @notice 1. Tokens are held in the DataExchange contract until players are paid.
+   *         2. This function follows a basic invoice flow:
+   *
+   *               DataOrder price
+   *            + Notarization fee
+   *            ------------------
+   *                 Total charges
+   *            -  Prepaid charges (Minimum between Notarization fee and Buyer remaining budget)
+   *            ------------------
+   *                 Final charges
+   *
+   * @param order DataOrder to which the DataResponse applies.
+   * @param seller Address of the Seller.
+   */
+  function chargeBuyer(DataOrder order, address seller) private whenNotPaused {
+    address buyer = order.buyer();
+    address notary = order.getNotaryForSeller(seller);
+    uint256 remainingBudget = buyerRemainingBudgetForAudits[buyer][order];
+
+    uint256 orderPrice = order.price();
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
+    uint256 totalCharges = orderPrice.add(notarizationFee);
+
+    uint256 prePaid = Math.min256(notarizationFee, remainingBudget);
+    uint256 finalCharges = totalCharges.sub(prePaid);
+
+    buyerRemainingBudgetForAudits[buyer][order] = remainingBudget.sub(prePaid);
+    require(token.transferFrom(buyer, this, finalCharges));
+
+    // Bookkeeping of the available tokens paid by the Buyer and now in control
+    // of the DataExchange takes into account the total charges (final + pre-paid)
+    buyerBalance[buyer][order][seller] = buyerBalance[buyer][order][seller].add(totalCharges);
+  }
+
+  /**
+   * @dev Pays the seller, notary and/or buyer according to the notary's veredict.
+   * @param order DataOrder to which the payments apply.
+   * @param buyer Address of the Buyer.
+   * @param seller Address of the Seller.
+   * @param notary Address of the Notary.
+   * @param wasAudited Indicates whether the data was audited or not.
+   * @param isDataValid Indicates the result of the audit, if happened.
+   */
+  function payPlayers(
+    DataOrder order,
+    address buyer,
+    address seller,
+    address notary,
+    bool wasAudited,
+    bool isDataValid
+  ) private whenNotPaused {
+    uint256 orderPrice = order.price();
+    (,, uint256 notarizationFee,,) = order.getNotaryInfo(notary);
+    uint256 totalCharges = orderPrice.add(notarizationFee);
+
+    require(buyerBalance[buyer][order][seller] >= totalCharges);
+    buyerBalance[buyer][order][seller] = buyerBalance[buyer][order][seller].sub(totalCharges);
+
+    // if no notarization was done, notarization fee tokens go back to buyer.
+    address notarizationFeeReceiver = wasAudited ? notary : buyer;
+
+    // if no notarization was done or data is valid, tokens go to the seller
+    address orderPriceReceiver = (!wasAudited || isDataValid) ? seller : buyer;
+
+    require(token.transfer(notarizationFeeReceiver, notarizationFee));
+    require(token.transfer(orderPriceReceiver, orderPrice));
   }
 
 }

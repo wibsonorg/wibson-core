@@ -1,25 +1,23 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 /**
  * @title MultiMap
- * @author Cristian Adamo <cristian@wibson.org>
- * @dev An address `MultiMap`, that allows to get elements using an address or
- *      the assigned index.
- *      `MultiMap` is useful when you need to keep track of a set of addresses.
+ * @author Wibson Development Team <developers@wibson.org>
+ * @notice An address `MultiMap`.
+ * @dev `MultiMap` is useful when you need to keep track of a set of addresses.
  */
 library MultiMap {
 
   struct MapStorage {
     mapping(address => uint) addressToIndex;
-    mapping(uint => address) indexToAddress;
-    uint size;
+    address[] addresses;
   }
 
   /**
-   * @dev Retrieves a address from the given `MapStorage` using a index Key.
+   * @notice Retrieves a address from the given `MapStorage` using a index Key.
    * @param self `MapStorage` where the index must be searched.
    * @param index Index to find.
    * @return Address of the given Index.
@@ -28,101 +26,91 @@ library MultiMap {
     MapStorage storage self,
     uint index
   ) public view returns (address) {
-    require(index >= 0 && index < self.size);
-    return self.indexToAddress[index];
+    require(index < self.addresses.length);
+    return self.addresses[index];
   }
 
   /**
-   * @dev Checks if the given address exists in the storage.
+   * @notice Checks if the given address exists in the storage.
    * @param self `MapStorage` where the key must be searched.
    * @param _key Address to find.
-   * @return Index of the given Address.
+   * @return true if `_key` exists in the storage, false otherwise.
    */
   function exist(
     MapStorage storage self,
     address _key
   ) public view returns (bool) {
-    uint targetIndex = self.addressToIndex[_key];
-    return self.indexToAddress[targetIndex] == _key;
+    if (_key != address(0)) {
+      uint targetIndex = self.addressToIndex[_key];
+      return targetIndex < self.addresses.length && self.addresses[targetIndex] == _key;
+    } else {
+      return false;
+    }
   }
 
   /**
-   * @dev Inserts a new address within the given storage.
+   * @notice Inserts a new address within the given storage.
    * @param self `MapStorage` where the key must be inserted.
    * @param _key Address to insert.
-   * @return Whether the address was added or not.
+   * @return true if `_key` was added, reverts otherwise.
    */
   function insert(
     MapStorage storage self,
     address _key
   ) public returns (bool) {
+    require(_key != address(0));
     if (exist(self, _key)) {
       return true;
     }
 
-    self.addressToIndex[_key] = self.size;
-    self.indexToAddress[self.size] = _key;
-    self.size++;
+    self.addressToIndex[_key] = self.addresses.length;
+    self.addresses.push(_key);
 
     return true;
   }
 
   /**
-   * @dev Removes the given index from the storage.
+   * @notice Removes the given index from the storage.
    * @param self MapStorage` where the index lives.
    * @param index Index to remove.
-   * @return Whether the index was removed or not.
+   * @return true if address at `index` was removed, false otherwise.
    */
   function removeAt(MapStorage storage self, uint index) public returns (bool) {
-    return remove(self, self.indexToAddress[index]);
+    return remove(self, self.addresses[index]);
   }
 
   /**
-   * @dev Removes the given address from the storage.
+   * @notice Removes the given address from the storage.
    * @param self `MapStorage` where the address lives.
    * @param _key Address to remove.
-   * @return Whether the address was removed or not.
+   * @return true if `_key` was removed, false otherwise.
    */
   function remove(MapStorage storage self, address _key) public returns (bool) {
+    require(_key != address(0));
     if (!exist(self, _key)) {
       return false;
     }
 
     uint currentIndex = self.addressToIndex[_key];
 
-    uint lastIndex = SafeMath.sub(self.size, 1);
-    address lastAddress = self.indexToAddress[lastIndex];
+    uint lastIndex = SafeMath.sub(self.addresses.length, 1);
+    address lastAddress = self.addresses[lastIndex];
     self.addressToIndex[lastAddress] = currentIndex;
-    self.indexToAddress[currentIndex] = lastAddress;
+    self.addresses[currentIndex] = lastAddress;
 
-    delete self.indexToAddress[lastIndex];
+    delete self.addresses[lastIndex];
     delete self.addressToIndex[_key];
 
-    self.size--;
+    self.addresses.length--;
     return true;
   }
 
   /**
-   * @dev Gets the current length of the Map.
+   * @notice Gets the current length of the Map.
    * @param self `MapStorage` to get the length from.
-   * @return Length.
+   * @return The length of the MultiMap.
    */
   function length(MapStorage storage self) public view returns (uint) {
-    return self.size;
-  }
-
-  /**
-   * @dev Converts a `MultiMap` of addresses into a memory array of addresses.
-   * @param self `MultiMap` storage to convert.
-   * @return A memory array of addresses.
-   */
-  function toArray(
-    MapStorage storage self
-  ) internal view returns (address[]) {
-    address[] memory rs = new address[](length(self));
-    for (uint i = 0; i < length(self); i++) {
-      rs[i] = get(self, i);
-    }
-    return rs;
+    return self.addresses.length;
   }
 }

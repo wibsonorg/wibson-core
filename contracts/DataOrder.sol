@@ -1,171 +1,155 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./lib/ModifierUtils.sol";
 
 
 /**
  * @title DataOrder
- * @author Cristian Adamo <cristian@wibson.org>
- * @dev `DataOrder` is the contract between a given buyer and a set of sellers.
- *      This holds the information about the "deal" between them and how the
- *      transaction has evolved.
+ * @author Wibson Development Team <developers@wibson.org>
+ * @notice `DataOrder` is the contract between a given buyer and a set of sellers.
+ *         This holds the information about the "deal" between them and how the
+ *         transaction has evolved.
  */
-contract DataOrder is Ownable, ModifierUtils {
+contract DataOrder is Ownable {
+  modifier validAddress(address addr) {
+    require(addr != address(0));
+    require(addr != address(this));
+    _;
+  }
+
   enum OrderStatus {
     OrderCreated,
-    NotaryAccepted,
+    NotaryAdded,
     TransactionCompleted
   }
 
   enum DataResponseStatus {
     DataResponseAdded,
     RefundedToBuyer,
-    TransactionCompleted,
-    TransactionCompletedByNotary
+    TransactionCompleted
   }
 
   // --- Notary Information ---
-  struct NotaryStatus {
-    bool accepted;
-    uint32 acceptedAt;
+  struct NotaryInfo {
+    uint256 responsesPercentage;
+    uint256 notarizationFee;
+    string notarizationTermsOfService;
+    uint32 addedAt;
   }
 
   // --- Seller Information ---
   struct SellerInfo {
     address notary;
-    string hash;
-    string signature;
-    uint32 closedAt;
+    string dataHash;
     uint32 createdAt;
-    uint32 notarizedAt;
+    uint32 closedAt;
     DataResponseStatus status;
   }
 
   address public buyer;
   string public filters;
   string public dataRequest;
-  bool public notarizeDataUpfront;
+  uint256 public price;
   string public termsAndConditions;
   string public buyerURL;
-  string public publicKey;
-  uint256 public price;
+  string public buyerPublicKey;
   uint32 public createdAt;
-  uint32 public dataAddedAt;
   uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
 
   mapping(address => SellerInfo) public sellerInfo;
-  mapping(address => NotaryStatus) internal notaryStatus;
+  mapping(address => NotaryInfo) internal notaryInfo;
 
   address[] public sellers;
-  address[] public acceptedNotaries;
   address[] public notaries;
 
   /**
-   * @dev Contract's constructor.
+   * @notice Contract's constructor.
    * @param _buyer Buyer address
-   * @param _notaries List of notaries that will be able to notarize the order,
-   *        at least one must be provided.
    * @param _filters Target audience of the order.
    * @param _dataRequest Requested data type (Geolocation, Facebook, etc).
-   * @param _notarizeDataUpfront Sets wheater the DataResponses must be notarized
-   *        upfront, if not the system will audit `DataResponses` in a "random"
-   *        fashion to guarantee data truthiness within the system.
+   * @param _price Price per added Data Response.
    * @param _termsAndConditions Copy of the terms and conditions for the order.
    * @param _buyerURL Public URL of the buyer where the data must be sent.
-   * @param _publicKey Public Key of the buyer, which will be used to encrypt the
+   * @param _buyerPublicKey Public Key of the buyer, which will be used to encrypt the
    *        data to be sent.
-   * @return The address of the newly created order.
    */
-  function DataOrder(
+  constructor(
     address _buyer,
-    address[] _notaries,
     string _filters,
     string _dataRequest,
-    bool _notarizeDataUpfront,
+    uint256 _price,
     string _termsAndConditions,
     string _buyerURL,
-    string _publicKey
+    string _buyerPublicKey
   ) public validAddress(_buyer) {
-    require(msg.sender != _buyer);
+    require(bytes(_buyerURL).length > 0);
+    require(bytes(_buyerPublicKey).length > 0);
 
     buyer = _buyer;
-    notaries = _notaries;
     filters = _filters;
     dataRequest = _dataRequest;
-    notarizeDataUpfront = _notarizeDataUpfront;
+    price = _price;
     termsAndConditions = _termsAndConditions;
     buyerURL = _buyerURL;
-    publicKey = _publicKey;
+    buyerPublicKey = _buyerPublicKey;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = uint32(block.timestamp);
+    transactionCompletedAt = 0;
   }
 
   /**
-   * @dev A notary accepts to notarize the given order.
-   * @param notary Address of the notary.
-   * @return Whether the Notary was set successfully or not.
+   * @notice Adds a notary to the Data Order.
+   * @param notary Notary's address.
+   * @param responsesPercentage Percentage of DataResponses to audit per DataOrder.
+            Value must be between 0 and 100.
+   * @param notarizationFee Fee to be charged per validation done.
+   * @param notarizationTermsOfService Notary's terms and conditions for the order.
+   * @return true if the Notary was added successfully, reverts otherwise.
    */
-  function acceptToBeNotary(address notary) public onlyOwner returns (bool) {
-    bool allowed = false;
-    for (uint i = 0; i < notaries.length; i++) {
-      if (notaries[i] == notary) {
-        allowed = true;
-        break;
-      }
-    }
+  function addNotary(
+    address notary,
+    uint256 responsesPercentage,
+    uint256 notarizationFee,
+    string notarizationTermsOfService
+  ) public onlyOwner validAddress(notary) returns (bool) {
+    require(transactionCompletedAt == 0);
+    require(responsesPercentage <= 100);
+    require(!hasNotaryBeenAdded(notary));
 
-    if (!allowed) {
-      return false;
-    }
-
-    if (notaryStatus[notary].accepted != true) {
-      notaryStatus[notary] = NotaryStatus(true, uint32(block.timestamp));
-      acceptedNotaries.push(notary);
-      orderStatus = OrderStatus.NotaryAccepted;
-    }
+    notaryInfo[notary] = NotaryInfo(
+      responsesPercentage,
+      notarizationFee,
+      notarizationTermsOfService,
+      uint32(block.timestamp)
+    );
+    notaries.push(notary);
+    orderStatus = OrderStatus.NotaryAdded;
     return true;
   }
 
    /**
-    * @dev Sets the price of the given order, once set this can't be changed.
-    * @param value Price amount.
-    * @return Whether the Price was set successfully or not.
-    */
-  function setPrice(uint256 value) public onlyOwner returns (bool) {
-    require(value > 0);
-    require(price == 0);
-    price = value;
-    return true;
-  }
-
-   /**
-    * @dev Adds a new DataResponse.
+    * @notice Adds a new DataResponse.
     * @param seller Address of the Seller.
-    * @param notary Notary address that the Seller chose to use as notarizer,
+    * @param notary Notary address that the Seller chooses to use as notary,
     *        this must be one within the allowed notaries and within the
-    *        `DataOrder`'s notaries.
-    * @param hash Hash of the data that must be sent, this is a SHA256.
-    * @param signature Signature of DataResponse.
-    * @return Whether the DataResponse was set successfully or not.
+    *         DataOrder's notaries.
+    * @param dataHash Hash of the data that must be sent, this is a SHA256.
+    * @return true if the DataResponse was added successfully, reverts otherwise.
     */
   function addDataResponse(
     address seller,
     address notary,
-    string hash,
-    string signature
+    string dataHash
   ) public onlyOwner validAddress(seller) validAddress(notary) returns (bool) {
-    require(notaryStatus[notary].accepted == true);
-    require(sellerInfo[seller].createdAt == 0);
-    require(orderStatus == OrderStatus.NotaryAccepted);
-    require(price > 0);
+    require(orderStatus == OrderStatus.NotaryAdded);
+    require(transactionCompletedAt == 0);
+    require(!hasSellerBeenAccepted(seller));
+    require(hasNotaryBeenAdded(notary));
 
     sellerInfo[seller] = SellerInfo(
       notary,
-      hash,
-      signature,
-      0,
+      dataHash,
       uint32(block.timestamp),
       0,
       DataResponseStatus.DataResponseAdded
@@ -177,96 +161,129 @@ contract DataOrder is Ownable, ModifierUtils {
   }
 
   /**
-   * @dev Closes a DataResponse (aka close transaction). Once the buyer receives
-   *      the seller's data and checks that it is valid or not, he must signal
-   *      DataResponse as completed.
+   * @notice Closes a DataResponse.
+   * @dev Once the buyer receives the seller's data and checks that it is valid
+   *      or not, he must signal  DataResponse as completed.
    * @param seller Seller address.
-   * @return Whether the DataResponse was successfully closed or not.
+   * @param transactionCompleted True, if the seller got paid for his/her data.
+   * @return true if DataResponse was successfully closed, reverts otherwise.
    */
   function closeDataResponse(
-    address seller
+    address seller,
+    bool transactionCompleted
   ) public onlyOwner validAddress(seller) returns (bool) {
-    if (hasSellerBeenAccepted(seller)) {
-      sellerInfo[seller].status = DataResponseStatus.TransactionCompleted;
-      sellerInfo[seller].closedAt = uint32(block.timestamp);
-      return true;
-    }
-    return false;
+    require(orderStatus != OrderStatus.TransactionCompleted);
+    require(transactionCompletedAt == 0);
+    require(hasSellerBeenAccepted(seller));
+    require(sellerInfo[seller].status == DataResponseStatus.DataResponseAdded);
+
+    sellerInfo[seller].status = transactionCompleted
+      ? DataResponseStatus.TransactionCompleted
+      : DataResponseStatus.RefundedToBuyer;
+    sellerInfo[seller].closedAt = uint32(block.timestamp);
+    return true;
   }
 
   /**
-   * @dev Closes the Data order.
-   * @notice Onces the data is closed it will no longer accepts new
-   *         DataResponse anymore.
-   * @return Whether the DataOrder was successfully closed or not.
+   * @notice Closes the Data order.
+   * @dev Once the DataOrder is closed it will no longer accept new DataResponses.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
    */
   function close() public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
+    require(transactionCompletedAt == 0);
     orderStatus = OrderStatus.TransactionCompleted;
     transactionCompletedAt = uint32(block.timestamp);
     return true;
   }
 
   /**
-   * @dev Gets wheater a `DataResponse` for a given the seller has been accepted
-   *      or not.
+   * @notice Checks if a DataResponse for a given seller has been accepted.
    * @param seller Seller address.
-   * @return Whether the `DataResponse` was accepted or not.
+   * @return true if the DataResponse was accepted, false otherwise.
    */
   function hasSellerBeenAccepted(
     address seller
   ) public view validAddress(seller) returns (bool) {
-    return sellerInfo[seller].status == DataResponseStatus.DataResponseAdded;
+    return sellerInfo[seller].createdAt != 0;
   }
 
   /**
-   * @dev Checks if the given notary accepted to notarize this `DataOrder`.
+   * @notice Checks if the given notary was added to notarize this DataOrder.
    * @param notary Notary address to check.
-   * @return Whether the notary accepted or not.
+   * @return true if the Notary was added, false otherwise.
    */
-  function hasNotaryAccepted(address notary) public view returns (bool) {
-    return notaryStatus[notary].accepted == true;
+  function hasNotaryBeenAdded(
+    address notary
+  ) public view validAddress(notary) returns (bool) {
+    return notaryInfo[notary].addedAt != 0;
   }
 
   /**
-   * @dev Gets the seller information.
+   * @notice Gets the notary information.
+   * @param notary Notary address to get info for.
+   * @return Notary information (address, responsesPercentage, notarizationFee,
+   *         notarizationTermsOfService, addedAt)
+   */
+  function getNotaryInfo(
+    address notary
+  ) public view validAddress(notary) returns (
+    address,
+    uint256,
+    uint256,
+    string,
+    uint32
+  ) {
+    require(hasNotaryBeenAdded(notary));
+    NotaryInfo memory info = notaryInfo[notary];
+    return (
+      notary,
+      info.responsesPercentage,
+      info.notarizationFee,
+      info.notarizationTermsOfService,
+      uint32(info.addedAt)
+    );
+  }
+
+  /**
+   * @notice Gets the seller information.
    * @param seller Seller address to get info for.
-   * @return Seller Information.
+   * @return Seller information (address, notary, dataHash, createdAt, closedAt,
+   *         status)
    */
   function getSellerInfo(
     address seller
-  ) public view returns (
+  ) public view validAddress(seller) returns (
     address,
     address,
-    uint256,
     string,
-    string,
-    uint32,
     uint32,
     uint32,
     bytes32
   ) {
+    require(hasSellerBeenAccepted(seller));
     SellerInfo memory info = sellerInfo[seller];
     return (
       seller,
       info.notary,
-      price,
-      info.hash,
-      info.signature,
-      uint32(info.closedAt),
+      info.dataHash,
       uint32(info.createdAt),
-      uint32(info.notarizedAt),
+      uint32(info.closedAt),
       getDataResponseStatusAsString(info.status)
     );
   }
 
   /**
-   * @dev Gets the selected notary for the given seller.
+   * @notice Gets the selected notary for the given seller.
    * @param seller Seller address.
    * @return Address of the notary assigned to the given seller.
    */
-  function getNotaryForSeller(address seller) public view returns (address) {
-    return sellerInfo[seller].notary;
+  function getNotaryForSeller(
+    address seller
+  ) public view validAddress(seller) returns (address) {
+    require(hasSellerBeenAccepted(seller));
+    SellerInfo memory info = sellerInfo[seller];
+    return info.notary;
   }
 
   function getDataResponseStatusAsString(
@@ -284,11 +301,7 @@ contract DataOrder is Ownable, ModifierUtils {
       return bytes32("TransactionCompleted");
     }
 
-    if (drs == DataResponseStatus.TransactionCompletedByNotary) {
-      return bytes32("TransactionCompletedByNotary");
-    }
-
-    return bytes32("unknown");
+    throw; // solium-disable-line security/no-throw
   }
 
 }

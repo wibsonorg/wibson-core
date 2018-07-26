@@ -1,6 +1,10 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 
+/**
+ * @title Migrations
+ * @dev This is a truffle contract, needed for truffle integration.
+ */
 contract Migrations {
   address public owner;
   uint public lastCompletedMigration;
@@ -9,7 +13,7 @@ contract Migrations {
     if (msg.sender == owner) _;
   }
 
-  function Migrations() public {
+  constructor() public {
     owner = msg.sender;
   }
 
