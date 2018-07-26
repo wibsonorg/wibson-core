@@ -21,7 +21,7 @@ exports.getProvider = function getProvider(network, environment) {
   return new HDWalletProvider(envConfig.mnemonic, infura);
 };
 
-exports.isLocal = function isLocal(environment) { return environment === 'development'; };
+exports.isLocal = function isLocal(environment) { return environment === 'development' || environment === 'test'; };
 
 exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
   const config = getEnvironmentConfig(environment);

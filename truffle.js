@@ -10,6 +10,11 @@ module.exports = {
       port: 8545,
       network_id: '*',
     },
+    test: {
+      host: 'localhost',
+      port: 8545,
+      network_id: '*',
+    },
     coverage: {
       host: 'localhost',
       port: 8555,
