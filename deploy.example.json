@@ -1,0 +1,28 @@
+{
+  "infuraToken": "foobarbaz",
+  "environments": {
+    "remoteDevelopment": {
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby",
+      "accounts": {
+        "owner": "0x4A2dF70ACFe332b72A3C9d7bDCf9bcEdb74f00f7",
+        "multisig": "0x67264081bf7DFf9B9dce5553b4Ac1597FcDa8298"
+      }
+    },
+    "staging": {
+      "wibcoinAddress": "0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6",
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby",
+      "accounts": {
+        "owner": "0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39",
+        "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"
+      }
+    },
+    "production": {
+      "wibcoinAddress": "0xd037f68A208A4C4a3DF9a1e426595a1e5A2727b6",
+      "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby",
+      "accounts": {
+        "owner": "0xdf08f82de32b8d460adbe8d72043e3a7e25a3b39",
+        "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"
+      }
+    }
+  }
+}

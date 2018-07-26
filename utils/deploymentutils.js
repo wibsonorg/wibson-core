@@ -1,24 +1,34 @@
 const fs = require('fs');
+const path = require('path');
 const HDWalletProvider = require('truffle-hdwallet-provider'); // eslint-disable-line import/no-extraneous-dependencies
 
-
 const getConfig = function getConfig() {
-  return JSON.parse(fs.readFileSync('deploy.json', 'utf8'));
+  const configFile = path.resolve(__dirname, '../deploy.json');
+  return JSON.parse(fs.readFileSync(configFile, 'utf8'));
 };
-exports.getConfig = getConfig;
 
-const getStagingConfig = function getStagingConfig() {
+const getEnvironmentConfig = function getEnvironmentConfig(environment) {
   const config = getConfig();
-  return config.network.ropsten;
+  return config.environments[environment] || {};
 };
-exports.getStagingConfig = getStagingConfig;
+exports.getEnvironmentConfig = getEnvironmentConfig;
 
-exports.getStagingAccounts = function getStagingAccounts() {
-  const config = getStagingConfig();
-  return { owner: config.ownerAddress };
+// --- ( Truffle Deployment ) ---
+exports.getProvider = function getProvider(network, environment) {
+  const config = getConfig();
+  const envConfig = getEnvironmentConfig(environment);
+  const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
+  return new HDWalletProvider(envConfig.mnemonic, infura);
 };
 
-exports.getDevelopmentAccounts = function getDevelopmentAccounts(accounts) {
+exports.isLocal = function isLocal(environment) { return environment === 'development'; };
+
+exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
+  const config = getEnvironmentConfig(environment);
+  return config.accounts;
+};
+
+exports.getLocalAccounts = function getLocalAccounts(accounts) {
   return {
     owner: accounts[0],
     notary1: accounts[1],
@@ -30,23 +40,7 @@ exports.getDevelopmentAccounts = function getDevelopmentAccounts(accounts) {
   };
 };
 
-exports.isProduction = function isProduction(network) { return network === 'mainnet'; };
-exports.isRopsten = function isRopsten(network) { return network === 'ropsten'; };
-exports.isPrivateNet = function isPrivateNet(network) { return network === 'staging'; };
-exports.isStaging = function isStaging(network) { return network === 'ropsten' || network === 'staging'; };
-exports.isDevelop = function isDevelop(network) { return network === 'development'; };
-
-// --- ( Truffle Deployment ) ---
-exports.getProvider = function getProvider(mnemonic, network) {
-  return new HDWalletProvider(mnemonic, `https://${network}.infura.io/`);
-};
-
-exports.getRopstenOwner = function getRopstenOwner() {
-  const config = getConfig();
-  return config.network.ropsten.ownerAddress;
-};
-
-exports.getStagingOwner = function getStagingOwner() {
-  const config = getConfig();
-  return config.network.staging.ownerAddress;
+exports.getWibcoinAddress = function getWibcoinAddress(environment) {
+  const config = getEnvironmentConfig(environment);
+  return config.wibcoinAddress;
 };

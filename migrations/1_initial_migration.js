@@ -1,5 +1,10 @@
 const Migrations = artifacts.require('./Migrations.sol');
+const DeployUtils = require('../utils/deploymentutils');
 
-module.exports = function migrations(deployer) {
-  deployer.deploy(Migrations);
+module.exports = async function migrations(deployer, network, accounts) {
+  const usedAccounts = DeployUtils.isLocal(network)
+    ? DeployUtils.getLocalAccounts(accounts)
+    : DeployUtils.getEnvironmentAccounts(network);
+
+  await deployer.deploy(Migrations, { from: usedAccounts.owner });
 };
