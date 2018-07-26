@@ -21,8 +21,11 @@ contract TestMultiMap {
   }
 
   function testInsert() public {
+    uint initialLength = store.addresses.length;
     bool b1 = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
     Assert.isTrue(b1, "Key was not inserted correctly");
+    Assert.equal(store.addresses.length, initialLength + 1, "Did not increase addresses array length");
+
 
     bool b2 = MultiMap.insert(store, 0xe0F5206bcD039e7B1392e8918821224E2A7437B9);
     Assert.isTrue(b2, "Duplicated Key did not return true");

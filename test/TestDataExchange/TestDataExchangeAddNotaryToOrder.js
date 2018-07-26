@@ -153,9 +153,9 @@ contract('DataExchange', async (accounts) => {
       }
     });
 
-    it('should emit a `NotaryAdded` event', async () => {
+    it('should emit a `NotaryAddedToOrder` event', async () => {
       const res = await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
-      assertEvent(res, 'NotaryAdded', 'did not emit `NotaryAdded` event');
+      assertEvent(res, 'NotaryAddedToOrder', 'did not emit `NotaryAddedToOrder` event');
     });
 
     it('should add notary to an order', async () => {

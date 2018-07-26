@@ -1,4 +1,4 @@
-import { createDataOrder } from '../TestDataOrder/helpers/dataOrderCreation';
+import createDataOrder from '../TestDataOrder/helpers/dataOrderCreation';
 import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 import { assertEvent, assertRevert, signMessage } from '../helpers';
 
@@ -514,6 +514,81 @@ contract('DataExchange', async (accounts) => {
         true,
         signMessage([orderAddress, seller, true, true], notary),
         { from: notary },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
+    it('closes a DataResponse that was not audited', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        false,
+        true,
+        signMessage([orderAddress, seller, false, true], notary),
+        { from: buyer },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'TransactionCompleted',
+        'DataResponse was not closed correctly',
+      );
+    });
+
+    it('closes a DataResponse with invalid data', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        true,
+        false,
+        signMessage([orderAddress, seller, true, false], notary),
+        { from: buyer },
+      );
+
+      assertEvent(
+        closeTransaction,
+        'RefundedToBuyer',
+        'DataResponse was not closed correctly',
+      );
+    });
+
+    it('closes a DataResponse with invalid data and not audited', async () => {
+      await addNotaryToOrder(dataExchange, { orderAddress, notary, from: buyer });
+      await addDataResponseToOrder(dataExchange, {
+        orderAddress,
+        seller,
+        notary,
+        from: buyer,
+      });
+
+      const closeTransaction = await dataExchange.closeDataResponse(
+        orderAddress,
+        seller,
+        false,
+        false,
+        signMessage([orderAddress, seller, false, false], notary),
+        { from: buyer },
       );
 
       assertEvent(

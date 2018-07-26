@@ -1,6 +1,10 @@
 pragma solidity ^0.4.24;
 
 
+/**
+ * @title Migrations
+ * @dev This is a truffle contract, needed for truffle integration.
+ */
 contract Migrations {
   address public owner;
   uint public lastCompletedMigration;
