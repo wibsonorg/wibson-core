@@ -5,27 +5,32 @@
 
 > NOTE: For more details about the protocol please read our white paper [here](https://wibson.org/).
 
+## Getting Started
+In order to run tests or deploy to local or any remote environment, the `deploy.json` file must be set up.
+You can start by copying the `deploy.example.json` file, renaming it and editing it as suitable.
+
+```bash
+$ cp deploy.example.json deploy.json
+$ vi deploy.json
+```
+
+## Testing
+```bash
+$ npm run test
+$ # Or run with coverage
+$ npm run test:coverage
+```
+
 ## Deployment with Truffle
 ### Local
 1. Deploy with truffle: `truffle migrate --reset --compile-all`
 2. Test within the console: `truffle console`
 
-### Ropsten
-
+### Any other environment
+Available environments: `remoteDevelopment`, `staging`, `production`
 1. Add etherbase account's Mnemonics in truffle.js file.
-2. Deploy with truffle: `truffle migrate --reset --compile-all --network ropsten`
-3. Test within the truffle console: `truffle console --network ropsten`
-
-## Testing
-
-### Run tests
-
-```bash
-npm run ganache & # (Only once)
-npm run test
-# Or run with coverage
-npm run test:coverage
-```
+2. Deploy with truffle: `truffle migrate --reset --compile-all --network staging`
+3. Test within the truffle console: `truffle console --network staging`
 
 ## Deployment status
 

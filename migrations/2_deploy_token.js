@@ -8,13 +8,15 @@ const DeployUtils = require('../utils/deploymentutils');
 const deployLocal = (deployer, tokenContract, accounts) => {
   const from = { from: accounts.owner };
 
-  deployer.deploy(tokenContract, from).then(() => tokenContract.deployed()).then((instance) => {
-    instance.transfer(accounts.seller, 1000, from);
-    instance.transfer(accounts.buyer, 100000, from);
-    instance.transfer(accounts.notary1, 100000, from);
-    instance.transfer(accounts.notary2, 100000, from);
-    instance.transfer(accounts.notary3, 100000, from);
-  });
+  return deployer.deploy(tokenContract, from)
+    .then(() => tokenContract.deployed())
+    .then((instance) => {
+      instance.transfer(accounts.seller, 1000, from);
+      instance.transfer(accounts.buyer, 100000, from);
+      instance.transfer(accounts.notary1, 100000, from);
+      instance.transfer(accounts.notary2, 100000, from);
+      instance.transfer(accounts.notary3, 100000, from);
+    });
 };
 
 module.exports = function deploy(deployer, network, accounts) {
@@ -27,7 +29,6 @@ module.exports = function deploy(deployer, network, accounts) {
     const localAccounts = DeployUtils.getLocalAccounts(accounts);
     deployLocal(deployer, Wibcoin, localAccounts);
   } else {
-    const networkAccounts = DeployUtils.getEnvironmentAccounts(network);
-    deployer.deploy(Wibcoin, { from: networkAccounts.owner });
+    deployer.deploy(Wibcoin);
   }
 };

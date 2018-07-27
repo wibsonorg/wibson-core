@@ -10,9 +10,8 @@ const CryptoUtils = artifacts.require('./lib/CryptoUtils.sol');
 const Wibcoin = artifacts.require('./Wibcoin.sol');
 const DataExchange = artifacts.require('./DataExchange.sol');
 
-const deployExchange = (deployer, accounts, tokenAddress) => {
-  const { owner, multisig } = accounts;
-  const from = { from: owner };
+const deployExchange = (deployer, tokenAddress, multisig, owner) => {
+  const from = owner ? { from: owner } : {};
 
   // Can't use async-await since truffle uses thenable objects, not ES6 promises
   return deployer.deploy(MathContract, from) // External libraries
@@ -33,9 +32,11 @@ module.exports = function deploy(deployer, network, accounts) {
   const wibcoinAddress = DeployUtils.getWibcoinAddress(network);
   const usedWibcoinAddress = wibcoinAddress || Wibcoin.address;
 
-  const usedAccounts = DeployUtils.isLocal(network)
-    ? DeployUtils.getLocalAccounts(accounts)
-    : DeployUtils.getEnvironmentAccounts(network);
+  if (DeployUtils.isLocal(network)) {
+    const { owner, multisig } = DeployUtils.getLocalAccounts(accounts);
+    return deployExchange(deployer, usedWibcoinAddress, multisig, owner);
+  }
 
-  return deployExchange(deployer, usedAccounts, usedWibcoinAddress);
+  const { multisig } = DeployUtils.getEnvironmentAccounts(network);
+  return deployExchange(deployer, usedWibcoinAddress, multisig);
 };
