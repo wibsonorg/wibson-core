@@ -25,17 +25,17 @@ module.exports = {
     remoteDevelopment: { // intended to be named as 'development' but it collides with truffle's default
       provider: () => DeployUtils.getProvider('ropsten', 'remoteDevelopment'),
       network_id: 3, // official id of the ropsten network
-      gas: 8400000,
+      gas: 7500000,
     },
     staging: {
       provider: () => DeployUtils.getProvider('ropsten', 'staging'),
       network_id: 3, // official id of the ropsten network
-      gas: 8400000,
+      gas: 7500000,
     },
     production: {
       provider: () => DeployUtils.getProvider('mainnet', 'production'),
       network_id: 1,
-      gas: 8400000,
+      gas: 7500000,
     },
   },
   solc: {
