@@ -8,7 +8,7 @@ contract('DataOrder', async (accounts) => {
   let dataOrder;
 
   const expectedGas = {
-    addNotary: 154000,
+    addNotary: 197000,
     addDataResponse: 180000,
     closeDataResponse: 37000,
     close: 28000,
@@ -19,14 +19,15 @@ contract('DataOrder', async (accounts) => {
   const dataRequest = '["geolocation"]';
   const price = 10;
   const termsAndConditions =
-    '0xd107c0801782889264da2e00ad0a19ba38435f84cbbf0689ed46b56a0ec7b4ea';
+    'd107c0801782889264da2e00ad0a19ba38435f84cbbf0689ed46b56a0ec7b4ea';
   const buyerURL =
     '{ "api": "http://buyer.com", "storage": "s3://key:secret@wibson-storage"}';
   const publicKey = 'pub key';
 
   const responsesPercentage = 30;
   const notarizationFee = 5;
-  const notarizationTermsOfService = 'Sample TOS';
+  const notarizationTermsOfService =
+    '028675a595387b2d32de68477f7a4a36a05b57a44957bf5ceb5d6d1f159e80d0';
 
   beforeEach(async () => {
     dataOrder = await DataOrder.new(

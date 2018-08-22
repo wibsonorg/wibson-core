@@ -16,7 +16,7 @@ contract('DataExchange', async (accounts) => {
     newOrder: 1769000,
     registerNotary: 170000,
     unregisterNotary: 33000,
-    addNotaryToOrder: 274000,
+    addNotaryToOrder: 318000,
     addDataResponseToOrder: 332000,
     closeDataResponse: 85000,
     closeOrder: 68000,
@@ -28,14 +28,15 @@ contract('DataExchange', async (accounts) => {
   const price = '10';
   const initialBudgetForAudits = '0';
   const termsAndConditions =
-    '0xd107c0801782889264da2e00ad0a19ba38435f84cbbf0689ed46b56a0ec7b4ea';
+    'd107c0801782889264da2e00ad0a19ba38435f84cbbf0689ed46b56a0ec7b4ea';
   const buyerURL =
     '{ "api": "http://buyer.com", "storage": "s3://key:secret@wibson-storage"}';
   const publicKey = 'pub key';
 
   const responsesPercentage = 30;
   const notarizationFee = 5;
-  const notarizationTermsOfService = 'Sample TOS';
+  const notarizationTermsOfService =
+    '028675a595387b2d32de68477f7a4a36a05b57a44957bf5ceb5d6d1f159e80d0';
 
   beforeEach(async () => {
     dataExchange = await DataExchange.new(token.address, owner);
