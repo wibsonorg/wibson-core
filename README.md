@@ -63,3 +63,20 @@ $ npm run truffle console --network staging # to test within the console
 -   CryptoUtils `0x`
 
 #### Notes:
+
+## Protocol's Gas Consumption
+
+| Transaction                  | DataExchange | DataOrder |
+| ---------------------------- | ------------ | --------- |
+| newOrder (1\*)               | 1769000      | -         |
+| registerNotary               | 170000       | -         |
+| unregisterNotary             | 33000        | -         |
+| addNotaryToOrder (2\*)       | 318000       | 197000    |
+| addDataResponseToOrder (3\*) | 332000       | 180000    |
+| closeDataResponse            | 85000        | 37000     |
+| closeOrder                   | 68000        | 28000     |
+
+1\*- With Terms and Conditions being about half of the size of the document we are currently using on the Buyer APP, the gas consumption of the `newOrder` transaction scales up to ~7millon (640 units per byte aprox). For the purpose of this document, the gas consumption for this transaction was calculated using a 64 bytes hash instead of the original terms contents (hashing method: `web3Utils.sha3(terms)`).
+2\*- Calculated by hashing the Notarization Terms of Service with the same method: `web3Utils.sha3(notarizationTermsOfService)`.
+3\*- Calculated with a dataHash of 58 bytes.
+

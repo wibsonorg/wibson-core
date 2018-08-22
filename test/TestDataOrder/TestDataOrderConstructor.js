@@ -69,7 +69,7 @@ contract('DataOrder', async (accounts) => {
     // This test is for documentation purposes.
     // The string `buyerUrl` is not limited in length, so anyone can submit
     // an URL the size they want, but the longer the string the more expensive
-    // the transaction (8 units of gas per byte aprox.).
+    // the transaction (640 units of gas per byte aprox.).
     it('creates a DataOrder with a huge Buyer URL', async () => {
       const dataOrder = await createDataOrder({
         buyer,
