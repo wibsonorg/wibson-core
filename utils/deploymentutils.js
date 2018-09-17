@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const HDWalletProvider = require('truffle-hdwallet-provider-privkey'); // eslint-disable-line import/no-extraneous-dependencies
-const NonceTrackerSubprovider = require('web3-provider-engine/subproviders/nonce-tracker');
+const HDWalletProvider = require('truffle-hdwallet-provider'); // eslint-disable-line import/no-extraneous-dependencies
 
 const getConfig = function getConfig() {
   try {
@@ -25,13 +24,7 @@ exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = getEnvironmentConfig(environment);
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
-  const privKeys = [envConfig.deployPrivateKey];
-  const wallet = new HDWalletProvider(privKeys, infura);
-
-  const nonceTracker = new NonceTrackerSubprovider();
-  wallet.engine._providers.unshift(nonceTracker); // eslint-disable-line no-underscore-dangle
-  nonceTracker.setEngine(wallet.engine);
-  return wallet;
+  return new HDWalletProvider(envConfig.mnemonic, infura);
 };
 
 exports.isLocal = function isLocal(environment) {
