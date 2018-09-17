@@ -2,15 +2,15 @@ import { assertRevert, assertEvent } from '../helpers';
 import { addNotaryToOrder, newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
   const owner = accounts[2];
   const other = accounts[3];
   const buyer = accounts[4];
-  const tokenAddress = Wibcoin.address;
-  const token = Wibcoin.at(tokenAddress);
+  const tokenAddress = WIBToken.address;
+  const token = WIBToken.at(tokenAddress);
 
   let dataExchange;
 

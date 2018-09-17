@@ -6,7 +6,7 @@ const SafeMath = artifacts.require('zeppelin-solidity/contracts/math/SafeMath.so
 const MultiMap = artifacts.require('./lib/MultiMap.sol');
 const CryptoUtils = artifacts.require('./lib/CryptoUtils.sol');
 
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 const DataExchange = artifacts.require('./DataExchange.sol');
 
 const deployExchange = (deployer, tokenAddress, multisig, owner) => {
@@ -21,14 +21,14 @@ const deployExchange = (deployer, tokenAddress, multisig, owner) => {
 };
 
 module.exports = function deploy(deployer, network, accounts) {
-  const wibcoinAddress = DeployUtils.getWibcoinAddress(network);
-  const usedWibcoinAddress = wibcoinAddress || Wibcoin.address;
+  const wibTokenAddress = DeployUtils.getWIBTokenAddress(network);
+  const usedWibTokenAddress = wibTokenAddress || WIBToken.address;
 
   if (DeployUtils.isLocal(network)) {
     const { owner, multisig } = DeployUtils.getLocalAccounts(accounts);
-    return deployExchange(deployer, usedWibcoinAddress, multisig, owner);
+    return deployExchange(deployer, usedWibTokenAddress, multisig, owner);
   }
 
   const { multisig } = DeployUtils.getEnvironmentAccounts(network);
-  return deployExchange(deployer, usedWibcoinAddress, multisig);
+  return deployExchange(deployer, usedWibTokenAddress, multisig);
 };

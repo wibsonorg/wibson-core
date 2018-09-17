@@ -3,7 +3,7 @@ import { signMessage } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const DataOrder = artifacts.require('./DataOrder.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', (accounts) => {
   const OWNER = accounts[6];
@@ -16,7 +16,7 @@ contract('DataExchange', (accounts) => {
   it('should do complete flow', () => {
     const meta = {};
 
-    Wibcoin.deployed().then((wib) => {
+    WIBToken.deployed().then((wib) => {
       meta.wib = wib;
     });
 

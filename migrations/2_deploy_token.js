@@ -1,4 +1,4 @@
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 const DeployUtils = require('../utils/deploymentutils');
 
@@ -20,15 +20,15 @@ const deployLocal = (deployer, tokenContract, accounts) => {
 };
 
 module.exports = function deploy(deployer, network, accounts) {
-  const wibcoinAddress = DeployUtils.getWibcoinAddress(network);
-  if (wibcoinAddress) {
+  const wibTokenAddress = DeployUtils.getWIBTokenAddress(network);
+  if (wibTokenAddress) {
     return;
   }
 
   if (DeployUtils.isLocal(network)) {
     const localAccounts = DeployUtils.getLocalAccounts(accounts);
-    deployLocal(deployer, Wibcoin, localAccounts);
+    deployLocal(deployer, WIBToken, localAccounts);
   } else {
-    deployer.deploy(Wibcoin);
+    deployer.deploy(WIBToken);
   }
 };

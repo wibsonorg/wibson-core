@@ -6,7 +6,7 @@ import "zeppelin-solidity/contracts/math/Math.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 import "./DataOrder.sol";
-import "./Wibcoin.sol";
+import "./WIBToken.sol";
 import "./lib/MultiMap.sol";
 import "./lib/CryptoUtils.sol";
 
@@ -72,15 +72,15 @@ contract DataExchange is TokenDestructible, Pausable {
     _;
   }
 
-  // @dev token A Wibcoin implementation of an ERC20 standard token.
-  Wibcoin token;
+  // @dev token A WIBToken implementation of an ERC20 standard token.
+  WIBToken token;
 
   // @dev The minimum for initial budget for audits per `DataOrder`.
   uint256 public minimumInitialBudgetForAudits;
 
   /**
    * @notice Contract constructor.
-   * @param tokenAddress Address of the Wibcoin token address.
+   * @param tokenAddress Address of the WIBToken token address.
    * @param ownerAddress Address of the DataExchange owner.
    */
   constructor(
@@ -89,7 +89,7 @@ contract DataExchange is TokenDestructible, Pausable {
   ) public validAddress(tokenAddress) validAddress(ownerAddress) {
     require(tokenAddress != ownerAddress);
 
-    token = Wibcoin(tokenAddress);
+    token = WIBToken(tokenAddress);
     minimumInitialBudgetForAudits = 0;
     transferOwnership(ownerAddress);
   }

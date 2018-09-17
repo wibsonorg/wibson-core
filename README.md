@@ -23,8 +23,8 @@ configured in the `deploy.json` file.
 * `infuraToken`: The API key supplied by [Infura](https://infura.io/) to be used on remote environments.
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
-    * `wibcoinAddress`: Optional. An Ethereum address of an existing `Wibcoin` contract. `DataExchange` will use this
-one instead of deploying a new `Wibcoin` instance.
+    * `wibTokenAddress`: Optional. An Ethereum address of an existing `WIBToken` contract. `DataExchange` will use this
+one instead of deploying a new `WIBToken` instance.
     * `mnemonic`: Twelve word mnemonic to create the deployer account only for remote environments.
     * `accounts.multisig`: Final owner of the `DataExchange` contract.
 
@@ -55,7 +55,7 @@ $ npm run truffle console --network staging # to test within the console
 #### Release Data:
 #### Deployed Addresses:
 
--   Wibcoin: `0x`
+-   WIBToken: `0x`
 -   DataExchange: `0x`
 -   Migrations `0x`
 -   MultiMap `0x`
@@ -79,4 +79,3 @@ $ npm run truffle console --network staging # to test within the console
 1\*- With Terms and Conditions being about half of the size of the document we are currently using on the Buyer APP, the gas consumption of the `newOrder` transaction scales up to ~7millon (640 units per byte aprox). For the purpose of this document, the gas consumption for this transaction was calculated using a 64 bytes hash instead of the original terms contents (hashing method: `web3Utils.sha3(terms)`).
 2\*- Calculated by hashing the Notarization Terms of Service with the same method: `web3Utils.sha3(notarizationTermsOfService)`.
 3\*- Calculated with a dataHash of 58 bytes.
-
