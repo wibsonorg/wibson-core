@@ -14,8 +14,8 @@ $ cp deploy.example.json deploy.json
 $ vi deploy.json
 ```
 
-If a remote network is used, a twelve word mnemonic is needed to sign the deployment transactions. Keep in mind that
-the first account created with this mnemonic will be the deployer, and therefore, the owner of each contract.
+If a remote network is used, a private key is needed to sign the deployment transactions. Keep in mind that
+the address for that private key will be the deployer, and therefore, the owner of each contract.
 Nevertheless, the ownership of the `DataExchange` contract will be transferred to the `multisig` account
 configured in the `deploy.json` file.
 
@@ -25,7 +25,7 @@ configured in the `deploy.json` file.
 * Environment options:
     * `wibTokenAddress`: Optional. An Ethereum address of an existing `WIBToken` contract. `DataExchange` will use this
 one instead of deploying a new `WIBToken` instance.
-    * `mnemonic`: Twelve word mnemonic to create the deployer account only for remote environments.
+    * `deployPrivateKey`: Private key for the deployer account only used in remote environments.
     * `accounts.multisig`: Final owner of the `DataExchange` contract.
 
 ## Testing
@@ -62,20 +62,24 @@ $ npm run truffle console --network staging # to test within the console
 -   ECRecovery `0x`
 -   CryptoUtils `0x`
 
-#### Notes:
-
 ## Protocol's Gas Consumption
 
-| Transaction                  | DataExchange | DataOrder |
-| ---------------------------- | ------------ | --------- |
-| newOrder (1\*)               | 1769000      | -         |
-| registerNotary               | 170000       | -         |
-| unregisterNotary             | 33000        | -         |
-| addNotaryToOrder (2\*)       | 318000       | 197000    |
-| addDataResponseToOrder (3\*) | 332000       | 180000    |
-| closeDataResponse            | 85000        | 37000     |
-| closeOrder                   | 68000        | 28000     |
+| Transaction                     | DataExchange | DataOrder |
+| ------------------------------- | ------------ | --------- |
+| newOrder (\*)                   | 1769000      | -         |
+| registerNotary                  | 170000       | -         |
+| unregisterNotary                | 33000        | -         |
+| addNotaryToOrder (\*\*)         | 318000       | 197000    |
+| addDataResponseToOrder (\*\*\*) | 332000       | 180000    |
+| closeDataResponse               | 85000        | 37000     |
+| closeOrder                      | 68000        | 28000     |
 
-1\*- With Terms and Conditions being about half of the size of the document we are currently using on the Buyer APP, the gas consumption of the `newOrder` transaction scales up to ~7millon (640 units per byte aprox). For the purpose of this document, the gas consumption for this transaction was calculated using a 64 bytes hash instead of the original terms contents (hashing method: `web3Utils.sha3(terms)`).
-2\*- Calculated by hashing the Notarization Terms of Service with the same method: `web3Utils.sha3(notarizationTermsOfService)`.
-3\*- Calculated with a dataHash of 58 bytes.
+\* With Terms and Conditions being about half of the size of the document we are currently using on the Buyer APP, the gas consumption of the `newOrder` transaction scales up to ~7millon (640 units per byte aprox). For the purpose of this document, the gas consumption for this transaction was calculated using a 64 bytes hash instead of the original terms contents (hashing method: `web3Utils.sha3(terms)`).
+
+\*\* Calculated by hashing the Notarization Terms of Service with the same method: `web3Utils.sha3(notarizationTermsOfService)`.
+
+\*\*\* Calculated with a dataHash of 58 bytes.
+
+## License
+
+LGPL-3.0
