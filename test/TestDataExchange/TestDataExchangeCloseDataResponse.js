@@ -3,7 +3,7 @@ import { newOrder, addNotaryToOrder, addDataResponseToOrder } from './helpers';
 import { assertEvent, assertRevert, signMessage } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 const extractAddress = transaction => transaction.logs[0].args.orderAddr;
 const closeDataResponse = (dataExchange, {
@@ -25,8 +25,8 @@ contract('DataExchange', async (accounts) => {
   const seller = accounts[5];
   const owner = accounts[6];
   const notOwner = accounts[7];
-  const tokenAddress = Wibcoin.address;
-  const token = Wibcoin.at(tokenAddress);
+  const tokenAddress = WIBToken.address;
+  const token = WIBToken.at(tokenAddress);
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
   const balanceOf = async (address) => {

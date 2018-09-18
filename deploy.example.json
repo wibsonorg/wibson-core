@@ -8,14 +8,14 @@
       }
     },
     "staging": {
-      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby",
       "accounts": {
         "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"
       }
     },
     "production": {
-      "wibcoinAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
+      "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
       "mnemonic": "twelve awesome words to create a mnemonic to conquer the world baby",
       "accounts": {
         "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"

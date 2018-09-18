@@ -1,11 +1,11 @@
 import { assertRevert } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', async (accounts) => {
   const owner = accounts[0];
-  const tokenAddress = Wibcoin.address;
+  const tokenAddress = WIBToken.address;
   const zeroAddress = '0x0000000000000000000000000000000000000000';
 
   describe('Constructor', () => {
@@ -33,7 +33,7 @@ contract('DataExchange', async (accounts) => {
     });
 
     it('creates a DataExchange instance', async () => {
-      const newToken = await Wibcoin.new();
+      const newToken = await WIBToken.new();
       const dataExchange = await DataExchange.new(newToken.address, owner);
       assert(dataExchange, 'DataExchange was not created correctly');
     });

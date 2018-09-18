@@ -2,10 +2,10 @@ import { assertEvent, assertRevert, signMessage } from '../helpers';
 import { newOrder } from './helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const Wibcoin = artifacts.require('./Wibcoin.sol');
+const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', (accounts) => {
-  let wibcoin;
+  let token;
   let dataExchange;
 
   const owner = accounts[0];
@@ -33,7 +33,7 @@ contract('DataExchange', (accounts) => {
     let approval = initialBudgetForAudits > 0 ? initialBudgetForAudits : notarizationFee;
     approval += orderPrice;
 
-    await wibcoin.increaseApproval(dataExchange.address, approval, {
+    await token.increaseApproval(dataExchange.address, approval, {
       from: buyer,
     });
 
@@ -64,8 +64,8 @@ contract('DataExchange', (accounts) => {
   };
 
   beforeEach('setup DataExchange for each test', async () => {
-    wibcoin = await Wibcoin.deployed();
-    dataExchange = await DataExchange.new(Wibcoin.address, owner);
+    token = await WIBToken.deployed();
+    dataExchange = await DataExchange.new(WIBToken.address, owner);
     await dataExchange.registerNotary(
       notary,
       'Notary A',
@@ -81,7 +81,7 @@ contract('DataExchange', (accounts) => {
       { from: owner },
     );
 
-    await wibcoin.approve(dataExchange.address, 0, { from: buyer });
+    await token.approve(dataExchange.address, 0, { from: buyer });
 
     orderAddress = await setUpDataOrder(2);
     orderAddressWithoutBudget = await setUpDataOrder(0);
@@ -214,7 +214,7 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add a data response twice', async () => {
-      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+      await token.increaseApproval(dataExchange.address, orderPrice, {
         from: buyer,
       });
 
@@ -243,7 +243,7 @@ contract('DataExchange', (accounts) => {
     });
 
     it('can not add an already-closed data response', async () => {
-      await wibcoin.increaseApproval(dataExchange.address, orderPrice, {
+      await token.increaseApproval(dataExchange.address, orderPrice, {
         from: buyer,
       });
 
@@ -348,7 +348,7 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if does not pay for order price', async () => {
       try {
-        await wibcoin.approve(dataExchange.address, notarizationFee, {
+        await token.approve(dataExchange.address, notarizationFee, {
           from: buyer,
         });
         await dataExchange.addDataResponseToOrder(
@@ -367,7 +367,7 @@ contract('DataExchange', (accounts) => {
 
     it('can not add a data response if does not pay for notarization fee', async () => {
       try {
-        await wibcoin.approve(dataExchange.address, orderPrice, {
+        await token.approve(dataExchange.address, orderPrice, {
           from: buyer,
         });
         await dataExchange.addDataResponseToOrder(
@@ -394,7 +394,7 @@ contract('DataExchange', (accounts) => {
         for (let i = 0; i < sellers.length; i += 1) {
           /* eslint-disable no-await-in-loop */
           // https://eslint.org/docs/rules/no-await-in-loop#when-not-to-use-it
-          await wibcoin.approve(dataExchange.address, orderPrice, {
+          await token.approve(dataExchange.address, orderPrice, {
             from: buyer,
           });
           const seller = sellers[i];
@@ -420,7 +420,7 @@ contract('DataExchange', (accounts) => {
     });
 
     it('should not pay the notarization fee if there still is initial budget available', async () => {
-      const initialBalance = await wibcoin.balanceOf(buyer);
+      const initialBalance = await token.balanceOf(buyer);
       await dataExchange.addDataResponseToOrder(
         orderAddress,
         sellerA,
@@ -429,7 +429,7 @@ contract('DataExchange', (accounts) => {
         signature,
         { from: buyer },
       );
-      const finalBalance = await wibcoin.balanceOf(buyer);
+      const finalBalance = await token.balanceOf(buyer);
       assert.equal(
         Number(initialBalance),
         Number(finalBalance) + orderPrice,

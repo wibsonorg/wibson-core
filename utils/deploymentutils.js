@@ -8,7 +8,7 @@ const getConfig = function getConfig() {
     return JSON.parse(fs.readFileSync(configFile, 'utf8'));
   } catch (err) {
     console.error('\n--> Missing deploy.json. ' + // eslint-disable-line no-console
-      'Please take a look at the README.md file before continuing.\n\n');
+        'Please take a look at the README.md file before continuing.\n\n');
     throw err;
   }
 };
@@ -27,7 +27,9 @@ exports.getProvider = function getProvider(network, environment) {
   return new HDWalletProvider(envConfig.mnemonic, infura);
 };
 
-exports.isLocal = function isLocal(environment) { return environment === 'development' || environment === 'test'; };
+exports.isLocal = function isLocal(environment) {
+  return environment === 'development' || environment === 'test' || environment === 'coverage';
+};
 
 exports.getEnvironmentAccounts = function getEnvironmentAccounts(environment) {
   const config = getEnvironmentConfig(environment);
@@ -46,7 +48,7 @@ exports.getLocalAccounts = function getLocalAccounts(accounts) {
   };
 };
 
-exports.getWibcoinAddress = function getWibcoinAddress(environment) {
+exports.getWIBTokenAddress = function getWIBTokenAddress(environment) {
   const config = getEnvironmentConfig(environment);
-  return config.wibcoinAddress;
+  return config.wibTokenAddress;
 };
