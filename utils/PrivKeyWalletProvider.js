@@ -15,6 +15,13 @@ const ethereumjsWallet = require('ethereumjs-wallet');
 // See issue #65 for more
 const singletonNonceSubProvider = new NonceSubProvider();
 
+/* The following provider is a patch over truffle-hdwallet-provider 0.0.7-beta.0
+   to support importing accounts by private keys instead of by mnemonic.
+   The idea was taken from: https://github.com/rhlsthrm/truffle-hdwallet-provider-privkey
+   This is useful when using wallets created on MyEtherWallet.
+   It's not even close to an ideal solution, let's discuss following steps at:
+   https://github.com/wibsonorg/wibson-core/issues/63
+ */
 function PrivKeyWalletProvider(privateKeys, providerUrl, shareNonce = true) {
   this.wallets = {};
   this.addresses = [];
