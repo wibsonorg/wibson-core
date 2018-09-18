@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const HDWalletProvider = require('truffle-hdwallet-provider'); // eslint-disable-line import/no-extraneous-dependencies
+const PrivKeyWalletProvider = require('./PrivKeyWalletProvider');
 
 const getConfig = function getConfig() {
   try {
@@ -24,7 +24,8 @@ exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = getEnvironmentConfig(environment);
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
-  return new HDWalletProvider(envConfig.mnemonic, infura);
+  const privKeys = [envConfig.deployPrivateKey];
+  return new PrivKeyWalletProvider(privKeys, infura);
 };
 
 exports.isLocal = function isLocal(environment) {
