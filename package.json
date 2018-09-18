@@ -32,7 +32,6 @@
     "solium": "^1.1.7",
     "solium-plugin-zeppelin": "^0.0.2",
     "truffle": "^4.1.11",
-    "truffle-hdwallet-provider": "^0.0.3",
     "truffle-solidity-loader": "^0.0.8",
     "web3": "^0.18.2",
     "web3-provider-engine": "^14.0.5",
