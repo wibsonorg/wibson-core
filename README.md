@@ -1,9 +1,10 @@
-# Wibson
+# <img src="logo.png" alt="Wibson" width="400px">
+
 [Wibson](https://wibson.org/) is a blockchain-based, decentralized data marketplace that provides individuals a way to securely and anonymously sell validated private information in a trusted environment.
 
 **wibson-core** is the implementation of the underlying protocol of Wibson using the Ethereum platform.
 
-> NOTE: For more details about the protocol please read our white paper [here](https://wibson.org/).
+> NOTE: For more details about the protocol, please read our white paper [here](https://wibson.org/).
 
 ## Getting Started
 In order to run tests or deploy to local or any remote environment, the `deploy.json` file must be set up.
@@ -55,12 +56,14 @@ $ npm run truffle console --network staging # to test within the console
 #### Release Data:
 #### Deployed Addresses:
 
--   WIBToken: `0x`
--   DataExchange: `0x`
--   Migrations `0x`
--   MultiMap `0x`
--   ECRecovery `0x`
--   CryptoUtils `0x`
+-   WIBToken: `0x3f17dd476faf0a4855572f0b6ed5115d9bba22ad`
+-   DataExchange: `0xd077c09a7e65c4cca490a776d5e395fb4fe7179a`
+-   MultiMap `0x72ae13d70f65c56e59eb63993605abef1ecb9c41`
+-   CryptoUtils `0x48819464877341cb7e0bbd91e0c268016ae5e6ad`
+-   Math `0x9c2693a1e04eb127b0d628e276a98fef235ee9e2`
+-   SafeMath `0x6919a6710bfa555e70cc8cd35bf2e613c355c443`
+-   ECRecovery `0x59740db1350bcac14fd3a3451d47205a1d499499`
+-   Migrations `0xde2e43f4831cd95a41b3bdc8947209f86670e446`
 
 ## Protocol's Gas Consumption
 
@@ -80,6 +83,14 @@ $ npm run truffle console --network staging # to test within the console
 
 \*\*\* Calculated with a dataHash of 58 bytes.
 
-## License
+## Reporting Security Vulnerabilities
+If you think that you have found a security issue in Wibson, please **DO NOT** use post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
+Although we are working on setting up a bug bounty program to improve this, we appreciate your discretion and will give the corresponding credit to the reporter(s).
 
-LGPL-3.0
+## Contribute
+Thank you for thinking about contributing to Wibson Core. There are many ways you can participate and help build high quality software. Check out the [contribution guide]!
+
+## License
+Wibson Core is released under the [LGPL-3.0](LICENSE).
+
+[contribution guide]: CONTRIBUTING.md
