@@ -32,7 +32,7 @@ We follow the rules described in the [.soliumrc.json] file for the smart contrac
 Please, make sure running `npm run lint:all` finishes successfully.
 
 ## Code of Conduct
-To ensure an inclusive community, contributors and users in the Wibson community should follow the code of conduct.
+To ensure an inclusive community, contributors and users in the Wibson community should follow the [Code of Conduct].
 
 ## License
 By contributing, you agree that your contributions will be licensed under the [LGPL-3.0] License.
@@ -47,5 +47,6 @@ Thanks for your time and code. Happy coding!
 [the Gitflow model]: http://nvie.com/posts/a-successful-git-branching-model/
 [.soliumrc.json]: .soliumrc.json
 [.eslintrc.js]: .eslintrc.js
+[Code of Conduct]: CODE_OF_CONDUCT.md
 [LGPL-3.0]: LICENSE
 [Github Issues]: https://github.com/wibsonorg/wibson-core/issues
