@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "author": "Wibson Development Team <developers@wibson.org>",
   "license": "LGPL-3.0",
+  "engines": {
+    "node": "~8.11.3",
+    "npm": ">= 6.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wibsonorg/wibson-core.git"
+  },
   "scripts": {
     "compile": "truffle compile",
     "lint:sol": "solium -d .",
