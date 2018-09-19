@@ -8,8 +8,7 @@ Files, functions, or lines of code that are tricky and should be reviewed carefu
 Reference issues in case this is a bugfix. Explain the rationale if it's a feature/enhancement.
 
 ### Does this Pull Request meet the acceptance criteria?
-- [ ] I have read the [Contribution guidelines](CONTRIBUTING.md).
-- [ ] I have read the [Code of Conduct](CODE_OF_CONDUCT.md).
+- [ ] I have read the [Contribution guidelines](https://github.com/wibsonorg/wibson-core/CONTRIBUTING.md).
+- [ ] I have read the [Code of Conduct](https://github.com/wibsonorg/wibson-core/CODE_OF_CONDUCT.md).
 - [ ] I have updated the documentation accordingly.
 - [ ] I have added tests to cover my changes.
-
