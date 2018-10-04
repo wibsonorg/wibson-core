@@ -8,11 +8,9 @@ cache:
 
 jobs:
   include:
-    - stage: prepare cache
-      script: true
+    - stage: setup
+      script: cp deploy.example.json deploy.json
     - stage: test
       script: npm run test
-    - stage: lint
-      script: npm run lint:all
-    - stage: coverage
       script: npm run test:coverage
+      script: npm run lint:all
