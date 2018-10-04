@@ -7,10 +7,15 @@ cache:
     - "node_modules"
 
 jobs:
+  allow_failures:
+    - env: ALLOW_FAILURE=true
   include:
     - stage: setup
       script: cp deploy.example.json deploy.json
     - stage: test
       script: npm run test
+    - stage: coverage
       script: npm run test:coverage
+    - stage: lint
       script: npm run lint:all
+      env: ALLOW_FAILURE=true
