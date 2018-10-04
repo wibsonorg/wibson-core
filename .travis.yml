@@ -1,0 +1,16 @@
+language: node_js
+
+cache:
+  directories:
+    - "node_modules"
+
+jobs:
+  include:
+    - stage: prepare cache
+      script: true
+    - stage: test
+      script: npm run test
+    - stage: lint
+      script: npm run lint:all
+    - stage: coverage
+      script: npm run test:coverage
