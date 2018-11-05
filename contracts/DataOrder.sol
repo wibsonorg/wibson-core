@@ -56,6 +56,7 @@ contract DataOrder is Ownable {
   uint32 public createdAt;
   uint32 public transactionCompletedAt;
   OrderStatus public orderStatus;
+  bytes32 public sellersProof; // MerkleTree Root hash
 
   mapping(address => SellerInfo) public sellerInfo;
   mapping(address => NotaryInfo) internal notaryInfo;
@@ -95,7 +96,8 @@ contract DataOrder is Ownable {
     buyerPublicKey = _buyerPublicKey;
     orderStatus = OrderStatus.OrderCreated;
     createdAt = uint32(block.timestamp);
-    transactionCompletedAt = 0;
+    // transactionCompletedAt = 0;
+    // sellersProof = bytes32(0);
   }
 
   /**
@@ -304,4 +306,10 @@ contract DataOrder is Ownable {
     throw; // solium-disable-line security/no-throw
   }
 
+  function updateSellersProof(
+    bytes32 newSellersProof
+  ) public onlyOwner returns (bool) {
+    sellersProof = newSellersProof;
+    return true;
+  }
 }
