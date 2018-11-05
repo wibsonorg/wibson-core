@@ -33,12 +33,23 @@ contract DataExchange is TokenDestructible, Pausable {
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
   event RefundedToBuyer(address indexed orderAddr, address indexed buyer);
   event OrderClosed(address indexed orderAddr);
+  event InitWithdraw(address indexed seller, uint256 challengeTimeout);
+  event Cashout(address indexed seller, uint256 cashoutBalance);
+
 
   struct NotaryInfo {
     address addr;
     string name;
     string notaryUrl;
     string publicKey;
+  }
+
+  struct SellerInfo {
+    uint256 pointer;
+    uint256 balance;
+    uint256 withdrawBalance;
+    uint256 withdrawPointer;
+    uint256 withdrawTimestamp;
   }
 
   MultiMap.MapStorage openOrders;
@@ -48,6 +59,7 @@ contract DataExchange is TokenDestructible, Pausable {
   mapping(address => address[]) public ordersByNotary;
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
+  mapping(address => SellerInfo) internal sellerInfo;
   // Tracks the orders created by this contract.
   mapping(address => bool) private orders;
 
@@ -77,6 +89,9 @@ contract DataExchange is TokenDestructible, Pausable {
 
   // @dev The minimum for initial budget for audits per `DataOrder`.
   uint256 public minimumInitialBudgetForAudits;
+
+  uint256 marketPointer;
+  uint256 timeout = 50; // TODO: Change me
 
   /**
    * @notice Contract constructor.
@@ -481,6 +496,39 @@ contract DataExchange is TokenDestructible, Pausable {
       info.publicKey,
       allowedNotaries.exist(notary)
     );
+  }
+
+  function initWithdraw(address seller) public returns (bool) {
+    SellerInfo info = sellerInfo[seller];
+    require(info.withdrawPointer == 0);
+    require(marketPointer > info.pointer);
+
+    info.withdrawPointer = marketPointer;
+    info.withdrawTimestamp = block.timestamp;
+
+    uint256 challengeTimeout = info.withdrawTimestamp.add(timeout);
+    emit InitWithdraw(seller, challengeTimeout);
+    return true;
+  }
+
+  function cashout(address seller) public returns (bool) {
+    SellerInfo info = sellerInfo[seller];
+    require(info.withdrawPointer > 0);
+    require(info.withdrawPointer <= marketPointer);
+    require(block.timestamp >= info.withdrawTimestamp.add(timeout));
+
+    uint256 cashoutBalance = info.balance;
+
+    info.pointer = withdrawPointer;
+    info.balance = info.balance.sub(withdrawBalance);
+    info.withdrawPointer = 0;
+    info.withdrawTimestamp = 0;
+    info.withdrawBalance = 0;
+
+
+    WIBToken.transfer(seller, cashoutBalance);
+    emit Cashout(seller, cashoutBalance);
+    return true;
   }
 
   /**
