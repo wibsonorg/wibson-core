@@ -91,7 +91,7 @@ contract DataExchange is TokenDestructible, Pausable {
   uint256 public minimumInitialBudgetForAudits;
 
   uint256 marketPointer;
-  uint256 timeout = 50; // TODO: Change me
+  uint256 timeout = 604800; // 1 week
 
   /**
    * @notice Contract constructor.
