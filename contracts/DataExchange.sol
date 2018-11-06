@@ -24,6 +24,8 @@ contract DataExchange {
   }
 
   mapping(address => SellerBalance) public sellersBalance;
+  mapping(address => uint256) public sellersPointer;
+  address[] public marketOrders;
 
   uint256 marketPointer = 0;
   uint256 timeout = 604800; // 1 week
@@ -119,4 +121,44 @@ contract DataExchange {
     return true;
   }
 
+  function withdraw(
+    bytes32[][] witnesses,
+    uint256[] ordersPosition,
+    address seller
+  ) returns (bool) {
+    // check that ordersPosition are sorted
+    // check that ordersPosition exist in marketOrders
+    require(sellersPointer[seller] < ordersPosition[0]);
+    bytes32 subject = keccak256(seller);
+    uint256 lastOrderPosition = 0;
+    uint256 total = 0;
+
+    for (uint j = 0; j < witnesses.length; j++) {
+      bytes32[] witness = witnesses[];
+      uint256 orderPosition = ordersPosition[j];
+      DataOrder order = DataOrder(marketOrders[orderPosition]);
+      bytes32 proof = subject;
+
+      for (uint i = 0; i < witness.length; i++) {
+        bytes32 sibbling = witness[i];
+        if (sibbling < proof) {
+          proof = keccak256(abi.encodePacked(sibbling, proof));
+        } else {
+          proof = keccak256(abi.encodePacked(proof, sibbling));
+        }
+      }
+
+      if (proof == order.sellersProof()) {
+        lastOrderPosition = orderPosition;
+        total = total.add(order.price());
+      }
+    }
+
+    if (total > 0) {
+      require(token.transfer(seller, total));
+      sellersPointer[seller] = lastOrderPosition;
+    }
+
+    return true;
+  }
 }
