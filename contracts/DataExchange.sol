@@ -33,6 +33,7 @@ contract DataExchange is TokenDestructible, Pausable {
   event TransactionCompleted(address indexed orderAddr, address indexed seller);
   event RefundedToBuyer(address indexed orderAddr, address indexed buyer);
   event OrderClosed(address indexed orderAddr);
+  event SellersAdded(address indexed orderAddr, bytes32 currentProof, bytes32 newProof);
   event InitWithdraw(address indexed seller, uint256 challengeTimeout);
   event Cashout(address indexed seller, uint256 cashoutBalance);
 
@@ -72,6 +73,11 @@ contract DataExchange is TokenDestructible, Pausable {
   // @dev buyerRemainingBudgetForAudits Keeps track of the buyer's remaining
   // budget from the initial one set on the `DataOrder`
   mapping(address => mapping(address => uint256)) public buyerRemainingBudgetForAudits;
+
+  // TODO: add docs
+  address[] public marketOrders;
+  // TODO: add docs
+  mapping(address => SellerBalance) public sellersBalance;
 
   modifier validAddress(address addr) {
     require(addr != address(0));
@@ -614,4 +620,37 @@ contract DataExchange is TokenDestructible, Pausable {
     require(token.transfer(orderPriceReceiver, orderPrice));
   }
 
+  function addSellersToOrder(
+    address orderAddr,
+    address[] sellers
+  ) public whenNotPaused isOrderLegit(orderAddr) returns (bool) {
+    DataOrder order = DataOrder(orderAddr);
+    address buyer = order.buyer();
+    require(msg.sender == buyer);
+
+    uint256 price = order.price();
+    bytes32 updatedSellersProof = 0;
+
+    for (uint i = 0; i < sellers.length; i++) {
+      sellersBalance[sellers[i]].balance += price;
+      if (updatedSellersProof == 0) {
+        updatedSellersProof = bytes32(sellers[i]);
+      } else {
+        updatedSellersProof = buildProof(updatedSellersProof, bytes32(sellers[i]));
+      }
+    }
+
+    bytes32 currentSellersProof = order.sellersProof();
+    order.updateSellersProof(buildProof(currentSellersProof, updatedSellersProof));
+
+    token.transferFrom(msg.sender, this, price * sellers.length);
+
+    emit SellersAdded(orderAddr, currentSellersProof, updatedSellersProof);
+
+    return true;
+  }
+
+  function buildProof(bytes32 _rigth, bytes32 _left) pure internal returns (bytes32) {
+    return keccak256(abi.encodePacked(_rigth, _left));
+  }
 }
