@@ -44,7 +44,7 @@ contract DataExchange is TokenDestructible, Pausable {
     string publicKey;
   }
 
-  struct SellerInfo {
+  struct SellerBalance {
     uint256 pointer;
     uint256 balance;
     uint256 withdrawBalance;
@@ -59,7 +59,7 @@ contract DataExchange is TokenDestructible, Pausable {
   mapping(address => address[]) public ordersByNotary;
   mapping(address => address[]) public ordersByBuyer;
   mapping(address => NotaryInfo) internal notaryInfo;
-  mapping(address => SellerInfo) internal sellerInfo;
+  mapping(address => SellerBalance) internal sellersBalance;
   // Tracks the orders created by this contract.
   mapping(address => bool) private orders;
 
@@ -499,31 +499,31 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   function initWithdraw(address seller) public returns (bool) {
-    SellerInfo info = sellerInfo[seller];
-    require(info.withdrawPointer == 0);
-    require(marketPointer > info.pointer);
+    SellerBalance balance = sellersBalance[seller];
+    require(balance.withdrawPointer == 0);
+    require(marketPointer > balance.pointer);
 
-    info.withdrawPointer = marketPointer;
-    info.withdrawTimestamp = block.timestamp;
+    balance.withdrawPointer = marketPointer;
+    balance.withdrawTimestamp = block.timestamp;
 
-    uint256 challengeTimeout = info.withdrawTimestamp.add(timeout);
+    uint256 challengeTimeout = balance.withdrawTimestamp.add(timeout);
     emit InitWithdraw(seller, challengeTimeout);
     return true;
   }
 
   function cashout(address seller) public returns (bool) {
-    SellerInfo info = sellerInfo[seller];
-    require(info.withdrawPointer > 0);
-    require(info.withdrawPointer <= marketPointer);
-    require(block.timestamp >= info.withdrawTimestamp.add(timeout));
+    SellerBalance balance = sellersBalance[seller];
+    require(balance.withdrawPointer > 0);
+    require(balance.withdrawPointer <= marketPointer);
+    require(block.timestamp >= balance.withdrawTimestamp.add(timeout));
 
-    uint256 cashoutBalance = info.balance;
+    uint256 cashoutBalance = balance.balance;
 
-    info.pointer = withdrawPointer;
-    info.balance = info.balance.sub(withdrawBalance);
-    info.withdrawPointer = 0;
-    info.withdrawTimestamp = 0;
-    info.withdrawBalance = 0;
+    balance.pointer = withdrawPointer;
+    balance.balance = balance.balance.sub(withdrawBalance);
+    balance.withdrawPointer = 0;
+    balance.withdrawTimestamp = 0;
+    balance.withdrawBalance = 0;
 
 
     WIBToken.transfer(seller, cashoutBalance);
