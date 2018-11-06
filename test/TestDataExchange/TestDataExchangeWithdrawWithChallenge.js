@@ -21,26 +21,17 @@ contract.only('DataExchange', async (accounts) => {
 
     const tx = await newOrder(dataExchange, { from: buyer });
     orderAddress = tx.logs[0].args.orderAddr;
+
+    await dataExchange.addSellersToOrder(orderAddress, sellers, { from: buyer });
   });
 
-  describe('addSellersToOrder', async () => {
-    it('fails to add sellers to order when sender is not the buyer', async () => {
-      try {
-        await dataExchange.addSellersToOrder(orderAddress, sellers, {
-          from: owner,
-        });
-        assert.fail();
-      } catch (error) {
-        assertRevert(error);
-      }
+  describe.only('initWithdraw', async () => {
+    it('starts withdrawal with challenge process', async () => {
+      const seller = sellers[0];
+
+      const tx = await dataExchange.initWithdraw(seller, { from: buyer });
+      assertEvent(tx, 'InitWithdraw', 'Could not init withdraw');
     });
 
-    it('adds sellers to order', async () => {
-      sellers = [...Array(10)].map(() => web3.personal.newAccount());
-      const tx = await dataExchange.addSellersToOrder(orderAddress, sellers, {
-        from: buyer,
-      });
-      assertEvent(tx, 'SellersAdded', 'No event was emitted');
-    });
   });
 });
