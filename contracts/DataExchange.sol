@@ -499,7 +499,7 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   function initWithdraw(address seller) public returns (bool) {
-    SellerBalance balance = sellersBalance[seller];
+    SellerBalance storage balance = sellersBalance[seller];
     require(balance.withdrawPointer == 0);
     require(marketPointer > balance.pointer);
 
@@ -512,21 +512,21 @@ contract DataExchange is TokenDestructible, Pausable {
   }
 
   function cashout(address seller) public returns (bool) {
-    SellerBalance balance = sellersBalance[seller];
+    SellerBalance storage balance = sellersBalance[seller];
     require(balance.withdrawPointer > 0);
     require(balance.withdrawPointer <= marketPointer);
     require(block.timestamp >= balance.withdrawTimestamp.add(timeout));
 
     uint256 cashoutBalance = balance.balance;
 
-    balance.pointer = withdrawPointer;
-    balance.balance = balance.balance.sub(withdrawBalance);
+    balance.pointer = balance.withdrawPointer;
+    balance.balance = balance.balance.sub(balance.withdrawBalance);
     balance.withdrawPointer = 0;
     balance.withdrawTimestamp = 0;
     balance.withdrawBalance = 0;
 
 
-    WIBToken.transfer(seller, cashoutBalance);
+    token.transfer(seller, cashoutBalance);
     emit Cashout(seller, cashoutBalance);
     return true;
   }
