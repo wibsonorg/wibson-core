@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 import "zeppelin-solidity/contracts/math/Math.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
@@ -10,7 +11,7 @@ import "./WIBToken.sol";
 contract DataExchange {
   using SafeMath for uint256;
 
-  event NewOrder(address indexed orderAddr);
+  event NewOrder(address indexed orderAddr, uint256 indexed orderPosition);
   event SellersAdded(address indexed orderAddr, bytes32 newProof);
   event InitWithdraw(address indexed seller, uint256 challengeTimeout);
   event Cashout(address indexed seller, uint256 cashoutBalance);
@@ -58,8 +59,9 @@ contract DataExchange {
     );
 
     marketPointer = marketPointer.add(1);
+    uint256 length = marketOrders.push(newOrderAddr);
 
-    emit NewOrder(newOrderAddr);
+    emit NewOrder(newOrderAddr, length - 1);
     return newOrderAddr;
   }
 
@@ -121,6 +123,34 @@ contract DataExchange {
     return true;
   }
 
+  function addSellersToOrderForFullWithdraw(
+    address orderAddr,
+    address[] sellers
+  ) public returns (bool) {
+    DataOrder order = DataOrder(orderAddr);
+    require(msg.sender == order.buyer());
+
+    uint256 price = order.price();
+    bytes32 updatedSellersProof = 0;
+
+    // TODO: build the tree correctly
+    for (uint i = 0; i < sellers.length; i++) {
+      if (updatedSellersProof == 0) {
+        updatedSellersProof = keccak256(bytes32(sellers[i]));
+      } else {
+        updatedSellersProof = keccak256(abi.encodePacked(updatedSellersProof, bytes32(sellers[i])));
+      }
+    }
+
+    order.updateSellersProof(keccak256(abi.encodePacked(order.sellersProof(), updatedSellersProof)));
+
+    token.transferFrom(msg.sender, this, price.mul(sellers.length));
+
+    emit SellersAdded(orderAddr,updatedSellersProof);
+
+    return true;
+  }
+
   function withdraw(
     bytes32[][] witnesses,
     uint256[] ordersPosition,
@@ -129,12 +159,12 @@ contract DataExchange {
     // check that ordersPosition are sorted
     // check that ordersPosition exist in marketOrders
     require(sellersPointer[seller] < ordersPosition[0]);
-    bytes32 subject = keccak256(seller);
+    bytes32 subject = keccak256(bytes32(seller));
     uint256 lastOrderPosition = 0;
     uint256 total = 0;
 
     for (uint j = 0; j < witnesses.length; j++) {
-      bytes32[] witness = witnesses[];
+      bytes32[] memory witness = witnesses[j];
       uint256 orderPosition = ordersPosition[j];
       DataOrder order = DataOrder(marketOrders[orderPosition]);
       bytes32 proof = subject;
@@ -152,6 +182,41 @@ contract DataExchange {
         lastOrderPosition = orderPosition;
         total = total.add(order.price());
       }
+    }
+
+    if (total > 0) {
+      require(token.transfer(seller, total));
+      sellersPointer[seller] = lastOrderPosition;
+    }
+
+    return true;
+  }
+
+  function withdrawFromOrder(
+    bytes32[] witness,
+    uint256 orderPosition,
+    address seller
+  ) returns (bool) {
+    // require(sellersPointer[seller] < orderPosition);
+    bytes32 subject = keccak256(bytes32(seller));
+    uint256 lastOrderPosition = 0;
+    uint256 total = 0;
+
+    DataOrder order = DataOrder(marketOrders[orderPosition]);
+    bytes32 proof = subject;
+
+    for (uint i = 0; i < witness.length; i++) {
+      bytes32 sibbling = witness[i];
+      if (sibbling < proof) {
+        proof = keccak256(abi.encodePacked(sibbling, proof));
+      } else {
+        proof = keccak256(abi.encodePacked(proof, sibbling));
+      }
+    }
+
+    if (proof == order.sellersProof()) {
+      lastOrderPosition = orderPosition;
+      total = total.add(order.price());
     }
 
     if (total > 0) {

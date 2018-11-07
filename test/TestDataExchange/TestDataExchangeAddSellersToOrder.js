@@ -4,7 +4,7 @@ import { newOrder } from './helpers';
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange', async (accounts) => {
+contract('DataExchange', async (accounts) => {
   const owner = accounts[0];
   const buyer = accounts[1];
   let sellers = accounts.slice(2, 5);
