@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "./DataOrder2.sol";
 
-
-contract DataExchange {
+contract DataExchange2 {
   using SafeMath for uint256;
 
   IERC20 public token;
@@ -25,11 +25,11 @@ contract DataExchange {
     string buyerURLs
   ) public returns (address) {
 
-    address dataOrder = new DataOrder(
+    address dataOrder = new DataOrder2(
       msg.sender,
       audience,
-      price,
       requestedData,
+      price,
       termsAndConditionsHash,
       buyerURLs
     );
@@ -37,12 +37,13 @@ contract DataExchange {
     emit NewDataOrder(dataOrder);
     return dataOrder;
   }
+//Sends sellerId list and notary. Send locked payment that needs the master key to be unlocked
 
   function addDataResponses(
     address dataOrder_,
     bytes32 keyHash
   ) public returns (uint256) {
-    DataOrder dataOrder = DataOrder(dataOrder_);
+    DataOrder2 dataOrder = DataOrder2(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
     keyHashes.push(keyHash);
@@ -56,7 +57,7 @@ contract DataExchange {
 
   function notarizeDataResponses(
     uint256 keyHashIndex,
-    string[] keys
+    bytes32[] keys
   ) public returns (bool) {
     bytes32 currentKeyHash = keyHashes[keyHashIndex];
 
