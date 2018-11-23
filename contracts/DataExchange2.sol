@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 import "./DataOrder2.sol";
 
 
-contract DataExchange {
+contract DataExchange2 {
   using SafeMath for uint256;
 
   struct Batch {
@@ -34,7 +34,7 @@ contract DataExchange {
     string buyerURLs
   ) public returns (address) {
 
-    address dataOrder = new DataOrder(
+    address dataOrder = new DataOrder2(
       msg.sender,
       audience,
       price,
@@ -54,7 +54,7 @@ contract DataExchange {
     uint256 notarizationFee,
     bytes notarySignature
   ) public returns (uint256) {
-    DataOrder dataOrder = DataOrder(dataOrder_);
+    DataOrder2 dataOrder = DataOrder2(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
     // TODO: Verify notarySignature(dataOrder, keyHash, notarizationFee)

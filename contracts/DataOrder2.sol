@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 
-contract DataOrder {
+contract DataOrder2 {
   address public buyer;
   string public audience;
   uint256 public price;
