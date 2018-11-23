@@ -37,8 +37,8 @@ contract DataExchange2 {
     address dataOrder = new DataOrder2(
       msg.sender,
       audience,
-      requestedData,
       price,
+      requestedData,
       termsAndConditionsHash,
       buyerURLs
     );

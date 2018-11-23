@@ -18,14 +18,11 @@ contract('DataExchange2', (accounts) => {
   const SELLER = accounts[5];
   const SELLER2 = accounts[6];
   const SELLER3 = accounts[7];
+  const MASTERKEY = 'master-key';
+  const MASTERKEY_HASH = '0x3a9c1573b2b71e6f983946fa79489682a1114193cd453bdea78717db684545b4';
+  const NOTARY_SIGNATURE = '0x2e58ea30aa3d31d4a997a14228c94f7384fab28d2bb6931b648cd0fe7d533fe3634164c7f84b6013d674a93e3c82bab150886767bf56c91cda028191162cd07500';
 
-  /*
 
-6. Notary reveals the key used to encrypt sellers’ keys (through a broker?)
-Challenge Period starts
-7a. Seller gets paid
-7b. Notary also gets paid for completed audits
-*/
   beforeEach('setup', async () => {
     WIBToken.deployed().then((wib) => { token = wib; });
     dataExchange = await DataExchange.new(token);
@@ -74,22 +71,24 @@ Challenge Period starts
     const sellerIsInRootHash = merkleProof.verify(proof, hashMerkle);
     assert.ok(sellerIsInRootHash, 'Seller must be in merkle tree');
 
-    const tx = await dataExchange.addDataResponses(newOrderAddress, root.toString('hex'), { from: BUYER });
+    const tx = await dataExchange.addDataResponses(
+      newOrderAddress,
+      NOTARY_A,
+      MASTERKEY_HASH,
+      10,
+      NOTARY_SIGNATURE,
+      { from: BUYER },
+    );
 
     const index = tx.logs[0].args.keyHashIndex;
+    console.log({ index });
 
-    // assert.ok(Web3.utils.isBN(index), 'Data response must have an index');
 
-    // const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
-    // const sig = signMessage([newOrderAddress, NOTARY_A, dataHash], SELLER);
-
-    // return meta.dx.addDataResponseToOrder(
-    //   meta.newOrderAddress,
-    //   SELLER,
-    //   NOTARY_A,
-    //   dataHash,
-    //   sig,
-    //   { from: BUYER },
-    // );
+    /*
+      6. Notary reveals the key used to encrypt sellers’ keys (through a broker?)
+      Challenge Period starts
+      7a. Seller gets paid
+      7b. Notary also gets paid for completed audits
+    */
   });
 });
