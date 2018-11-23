@@ -56,6 +56,10 @@ contract('DataExchange2', (accounts) => {
 
     // 6. Notary reveals the key used to encrypt sellers’ keys
     // TODO:(through a broker?)
+    const notarized = await dataExchange.notarizeDataResponses
+      .call(index.toNumber(), MASTERKEY, { from: NOTARY_A });
+    assert.ok(notarized, 'Data Responses should be notarized');
+
     tx = await dataExchange.notarizeDataResponses(index.toNumber(), MASTERKEY, { from: NOTARY_A });
     assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
     assert.equal(tx.logs[0].args.key, MASTERKEY);
