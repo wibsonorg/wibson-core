@@ -1,4 +1,5 @@
-const web3Utils = require('web3-utils');
+const Web3 = require('web3');
+const crypto = require('crypto');
 
 /**
  * @param {Object} transaction the transaction where the event was emitted.
@@ -33,6 +34,24 @@ export function assertRevert(error) {
  * @return {string} the signature over the arguments passed.
  */
 export function signMessage(args, signer) {
-  const hash = web3Utils.soliditySha3(...args);
+  const hash = Web3.utils.soliditySha3(...args);
   return web3.eth.sign(signer, hash);
+}
+
+/**
+ * Hash payload.
+ * @param {array} args an array of values hash.
+ * @return {string} the hash over the arguments passed.
+ */
+export function hashMessage(args) {
+  return Web3.utils.soliditySha3(...args);
+}
+
+/**
+ * Hash Buffer payload.
+ * @param {Buffer} Buffer to be hashed.
+ * @return {string} the hash over the Buffer param.
+ */
+export function hashMerkle(buffer) {
+  return crypto.createHash('sha256').update(buffer).digest();
 }
