@@ -1,8 +1,3 @@
-import { hashMessage, hashMerkle } from './helpers';
-
-const merkle = require('merkle-lib');
-const fastRoot = require('merkle-lib/fastRoot');
-const merkleProof = require('merkle-lib/proof');
 const Web3 = require('web3');
 
 const DataExchange = artifacts.require('./DataExchange2.sol');
@@ -42,24 +37,11 @@ contract('DataExchange2', (accounts) => {
     );
     // 2. Sellers listen for new Data Orders
     assert.equal(newOrder.logs[0].event, 'NewDataOrder');
-    /*
-    3a. If Seller accepts Data Order, sends a Data Response directly
-    to Buyer’s public URL. It includes the data encrypted
-     with a key known only by the Notary and the Seller,
-     and the hash of such key.
-    3b. Data is sent for validation, along with the key used for the buyer.
-    4a <- Buyer sends selected Sellers (addresses) to Notary.
-    4b -> Notary filters out bad ones,
-     replies (seller address, hash of seller key, encrypted seller key with master key)
-     + hash(master key)
-    4c <- Buyer selects sellers that notary could decrypt (the ones that match Buyer’s key hashes).
-     Send `{order_address, hashes_of_keys, hash(hashes_of_keys) }` to the Notary and asks to sign it
-    4d -> Notary signs the message (complies)
-    */
     const newOrderAddress = newOrder.logs[0].args.dataOrder;
+
     // 5. Sends sellerId list and notary.
     // Send locked payment that needs the master key to be unlocked
-
+    // TODO: Send sellerId list
     tx = await dataExchange.addDataResponses(
       newOrderAddress,
       NOTARY_A,
@@ -74,7 +56,6 @@ contract('DataExchange2', (accounts) => {
 
     // 6. Notary reveals the key used to encrypt sellers’ keys
     // TODO:(through a broker?)
-    // notarizeDataResponses( uint256 batchIndex, string key)
     tx = await dataExchange.notarizeDataResponses(index.toNumber(), MASTERKEY, { from: NOTARY_A });
     assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
     assert.equal(tx.logs[0].args.key, MASTERKEY);
