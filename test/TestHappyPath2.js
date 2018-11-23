@@ -12,6 +12,7 @@ const WIBToken = artifacts.require('./WIBToken.sol');
 contract('DataExchange2', (accounts) => {
   let dataExchange;
   let token;
+  let tx;
   // const OWNER = accounts[6];
   const NOTARY_A = accounts[1];
   const BUYER = accounts[4];
@@ -58,20 +59,8 @@ contract('DataExchange2', (accounts) => {
     const newOrderAddress = newOrder.logs[0].args.dataOrder;
     // 5. Sends sellerId list and notary.
     // Send locked payment that needs the master key to be unlocked
-    const sellers = [SELLER, SELLER2, SELLER3].map(s => s.slice(2)); // Remove the 0x
-    const sellersBuffer = sellers.map(s => Buffer.from(s, 'hex'));
 
-    const root = fastRoot(sellersBuffer, hashMerkle);
-    assert.ok(root.toString('hex') !== '', 'Root hash cannot be empty');
-
-    const tree = merkle(sellersBuffer, hashMerkle);
-    const proof = merkleProof(tree, sellersBuffer[0]);
-    assert.ok(proof !== null, 'Proof does not exist');
-
-    const sellerIsInRootHash = merkleProof.verify(proof, hashMerkle);
-    assert.ok(sellerIsInRootHash, 'Seller must be in merkle tree');
-
-    const tx = await dataExchange.addDataResponses(
+    tx = await dataExchange.addDataResponses(
       newOrderAddress,
       NOTARY_A,
       MASTERKEY_HASH,
@@ -79,13 +68,18 @@ contract('DataExchange2', (accounts) => {
       NOTARY_SIGNATURE,
       { from: BUYER },
     );
+    const index = Web3.utils.toBN(tx.logs[0].args.batchIndex);
 
-    const index = tx.logs[0].args.keyHashIndex;
-    console.log({ index });
+    assert.ok(index.eqn(0), 'Index should be the first one (zero)');
 
+    // 6. Notary reveals the key used to encrypt sellers’ keys
+    // TODO:(through a broker?)
+    // notarizeDataResponses( uint256 batchIndex, string key)
+    tx = await dataExchange.notarizeDataResponses(index.toNumber(), MASTERKEY, { from: NOTARY_A });
+    assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
+    assert.equal(tx.logs[0].args.key, MASTERKEY);
 
     /*
-      6. Notary reveals the key used to encrypt sellers’ keys (through a broker?)
       Challenge Period starts
       7a. Seller gets paid
       7b. Notary also gets paid for completed audits
