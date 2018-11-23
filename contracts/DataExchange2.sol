@@ -76,7 +76,7 @@ contract DataExchange {
   ) public returns (bool) {
     Batch memory currentBatch = batches[batchIndex];
     require(msg.sender == currentBatch.notary);
-    require(currentBatch.keyHash = keccak256(abi.encodePacked(key)));
+    require(currentBatch.keyHash == keccak256(abi.encodePacked(key)));
 
     emit DataResponsesNotarized(
       currentBatch.dataOrder,
