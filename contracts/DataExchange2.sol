@@ -1,17 +1,24 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 
 contract DataExchange {
   using SafeMath for uint256;
 
+  struct Batch {
+    address dataOrder;
+    address notary;
+    bytes32 keyHash;
+  }
+
   IERC20 public token;
-  bytes32[] public keyHashes;
+  Batch[] public batches;
 
   event NewDataOrder(address indexed dataOrder);
-  event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 keyHashIndex);
+  event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 batchIndex);
+  event DataResponsesNotarized(address indexed dataOrder, address indexed notary, string key, uint256 batchIndex);
 
   constructor(address token_) public {
     token = IERC20(token_);
@@ -40,34 +47,40 @@ contract DataExchange {
 
   function addDataResponses(
     address dataOrder_,
-    bytes32 keyHash
+    address notary,
+    bytes32 keyHash,
+    bytes notarySignature
   ) public returns (uint256) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
-    keyHashes.push(keyHash);
+    // TODO: Verify notarySignature
 
-    uint256 keyHashIndex = keyHashes.length.sub(1);
+    batches.push(
+      Batch(dataOrder_, notary, keyHash)
+    );
 
-    emit DataResponsesAdded(dataOrder, keyHash, keyHashIndex);
+    uint256 batchIndex = batches.length.sub(1);
 
-    return keyHashIndex;
+    emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
+
+    return batchIndex;
   }
 
   function notarizeDataResponses(
-    uint256 keyHashIndex,
-    string[] keys
+    uint256 batchIndex,
+    string key
   ) public returns (bool) {
-    bytes32 currentKeyHash = keyHashes[keyHashIndex];
+    Batch currentBatch = batches[batchIndex];
+    require(msg.sender == currentBatch.notary);
+    require(currentBatch.keyHash = keccak256(abi.encodePacked(key)));
 
-    bytes32[] keyHashes;
-    for (uint256 i = 0; i < keys.length; i++) {
-      keyHashes.push(keccak256(abi.encodePacked(keys[i])));
-    }
-
-    bytes32 newKeyHash = keccak256(abi.encodePacked(keyHashes));
-
-    require(newKeyHash == currentKeyHash);
+    emit DataResponsesNotarized(
+      currentBatch.dataOrder,
+      currentBatch.notary,
+      key,
+      batchIndex
+    );
 
     return true;
   }
