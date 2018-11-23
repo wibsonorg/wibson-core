@@ -63,6 +63,8 @@ contract DataExchange2 {
       Batch(dataOrder_, notary, keyHash)
     );
 
+    // TODO: Make DataOrder be responsible for managing batches
+
     uint256 batchIndex = batches.length.sub(1);
 
     emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
