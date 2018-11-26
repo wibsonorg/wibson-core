@@ -1,5 +1,6 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
@@ -57,7 +58,15 @@ contract DataExchange2 {
     DataOrder2 dataOrder = DataOrder2(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
-    // TODO: Verify notarySignature(dataOrder, keyHash, notarizationFee)
+    require(
+      validNotarySignature(
+        notarySignature,
+        notary,
+        dataOrder_,
+        keyHash,
+        notarizationFee
+      )
+    );
 
     batches.push(
       Batch(dataOrder_, notary, keyHash)
@@ -88,5 +97,20 @@ contract DataExchange2 {
     );
 
     return true;
+  }
+
+  function validNotarySignature(
+    bytes signature,
+    address notary,
+    address dataOrder,
+    bytes32 keyHash,
+    uint256 notarizationFee
+  ) private pure returns (bool) {
+    bytes32 hash = ECDSA.toEthSignedMessageHash(
+      keccak256(abi.encodePacked(dataOrder, keyHash, notarizationFee))
+    );
+    address signer = ECDSA.recover(hash, signature);
+
+    return signer == notary;
   }
 }
