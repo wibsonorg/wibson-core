@@ -1,5 +1,6 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
@@ -9,14 +10,7 @@ import "./DataOrder2.sol";
 contract DataExchange2 {
   using SafeMath for uint256;
 
-  struct Batch {
-    address dataOrder;
-    address notary;
-    bytes32 keyHash;
-  }
-
   IERC20 public token;
-  Batch[] public batches;
 
   event NewDataOrder(address indexed dataOrder);
   event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 batchIndex);
@@ -58,15 +52,17 @@ contract DataExchange2 {
     DataOrder2 dataOrder = DataOrder2(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
-    // TODO: Verify notarySignature(dataOrder, keyHash, notarizationFee)
-
-    batches.push(
-      Batch(dataOrder_, notary, keyHash)
+    require(
+      validNotarySignature(
+        notarySignature,
+        notary,
+        dataOrder_,
+        keyHash,
+        notarizationFee
+      )
     );
 
-    // TODO: Make DataOrder be responsible for managing batches
-
-    uint256 batchIndex = batches.length.sub(1);
+    uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
 
     emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
 
@@ -74,20 +70,37 @@ contract DataExchange2 {
   }
 
   function notarizeDataResponses(
+    address dataOrder_,
     uint256 batchIndex,
     string key
   ) public returns (bool) {
-    Batch memory currentBatch = batches[batchIndex];
-    require(msg.sender == currentBatch.notary);
-    require(currentBatch.keyHash == keccak256(abi.encodePacked(key)));
+    DataOrder2 dataOrder = DataOrder2(dataOrder_);
+    (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
+    require(msg.sender == notary);
+    require(keyHash == keccak256(abi.encodePacked(key)));
 
     emit DataResponsesNotarized(
-      currentBatch.dataOrder,
-      currentBatch.notary,
+      dataOrder_,
+      notary,
       key,
       batchIndex
     );
 
     return true;
+  }
+
+  function validNotarySignature(
+    bytes signature,
+    address notary,
+    address dataOrder,
+    bytes32 keyHash,
+    uint256 notarizationFee
+  ) private pure returns (bool) {
+    bytes32 hash = ECDSA.toEthSignedMessageHash(
+      keccak256(abi.encodePacked(dataOrder, keyHash, notarizationFee))
+    );
+    address signer = ECDSA.recover(hash, signature);
+
+    return signer == notary;
   }
 }
