@@ -1,5 +1,7 @@
 const Web3 = require('web3');
 
+const web3 = new Web3('http://localhost:8545');
+
 const DataExchange = artifacts.require('./DataExchange2.sol');
 const DataOrder = artifacts.require('./DataOrder2.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
@@ -16,7 +18,7 @@ contract('DataExchange2', (accounts) => {
   const SELLER3 = accounts[7];
   const MASTERKEY = 'master-key';
   const MASTERKEY_HASH = '0x3a9c1573b2b71e6f983946fa79489682a1114193cd453bdea78717db684545b4';
-  const NOTARY_SIGNATURE = '0x2e58ea30aa3d31d4a997a14228c94f7384fab28d2bb6931b648cd0fe7d533fe3634164c7f84b6013d674a93e3c82bab150886767bf56c91cda028191162cd07500';
+  // const NOTARY_SIGNATURE = '0x2e58ea30aa3d31d4a997a14228c94f7384fab28d2bb6931b648cd0fe7d533fe3634164c7f84b6013d674a93e3c82bab150886767bf56c91cda028191162cd07500';
 
 
   beforeEach('setup', async () => {
@@ -31,13 +33,16 @@ contract('DataExchange2', (accounts) => {
       'age:20,gender:male',
       20,
       'data request',
-      'Terms and Conditions',
+      '0x75cb7367476d39a4e7d2748bb1c75908f7086a0307fac4ea8fcd2231dcd2662e',
       'https://buyer.example.com/data',
       { from: BUYER },
     );
     // 2. Sellers listen for new Data Orders
     assert.equal(newOrder.logs[0].event, 'NewDataOrder');
     const newOrderAddress = newOrder.logs[0].args.dataOrder;
+
+    const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, 10);
+    const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
 
     // 5. Sends sellerId list and notary.
     // Send locked payment that needs the master key to be unlocked
@@ -57,12 +62,24 @@ contract('DataExchange2', (accounts) => {
     // 6. Notary reveals the key used to encrypt sellers’ keys
     // TODO:(through a broker?)
     const notarized = await dataExchange.notarizeDataResponses
-      .call(index.toNumber(), MASTERKEY, { from: NOTARY_A });
+      .call(
+        newOrderAddress, index.toNumber(), MASTERKEY,
+        { from: NOTARY_A },
+      );
     assert.ok(notarized, 'Data Responses should be notarized');
 
-    tx = await dataExchange.notarizeDataResponses(index.toNumber(), MASTERKEY, { from: NOTARY_A });
+    tx = await dataExchange.notarizeDataResponses(
+      newOrderAddress, index.toNumber(), MASTERKEY,
+      { from: NOTARY_A },
+    );
     assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
     assert.equal(tx.logs[0].args.key, MASTERKEY);
+
+    const dataOrder = DataOrder.at(newOrderAddress);
+    // batch.notary, batch.keyHash
+    const [resNotaryAddress, resKeyHash] = await dataOrder.getBatch(0);
+    assert.equal(resNotaryAddress, NOTARY_A);
+    assert.equal(resKeyHash, MASTERKEY_HASH);
 
     /*
       Challenge Period starts
