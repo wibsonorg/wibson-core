@@ -40,7 +40,6 @@ contract DataExchange2 {
     emit NewDataOrder(dataOrder);
     return dataOrder;
   }
-//Sends sellerId list and notary. Send locked payment that needs the master key to be unlocked
 
   function addDataResponses(
     address dataOrder_,
