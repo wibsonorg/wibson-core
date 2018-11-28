@@ -2,11 +2,11 @@ const Web3 = require('web3');
 
 const web3 = new Web3('http://localhost:8545');
 
-const DataExchange = artifacts.require('./DataExchange2.sol');
-const DataOrder = artifacts.require('./DataOrder2.sol');
+const DataExchange = artifacts.require('./DataExchange.sol');
+const DataOrder = artifacts.require('./DataOrder.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract('DataExchange2', (accounts) => {
+contract('DataExchange', (accounts) => {
   let dataExchange;
   let token;
   let tx;
