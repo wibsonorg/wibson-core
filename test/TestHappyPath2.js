@@ -6,7 +6,7 @@ const DataExchange = artifacts.require('./DataExchange.sol');
 const DataOrder = artifacts.require('./DataOrder.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract('DataExchange', (accounts) => {
+contract.only('DataExchange', (accounts) => {
   let dataExchange;
   let token;
   let tx;
