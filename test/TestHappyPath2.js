@@ -76,7 +76,7 @@ contract('DataExchange2', (accounts) => {
     assert.equal(tx.logs[0].args.key, MASTERKEY);
 
     const dataOrder = DataOrder.at(newOrderAddress);
-    const [resNotaryAddress, resKeyHash] = await dataOrder.getBatch(index);
+    const [resNotaryAddress, resKeyHash] = await dataOrder.getBatch(index.toNumber());
     assert.equal(resNotaryAddress, NOTARY_A);
     assert.equal(resKeyHash, MASTERKEY_HASH);
 
