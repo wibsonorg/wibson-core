@@ -4,10 +4,10 @@ import "openzeppelin-solidity/contracts/cryptography/ECDSA.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
-import "./DataOrder2.sol";
+import "./DataOrder.sol";
 
 
-contract DataExchange2 {
+contract DataExchange {
   using SafeMath for uint256;
 
   IERC20 public token;
@@ -28,7 +28,7 @@ contract DataExchange2 {
     string buyerURLs
   ) public returns (address) {
 
-    address dataOrder = new DataOrder2(
+    address dataOrder = new DataOrder(
       msg.sender,
       audience,
       price,
@@ -48,7 +48,7 @@ contract DataExchange2 {
     uint256 notarizationFee,
     bytes notarySignature
   ) public returns (uint256) {
-    DataOrder2 dataOrder = DataOrder2(dataOrder_);
+    DataOrder dataOrder = DataOrder(dataOrder_);
     require(msg.sender == dataOrder.buyer());
 
     require(
@@ -73,7 +73,7 @@ contract DataExchange2 {
     uint256 batchIndex,
     string key
   ) public returns (bool) {
-    DataOrder2 dataOrder = DataOrder2(dataOrder_);
+    DataOrder dataOrder = DataOrder(dataOrder_);
     (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
     require(msg.sender == notary);
     require(keyHash == keccak256(abi.encodePacked(key)));

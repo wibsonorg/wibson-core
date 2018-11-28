@@ -1,13 +1,13 @@
-const DataExchange2 = artifacts.require('./DataExchange2.sol');
+const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange2', (accounts) => {
+contract.only('DataExchange', (accounts) => {
   let dataExchange;
   let token;
 
   beforeEach('setup', async () => {
     WIBToken.deployed().then((wib) => { token = wib; });
 
-    dataExchange = await DataExchange2.new(token);
+    dataExchange = await DataExchange.new(token);
   });
-})
+});

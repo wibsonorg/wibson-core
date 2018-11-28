@@ -4,7 +4,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract DataOrder2 is Ownable{
+contract DataOrder is Ownable {
   using SafeMath for uint256;
 
   address public buyer;

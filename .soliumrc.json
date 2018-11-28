@@ -10,8 +10,6 @@
     "security/no-block-members": ["warning"],
     "security/no-inline-assembly": ["warning"],
     "zeppelin/constant-candidates": ["warning"],
-    "zeppelin/highlight-comments": ["off"],
-    "zeppelin/missing-natspec-comments": ["off"],
     "zeppelin/no-arithmetic-operations": ["error"],
     "zeppelin/no-state-variable-shadowing": ["warning"],
     "zeppelin/no-unchecked-send": ["warning"],
