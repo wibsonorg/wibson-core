@@ -6,24 +6,23 @@ const DataExchange = artifacts.require('./DataExchange.sol');
 const DataOrder = artifacts.require('./DataOrder.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange', () => {
+contract.only('DataExchange', (accounts) => {
   let token;
   let tx;
   // const OWNER = accounts[6];
   const NOTARY_A = accounts[1];
   const BUYER = accounts[4];
-  const SELLER = accounts[5];
-  const SELLER2 = accounts[6];
-  const SELLER3 = accounts[7];
+  // const SELLER = accounts[5];
+  // const SELLER2 = accounts[6];
+  // const SELLER3 = accounts[7];
   const MASTERKEY = 'master-key';
   const MASTERKEY_HASH = '0x3a9c1573b2b71e6f983946fa79489682a1114193cd453bdea78717db684545b4';
-  // const NOTARY_SIGNATURE = '0x2e58ea30aa3d31d4a997a14228c94f7384fab28d2bb6931b648cd0fe7d533fe3634164c7f84b6013d674a93e3c82bab150886767bf56c91cda028191162cd07500';
 
   let dataExchange;
 
   beforeEach('setup', async () => {
     WIBToken.deployed().then((wib) => { token = wib; });
-    dataExchange = await DataExchange.new(token);
+    dataExchange = await DataExchange.new(token, `0x+${Web3.utils.toBN(0)}`);
     await token.approve(dataExchange.address, 3000, { from: BUYER });
   });
 
