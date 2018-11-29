@@ -2,6 +2,8 @@ import { randomIds, getPayData } from './helpers/utils';
 
 const Web3 = require('web3');
 
+const web3 = new Web3('http://localhost:8545');
+
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 const BatPay = artifacts.require('./BatPay.sol');
@@ -26,15 +28,36 @@ contract('DataExchange', (accounts) => {
     token = await WIBToken.new();
     batPay = await BatPay.new(token.address);
     dataExchange = await DataExchange.new(token.address, batPay.address);
+    // FIXME: This should have {from: BUYER} but batPay fails
     await token.approve(batPay.address, amount);
     await batPay.deposit(amount, newAccount);
     id = await batPay.accountsLength.call() - 1;
     await batPay.bulkRegister(100, 0);
   });
 
-  it('cost of batpay directly', async () => {
-    tx = await batPay.transfer(id, 1, data, 0, 0x1234, 0);
-    console.log({ transactionToBatPay: tx });
+  it('cost of batpay batch payment', async () => {
+    tx = await batPay.transfer(id, 1, data, 0, 0x1234, 0, { from: BUYER });
+    console.log({ batchPaymentCost: tx.receipt.gasUsed });
+  });
+
+  it('cost of addDataResponse without payment', async () => {
+    const newOrder = await dataExchange.createDataOrder(
+      'age:20,gender:male',
+      20,
+      'data request',
+      '0x75cb7367476d39a4e7d2748bb1c75908f7086a0307fac4ea8fcd2231dcd2662e',
+      'https://buyer.example.com/data',
+      { from: BUYER },
+    );
+    const newOrderAddress = newOrder.logs[0].args.dataOrder;
+    const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, 10);
+    const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
+
+    tx = await dataExchange.addDataResponses(
+      newOrderAddress, NOTARY_A, MASTERKEY_HASH, 10, NOTARY_SIGNATURE,
+      { from: BUYER },
+    );
+    console.log({ addDataResponseWithoutPayment: tx.receipt.gasUsed });
   });
 
   it('cost of batpay through dataExchange', async () => {
@@ -47,21 +70,14 @@ contract('DataExchange', (accounts) => {
       { from: BUYER },
     );
     const newOrderAddress = newOrder.logs[0].args.dataOrder;
-    console.log({ newOrderAddress });
     const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, 10);
-    console.log({ hash, NOTARY_A });
     const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
-    console.log({ NOTARY_SIGNATURE });
 
-    console.log({
-      newOrderAddress,
-      NOTARY_A,
-    });
     tx = await dataExchange.addDataResponsesWithBatPay(
       newOrderAddress, NOTARY_A, MASTERKEY_HASH, 10, NOTARY_SIGNATURE, data,
       id, 1, /* 0, */ 0x1234, 1,
       { from: BUYER },
     );
-    console.log({ transactionToBatPayThroughDX: tx });
+    console.log({ addDataResponseWithPayment: tx.receipt.gasUsed });
   });
 });

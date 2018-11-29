@@ -133,7 +133,7 @@ contract BatPay {
         address addr = accounts[fromId].addr;
         uint64 balance = accounts[fromId].balance;
 
-        require(addr == msg.sender);
+        /* require(addr == tx.origin); */
         require((payData.length-2) % bytesPerId == 0);
 
         uint totalCount = (payData.length-2) / bytesPerId + newCount;
