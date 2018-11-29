@@ -5,19 +5,22 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
 
 import "./DataOrder.sol";
+import "./BatPay.sol";
 
 
 contract DataExchange {
   using SafeMath for uint256;
 
   IERC20 public token;
+  BatPay public batPay;
 
   event NewDataOrder(address indexed dataOrder);
   event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 batchIndex);
   event DataResponsesNotarized(address indexed dataOrder, address indexed notary, string key, uint256 batchIndex);
 
-  constructor(address token_) public {
+  constructor(address token_, address batPay_) public {
     token = IERC20(token_);
+    batPay = BatPay(batPay_);
   }
 
   function createDataOrder(
@@ -68,6 +71,39 @@ contract DataExchange {
     return batchIndex;
   }
 
+  /*
+  batPayParams[0]: uint32 fromId,
+  batPayParams[1]: uint64 amount,
+  batPayParams[2]: uint newCount,
+  */
+  function addDataResponsesWithBatPay(
+    address dataOrder_,
+    address notary,
+    bytes32 keyHash,
+    uint256 notarizationFee,
+    bytes notarySignature,
+    bytes payData,
+    uint[] batPayParams,
+    bytes32 roothash
+  ) public returns (uint256) {
+    DataOrder dataOrder = DataOrder(dataOrder_);
+    require(msg.sender == dataOrder.buyer());
+
+    require(
+      validNotarySignature(
+        notarySignature,
+        notary,
+        dataOrder_,
+        keyHash,
+        notarizationFee
+      )
+    );
+    uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
+    emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
+    batPay.transfer(uint32(batPayParams[0]), uint32(batPayParams[1]), payData, uint32(batPayParams[2]), roothash, keyHash);
+    return batchIndex;
+  }
+
   function notarizeDataResponses(
     address dataOrder_,
     uint256 batchIndex,
@@ -75,7 +111,6 @@ contract DataExchange {
   ) public returns (bool) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
-    require(msg.sender == notary);
     require(keyHash == keccak256(abi.encodePacked(key)));
 
     emit DataResponsesNotarized(
