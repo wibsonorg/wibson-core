@@ -5,7 +5,7 @@ const DeployUtils = require('./utils/deploymentutils');
 module.exports = {
   migrations_directory: './migrations',
   networks: {
-    development: { // intended to be named as 'local' but 'development' is truffle's default
+    development: {
       host: 'localhost',
       port: 8545,
       network_id: '*',
