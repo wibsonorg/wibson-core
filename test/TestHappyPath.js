@@ -1,170 +1,88 @@
-import web3Utils from 'web3-utils';
-import { signMessage } from './helpers';
+const Web3 = require('web3');
+
+const web3 = new Web3('http://localhost:8545');
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const DataOrder = artifacts.require('./DataOrder.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract('DataExchange', (accounts) => {
-  const OWNER = accounts[6];
+contract.only('DataExchange', (accounts) => {
+  let token;
+  let tx;
+  // const OWNER = accounts[6];
   const NOTARY_A = accounts[1];
   const BUYER = accounts[4];
-  const SELLER = accounts[5];
+  // const SELLER = accounts[5];
+  // const SELLER2 = accounts[6];
+  // const SELLER3 = accounts[7];
+  const MASTERKEY = 'master-key';
+  const MASTERKEY_HASH = '0x3a9c1573b2b71e6f983946fa79489682a1114193cd453bdea78717db684545b4';
 
-  const NOTARY_A_PK = 'abcd123xyz9-fo00o42bar-1fed019n1';
+  let dataExchange;
 
-  it('should do complete flow', () => {
-    const meta = {};
+  beforeEach('setup', async () => {
+    WIBToken.deployed().then((wib) => { token = wib; });
+    dataExchange = await DataExchange.new(token, `0x+${Web3.utils.toBN(0)}`);
+    await token.approve(dataExchange.address, 3000, { from: BUYER });
+  });
 
-    WIBToken.deployed().then((wib) => {
-      meta.wib = wib;
-    });
+  it('should do complete flow', async () => {
+    // 1. Buyer places the order on the Smart Contract
+    const newOrder = await dataExchange.createDataOrder(
+      'age:20,gender:male',
+      20,
+      'data request',
+      '0x75cb7367476d39a4e7d2748bb1c75908f7086a0307fac4ea8fcd2231dcd2662e',
+      'https://buyer.example.com/data',
+      { from: BUYER },
+    );
+    // 2. Sellers listen for new Data Orders
+    assert.equal(newOrder.logs[0].event, 'NewDataOrder');
+    const newOrderAddress = newOrder.logs[0].args.dataOrder;
 
-    return DataExchange.deployed()
-      .then((dx) => {
-        meta.dx = dx;
-        return meta.dx.registerNotary(
-          NOTARY_A,
-          'Notary A',
-          'https://notary-a.com/data',
-          NOTARY_A_PK,
-          { from: OWNER },
-        );
-      })
-      .then((res) => {
-        assert.ok(res, "couldn't register Notary");
-      })
-      .then(() => meta.dx.setMinimumInitialBudgetForAudits(2000, { from: OWNER }))
-      .then((res) => {
-        assert.ok(res, "couldn't set minimum initial budget for audit");
-      })
-      .then(() => meta.wib.approve(meta.dx.address, 3000, { from: BUYER }))
-      .then(() => {
-        meta.price = 20;
-        return meta.dx.newOrder(
-          'age:20,gender:male',
-          'data request',
-          meta.price,
-          3000,
-          'Terms and Conditions',
-          'https://buyer.example.com/data',
-          'public-key',
-          { from: BUYER },
-        );
-      })
-      .then((newOrder) => {
-        meta.order = newOrder;
-        assert.equal(newOrder.logs[0].event, 'NewOrder');
-      })
-      .then(() => {
-        let newOrderAddress;
-        for (let i = 0; i < meta.order.logs.length; i += 1) {
-          const log = meta.order.logs[i];
+    const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, 10);
+    const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
 
-          if (log.event === 'NewOrder') {
-            newOrderAddress = log.args.orderAddr;
-            break;
-          }
-        }
+    // 5. Sends sellerId list and notary.
+    // Send locked payment that needs the master key to be unlocked
+    // TODO: Send sellerId list
+    tx = await dataExchange.addDataResponses(
+      newOrderAddress,
+      NOTARY_A,
+      MASTERKEY_HASH,
+      10,
+      NOTARY_SIGNATURE,
+      { from: BUYER },
+    );
+    const index = Web3.utils.toBN(tx.logs[0].args.batchIndex);
 
-        meta.newOrderAddress = newOrderAddress;
-        meta.notarizationFee = 1;
+    assert.ok(index.eqn(0), 'Index should be the first one (zero)');
 
-        const responsesPercentage = 30;
-        const notarizationTermsOfService = 'Notary Terms and Conditions';
-        const sig = signMessage(
-          [newOrderAddress, responsesPercentage, meta.notarizationFee, notarizationTermsOfService],
-          NOTARY_A,
-        );
+    // 6. Notary reveals the key used to encrypt sellers’ keys
+    // TODO:(through a broker?)
+    const notarized = await dataExchange.notarizeDataResponses
+      .call(
+        newOrderAddress, index.toNumber(), MASTERKEY,
+        { from: NOTARY_A },
+      );
+    assert.ok(notarized, 'Data Responses should be notarized');
 
-        return meta.dx.addNotaryToOrder(
-          newOrderAddress,
-          NOTARY_A,
-          responsesPercentage,
-          meta.notarizationFee,
-          notarizationTermsOfService,
-          sig,
-          { from: BUYER },
-        );
-      })
-      .then((res) => {
-        assert.equal(res.logs[0].event, 'NotaryAddedToOrder');
-        assert.ok(res, 'Notary was not added to order');
-      })
-      .then(() => DataOrder.at(meta.newOrderAddress).hasNotaryBeenAdded(NOTARY_A))
-      .then((res) => {
-        assert.ok(res, 'Notary is not in Data Order');
-      })
-      .then(() => DataOrder.at(meta.newOrderAddress).getNotaryInfo(NOTARY_A))
-      .then((res) => {
-        assert.equal(res[2], meta.notarizationFee, 'notarizationFee does not match');
-      })
-      .then(() => meta.dx.getOpenOrders())
-      .then((openOrders) => {
-        assert.ok(openOrders.indexOf(meta.newOrderAddress) >= 0, 'Order not in Open Orders');
-      })
-      .then(() => meta.dx.getOrdersForNotary(NOTARY_A))
-      .then((ordersForNotary) => {
-        assert.ok(ordersForNotary.length >= 1, 'Order not in orders for Notary');
-      })
-      .then(() => meta.dx.getOrdersForBuyer(BUYER))
-      .then((ordersForBuyer) => {
-        assert.ok(ordersForBuyer.length >= 1, 'Order not in orders for Buyer');
-      })
-      .then(() => meta.wib.approve(meta.dx.address, 100, { from: BUYER }))
-      .then(() => {
-        const dataHash = '9eea36c42a56b62380d05f8430f3662e7720da6d5be3bdd1b20bb16e9d';
-        const sig = signMessage([meta.newOrderAddress, NOTARY_A, dataHash], SELLER);
+    tx = await dataExchange.notarizeDataResponses(
+      newOrderAddress, index.toNumber(), MASTERKEY,
+      { from: NOTARY_A },
+    );
+    assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
+    assert.equal(tx.logs[0].args.key, MASTERKEY);
 
-        return meta.dx.addDataResponseToOrder(
-          meta.newOrderAddress,
-          SELLER,
-          NOTARY_A,
-          dataHash,
-          sig,
-          { from: BUYER },
-        );
-      })
-      .then((res) => {
-        assert.equal(res.logs[0].event, 'DataAdded');
-        assert.ok(res, 'Buyer could not add data response to order');
-      })
-      .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
-      .then((res) => {
-        assert.equal(res[1], NOTARY_A, 'Selected notary does not match');
-      })
-      .then(() => meta.dx.getOrdersForSeller(SELLER))
-      .then((ordersForSeller) => {
-        assert.ok(ordersForSeller.length >= 1, 'Order not in orders for Seller');
-      })
-      .then(() => {
-        const hash = web3Utils.soliditySha3(meta.newOrderAddress, SELLER, true, true);
-        const sig = web3.eth.sign(NOTARY_A, hash);
+    const dataOrder = DataOrder.at(newOrderAddress);
+    const [resNotaryAddress, resKeyHash] = await dataOrder.getBatch(index.toNumber());
+    assert.equal(resNotaryAddress, NOTARY_A);
+    assert.equal(resKeyHash, MASTERKEY_HASH);
 
-        return meta.dx.closeDataResponse(
-          meta.newOrderAddress,
-          SELLER,
-          true, // wasAudited
-          true, // isDataValid
-          sig,
-          { from: BUYER },
-        );
-      })
-      .then((res) => {
-        assert.ok(res, 'Buyer could not close Data Response');
-      })
-      .then(() => DataOrder.at(meta.newOrderAddress).getSellerInfo(SELLER))
-      .then((res) => {
-        assert.equal(
-          web3Utils.hexToUtf8(res[5]),
-          'TransactionCompleted',
-          'SellerInfo status does not match',
-        );
-      })
-      .then(() => meta.dx.closeOrder(meta.newOrderAddress, { from: BUYER }))
-      .then((res) => {
-        assert.equal(res.logs[0].event, 'OrderClosed');
-        assert.ok(res, 'Buyer could not close Data Order');
-      });
+    /*
+      Challenge Period starts
+      7a. Seller gets paid
+      7b. Notary also gets paid for completed audits
+    */
   });
 });
