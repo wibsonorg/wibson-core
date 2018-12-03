@@ -109,7 +109,6 @@ contract DataExchange {
   ) public returns (bool) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
-    require(msg.sender == notary);
     require(keyHash == keccak256(abi.encodePacked(key)));
 
     emit DataResponsesNotarized(
