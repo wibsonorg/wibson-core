@@ -174,7 +174,7 @@ contract BatPay {
         uint bytesPerId = uint(payData[1]);
         Account memory from = accounts[fromId];
 
-        require(from.addr == msg.sender, "only owner of id can transfer");
+        require(from.addr == tx.origin, "only owner of id can transfer");
         require((payData.length-2) % bytesPerId == 0, "payData length is invalid");
 
         p.totalCount = uint32((payData.length-2) / bytesPerId + newCount);

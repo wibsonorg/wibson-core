@@ -25,18 +25,17 @@ contract('DataExchange', (accounts) => {
   const amount = list.length;
 
   beforeEach('setup', async () => {
-    token = await WIBToken.new();
+    token = await WIBToken.new({ from: BUYER });
     batPay = await BatPay.new(token.address);
     dataExchange = await DataExchange.new(token.address, batPay.address);
-    // FIXME: This should have {from: BUYER} but batPay fails
-    await token.approve(batPay.address, amount);
-    await batPay.deposit(amount, newAccount);
+    await token.approve(batPay.address, amount, { from: BUYER });
+    await batPay.deposit(amount, newAccount, { from: BUYER });
     id = await batPay.accountsLength.call() - 1;
-    await batPay.bulkRegister(100, 0);
+    await batPay.bulkRegister(100, 0, { from: BUYER });
   });
 
   it('cost of batpay batch payment', async () => {
-    tx = await batPay.transfer(id, 1, data, 0, 0x1234, 0, { from: BUYER });
+    tx = await batPay.transfer(id, 1, data, 0, 0x1234, 0x1234, { from: BUYER });
     console.log({ batchPaymentCost: tx.receipt.gasUsed });
   });
 
@@ -75,7 +74,7 @@ contract('DataExchange', (accounts) => {
 
     tx = await dataExchange.addDataResponsesWithBatPay(
       newOrderAddress, NOTARY_A, MASTERKEY_HASH, 10, NOTARY_SIGNATURE, data,
-      id, 1, /* 0, */ 0x1234, 1,
+      [id, 1, 0], 0x1234,
       { from: BUYER },
     );
     console.log({ addDataResponseWithPayment: tx.receipt.gasUsed });

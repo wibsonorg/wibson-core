@@ -71,6 +71,11 @@ contract DataExchange {
     return batchIndex;
   }
 
+  /*
+  batPayParams[0]: uint32 fromId,
+  batPayParams[1]: uint64 amount,
+  batPayParams[2]: uint newCount,
+  */
   function addDataResponsesWithBatPay(
     address dataOrder_,
     address notary,
@@ -78,9 +83,7 @@ contract DataExchange {
     uint256 notarizationFee,
     bytes notarySignature,
     bytes payData,
-    uint32 fromId,
-    uint64 amount,
-    uint newCount,
+    uint[] batPayParams,
     bytes32 roothash
   ) public returns (uint256) {
     DataOrder dataOrder = DataOrder(dataOrder_);
@@ -97,7 +100,7 @@ contract DataExchange {
     );
     uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
     emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
-    batPay.transfer(fromId, amount, payData, newCount, roothash, keyHash);
+    batPay.transfer(uint32(batPayParams[0]), uint32(batPayParams[1]), payData, uint32(batPayParams[2]), roothash, keyHash);
     return batchIndex;
   }
 
