@@ -78,11 +78,10 @@ contract DataExchange {
     uint256 notarizationFee,
     bytes notarySignature,
     bytes payData,
-    uint fromId,
-    uint amount,
-    /* uint newCount, */
-    bytes32 roothash,
-    uint256 lock
+    uint32 fromId,
+    uint64 amount,
+    uint newCount,
+    bytes32 roothash
   ) public returns (uint256) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     require(msg.sender == dataOrder.buyer());
@@ -98,7 +97,7 @@ contract DataExchange {
     );
     uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
     emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
-    batPay.transfer(fromId, amount, payData, 0, roothash, lock);
+    batPay.transfer(fromId, amount, payData, newCount, roothash, keyHash);
     return batchIndex;
   }
 
