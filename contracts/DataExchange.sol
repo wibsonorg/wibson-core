@@ -16,7 +16,7 @@ contract DataExchange {
 
   event NewDataOrder(address indexed dataOrder);
   event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 batchIndex);
-  event DataResponsesNotarized(address indexed dataOrder, address indexed notary, string key, uint256 batchIndex);
+  event DataResponsesNotarized(address indexed dataOrder, address indexed notary, bytes32 key, uint256 batchIndex);
 
   constructor(address token_, address batPay_) public {
     token = IERC20(token_);
@@ -73,8 +73,7 @@ contract DataExchange {
 
   /*
   batPayParams[0]: uint32 fromId,
-  batPayParams[1]: uint64 amount,
-  batPayParams[2]: uint newCount,
+  batPayParams[1]: uint newCount,
   */
   function addDataResponsesWithBatPay(
     address dataOrder_,
@@ -84,7 +83,7 @@ contract DataExchange {
     bytes notarySignature,
     bytes payData,
     uint[] batPayParams,
-    bytes32 roothash
+    bytes32 rootHash
   ) public returns (uint256) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     require(msg.sender == dataOrder.buyer());
@@ -100,14 +99,15 @@ contract DataExchange {
     );
     uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
     emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
-    batPay.transfer(uint32(batPayParams[0]), uint32(batPayParams[1]), payData, uint32(batPayParams[2]), roothash, keyHash);
+    batPay.transfer(uint32(batPayParams[0]), uint64(dataOrder.price()), payData, uint(batPayParams[1]), rootHash, keyHash);
     return batchIndex;
   }
 
   function notarizeDataResponses(
     address dataOrder_,
     uint256 batchIndex,
-    string key
+    uint32 payId,
+    bytes32 key
   ) public returns (bool) {
     DataOrder dataOrder = DataOrder(dataOrder_);
     (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
@@ -119,6 +119,8 @@ contract DataExchange {
       key,
       batchIndex
     );
+
+    require(batPay.unlock(payId,key));
 
     return true;
   }
