@@ -18,12 +18,12 @@ contract.only('DataExchange', (accounts) => {
   const BUYER = accounts[4];
   const DATA_ORDER_PRICE = 20;
   const NOTARIZATION_FEE = 10;
-  const list = randomIds(1000, 50000);
-  const PAYDATA = getPayData(list);
+  const LIST_OF_SELLERS = randomIds(1000, 50000);
+  const PAYDATA = getPayData(LIST_OF_SELLERS);
   const MASTERKEY = '0x3a9c1573b2b71e6f983946fa79489682a1114193cd453bdea78717db684545b4';
   const MASTERKEY_HASH = '0x33cfdaac3c1fd1984b81dc1c3522a76b2d2fad7dd70ca8e10ea702764eafe2a8';
   const NEW_ACCOUNT = `0x${Web3.utils.toBN(2).pow(Web3.utils.toBN(256)).subn(1).toJSON()}`;
-  const BATPAY_AMOUNT = list.length * DATA_ORDER_PRICE;
+  const BATPAY_AMOUNT = LIST_OF_SELLERS.length * DATA_ORDER_PRICE;
 
   let dataExchange;
 
@@ -51,53 +51,28 @@ contract.only('DataExchange', (accounts) => {
     assert.equal(newOrder.logs[0].event, 'NewDataOrder');
     const newOrderAddress = newOrder.logs[0].args.dataOrder;
 
-    const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, NOTARIZATION_FEE);
-    const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
+    // const hash = Web3.utils.soliditySha3(newOrderAddress, MASTERKEY_HASH, NOTARIZATION_FEE);
+    // const NOTARY_SIGNATURE = await web3.eth.sign(hash, NOTARY_A);
 
     // 5. Sends sellerId list and notary.
     // Send locked payment that needs the master key to be unlocked
-    tx = await dataExchange.addDataResponsesWithBatPay(
-      newOrderAddress,
-      NOTARY_A,
-      MASTERKEY_HASH,
-      NOTARIZATION_FEE,
-      NOTARY_SIGNATURE,
-      PAYDATA,
-      [id, 0],
-      0x1234,
-      { from: BUYER },
-    );
+    const payDataHash = Web3.utils.soliditySha3(PAYDATA.toString());
+    const lock = Web3.utils.soliditySha3(payDataHash, MASTERKEY);
 
-    const index = Web3.utils.toBN(tx.logs[0].args.batchIndex);
+    const PAYDATA_PADDED = PAYDATA.toArray().map(e => `0x${(`0${e.toString('16')}`).slice(-2)}`);
 
-    assert.ok(index.eqn(0), 'Index should be the first one (zero)');
+    // tx = await batPay.transfer(id, 1, PAYDATA.toArray(), 0, payDataHash, lock, { from: BUYER });
+    tx = await batPay.transfer(id, 1, PAYDATA_PADDED, 0, payDataHash, lock, { from: BUYER });
 
-    // 6. Notary reveals the key used to encrypt sellers’ keys
+    // 6. Broker unlocks the payment (on notary’s behalf)
+    // by revealing the master key used to encrypt sellers’ keys.
     // TODO:(through a broker?) Define broker requirements
-    const payId = 0;
-    const notarized = await dataExchange.notarizeDataResponses
-      .call(
-        newOrderAddress, index.toNumber(), payId, MASTERKEY,
-        { from: NOTARY_A },
-      );
-    assert.ok(notarized, 'Data Responses should be notarized');
+    tx = await batPay.unlock(0, MASTERKEY, { from: BUYER });
 
-    tx = await dataExchange.notarizeDataResponses(
-      newOrderAddress, index.toNumber(), payId, MASTERKEY,
-      { from: NOTARY_A },
-    );
-    assert.equal(tx.logs[0].event, 'DataResponsesNotarized');
-    assert.equal(tx.logs[0].args.key, MASTERKEY);
+    tx = await dataExchange.closeOrder(newOrderAddress, { from: BUYER });
+    assert.equal(tx.logs[0].event, 'OrderClosed');
 
-    const dataOrder = DataOrder.at(newOrderAddress);
-    const [resNotaryAddress, resKeyHash] = await dataOrder.getBatch(index.toNumber());
-    assert.equal(resNotaryAddress, NOTARY_A);
-    assert.equal(resKeyHash, MASTERKEY_HASH);
-
-    /*
-      Challenge Period starts
-      7a. Seller gets paid
-      7b. Notary also gets paid for completed audits
-    */
+    // 7a. Seller can withdraw payment
+    // 7b. Notary also gets paid for completed audits
   });
 });

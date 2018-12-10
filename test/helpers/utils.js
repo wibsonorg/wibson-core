@@ -1,3 +1,5 @@
+const Web3 = require('web3');
+
 const randomIds = (n, max) => {
   const res = [];
   const used = {};
@@ -48,7 +50,7 @@ const getPayData = (list) => {
     last = list[i];
   }
 
-  return new web3.BigNumber(`0xff${hex(bytesPerId)}${data}`);
+  return Web3.utils.toBN(`0xff${hex(bytesPerId)}${data}`);
 };
 
 export {
