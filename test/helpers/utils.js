@@ -1,10 +1,12 @@
+const Web3 = require('web3');
+
 const randomIds = (n, max) => {
   const res = [];
   const used = {};
 
   used[0] = true;
 
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n; i += 1) {
     let id = 0;
     while (id in used) {
       id = Math.trunc(Math.random() * max);
@@ -20,7 +22,7 @@ const hex = x => (`00${x.toString(16)}`).substr(-2);
 const toHex = (x) => {
   let ret = '';
 
-  for (let i = 0; i < x.length; i++) {
+  for (let i = 0; i < x.length; i += 1) {
     ret += hex(x.charCodeAt(i));
   }
 
@@ -34,11 +36,11 @@ const getPayData = (list) => {
   let last = 0;
   let data = '';
 
-  for (let i = 0; i < list.length; i++) {
+  for (let i = 0; i < list.length; i += 1) {
     let delta = list[i] - last;
 
     let number = '';
-    for (let j = 0; j < bytesPerId; j++) {
+    for (let j = 0; j < bytesPerId; j += 1) {
       number = hex(delta % 256) + number;
       delta = Math.trunc(delta / 256);
     }
@@ -48,7 +50,7 @@ const getPayData = (list) => {
     last = list[i];
   }
 
-  return new web3.BigNumber(`0xff${hex(bytesPerId)}${data}`);
+  return Web3.utils.toBN(`0xff${hex(bytesPerId)}${data}`);
 };
 
 export {

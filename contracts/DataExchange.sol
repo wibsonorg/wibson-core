@@ -16,7 +16,8 @@ contract DataExchange {
 
   event NewDataOrder(address indexed dataOrder);
   event DataResponsesAdded(address indexed dataOrder, bytes32 keyHash, uint256 batchIndex);
-  event DataResponsesNotarized(address indexed dataOrder, address indexed notary, string key, uint256 batchIndex);
+  event DataResponsesNotarized(address indexed dataOrder, address indexed notary, bytes32 key, uint256 batchIndex);
+  event OrderClosed(address indexed orderAddr);
 
   constructor(address token_, address batPay_) public {
     token = IERC20(token_);
@@ -44,97 +45,20 @@ contract DataExchange {
     return dataOrder;
   }
 
-  function addDataResponses(
-    address dataOrder_,
-    address notary,
-    bytes32 keyHash,
-    uint256 notarizationFee,
-    bytes notarySignature
-  ) public returns (uint256) {
-    DataOrder dataOrder = DataOrder(dataOrder_);
-    require(msg.sender == dataOrder.buyer());
-
-    require(
-      validNotarySignature(
-        notarySignature,
-        notary,
-        dataOrder_,
-        keyHash,
-        notarizationFee
-      )
-    );
-
-    uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
-
-    emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
-
-    return batchIndex;
-  }
-
-  /*
-  batPayParams[0]: uint32 fromId,
-  batPayParams[1]: uint64 amount,
-  batPayParams[2]: uint newCount,
-  */
-  function addDataResponsesWithBatPay(
-    address dataOrder_,
-    address notary,
-    bytes32 keyHash,
-    uint256 notarizationFee,
-    bytes notarySignature,
-    bytes payData,
-    uint[] batPayParams,
-    bytes32 roothash
-  ) public returns (uint256) {
-    DataOrder dataOrder = DataOrder(dataOrder_);
-    require(msg.sender == dataOrder.buyer());
-
-    require(
-      validNotarySignature(
-        notarySignature,
-        notary,
-        dataOrder_,
-        keyHash,
-        notarizationFee
-      )
-    );
-    uint256 batchIndex = dataOrder.addDataResponses(notary, keyHash);
-    emit DataResponsesAdded(dataOrder, keyHash, batchIndex);
-    batPay.transfer(uint32(batPayParams[0]), uint32(batPayParams[1]), payData, uint32(batPayParams[2]), roothash, keyHash);
-    return batchIndex;
-  }
-
-  function notarizeDataResponses(
-    address dataOrder_,
-    uint256 batchIndex,
-    string key
+  function closeOrder(
+    address orderAddr
   ) public returns (bool) {
-    DataOrder dataOrder = DataOrder(dataOrder_);
-    (address notary, bytes32 keyHash) = dataOrder.getBatch(batchIndex);
-    require(keyHash == keccak256(abi.encodePacked(key)));
+    DataOrder order = DataOrder(orderAddr);
+    address buyer = order.buyer();
+    require(msg.sender == buyer);
 
-    emit DataResponsesNotarized(
-      dataOrder_,
-      notary,
-      key,
-      batchIndex
-    );
+    bool okay = order.close();
+    if (okay) {
+      emit OrderClosed(orderAddr);
+    }
 
-    return true;
+    return okay;
   }
 
-  function validNotarySignature(
-    bytes signature,
-    address notary,
-    address dataOrder,
-    bytes32 keyHash,
-    uint256 notarizationFee
-  ) private pure returns (bool) {
-    bytes32 hash = ECDSA.toEthSignedMessageHash(
-      keccak256(abi.encodePacked(dataOrder, keyHash, notarizationFee))
-    );
-    address signer = ECDSA.recover(hash, signature);
 
-    return signer == notary;
-  }
 }

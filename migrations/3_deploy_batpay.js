@@ -8,5 +8,5 @@ module.exports = function deploy(deployer, network) {
   if (batPayAddress) {
     return;
   }
-  return deployer.deploy(BatPay, WIBToken.address);
+  deployer.deploy(BatPay, WIBToken.address);
 };
