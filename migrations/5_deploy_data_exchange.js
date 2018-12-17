@@ -18,8 +18,8 @@ module.exports = function deploy(deployer, network, accounts) {
   const usedWibTokenAddress = wibTokenAddress || WIBToken.address;
 
   if (DeployUtils.isLocal(network)) {
-    const { owner, multisig } = DeployUtils.getLocalAccounts(accounts);
-    return deployExchange(deployer, usedWibTokenAddress, multisig, owner);
+    const { multisig } = DeployUtils.getLocalAccounts(accounts);
+    return deployExchange(deployer, usedWibTokenAddress, multisig);
   }
 
   const { multisig } = DeployUtils.getEnvironmentAccounts(network);
