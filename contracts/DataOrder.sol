@@ -39,11 +39,11 @@ contract DataOrder is Ownable {
   }
 
   /**
- * @notice Closes the Data order.
- * @dev Once the DataOrder is closed it will no longer accept new DataResponses.
- * @return true if the DataOrder was successfully closed, reverts otherwise.
- */
- function close() public onlyOwner returns (bool) {
+   * @notice Closes the Data order.
+   * @dev Once the DataOrder is closed it will no longer accept new DataResponses.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
+   */
+  function close() public onlyOwner returns (bool) {
     require(orderStatus != OrderStatus.TransactionCompleted);
     require(transactionCompletedAt == 0);
     orderStatus = OrderStatus.TransactionCompleted;
