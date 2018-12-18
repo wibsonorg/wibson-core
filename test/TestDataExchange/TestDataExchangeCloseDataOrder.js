@@ -1,6 +1,7 @@
 import { assertEvent, assertRevert, assertGasConsumptionNotExceeds } from '../helpers';
 
 const Web3 = require('web3');
+
 const sha3 = Web3.utils.soliditySha3;
 
 const DataExchange = artifacts.require('./DataExchange.sol');
@@ -18,15 +19,15 @@ contract.only('DataExchange', async (accounts) => {
     dataExchange = await DataExchange.new(tokenAddress);
     const tx = await dataExchange.createDataOrder(
       JSON.stringify([
-        { name: 'age', value: '20' }, 
-        { name: 'gender', value: 'male' }
+        { name: 'age', value: '20' },
+        { name: 'gender', value: 'male' },
       ]),
       '20000000000',
       JSON.stringify(['geolocation']),
       sha3('DataOrder T&C'),
       JSON.stringify({
         dataOrderUrl: '/data-orders/12345',
-        dataResponsesUrl: '/data-responses'
+        dataResponsesUrl: '/data-responses',
       }),
       { from: buyer },
     );
@@ -43,19 +44,19 @@ contract.only('DataExchange', async (accounts) => {
     it('closes an open order even if another order is created', async () => {
       await dataExchange.createDataOrder(
         JSON.stringify([
-          { name: 'age', value: '25' }, 
-          { name: 'gender', value: 'female' }
+          { name: 'age', value: '25' },
+          { name: 'gender', value: 'female' },
         ]),
         '20000000000',
         JSON.stringify(['device_info']),
         sha3('DataOrder 2 T&C'),
         JSON.stringify({
           dataOrderUrl: '/data-orders/67890',
-          dataResponsesUrl: '/data-responses'
+          dataResponsesUrl: '/data-responses',
         }),
         { from: buyer },
       );
-  
+
       const transaction = await dataExchange.closeDataOrder(orderAddress, { from: buyer });
       assertEvent(transaction, 'DataOrderClosed', 'did not emit `DataOrderClosed` event');
     });
