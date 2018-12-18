@@ -1,4 +1,4 @@
-import { assertEvent, assertRevert } from '../helpers';
+import { assertEvent, assertRevert, assertGasConsumptionNotExceeds } from '../helpers';
 
 const Web3 = require('web3');
 const sha3 = Web3.utils.soliditySha3;
@@ -37,6 +37,7 @@ contract.only('DataExchange', async (accounts) => {
     it('closes an open order', async () => {
       const transaction = await dataExchange.closeDataOrder(orderAddress, { from: buyer });
       assertEvent(transaction, 'DataOrderClosed', 'did not emit `DataOrderClosed` event');
+      assertGasConsumptionNotExceeds(transaction, 35000);
     });
 
     it('closes an open order even if another order is created', async () => {

@@ -13,19 +13,28 @@ export function assertEvent(transaction, eventName, message = '') {
 }
 
 /**
- * @param {Object} transaction the transaction where the event was emitted.
- */
-export function extractEventArgs(transaction) {
-  return transaction.logs[0].args;
-}
-
-/**
  * @param {Error} error the error where the assertion is made.
  * @param {String} message string that should match the revert message.
  * @throws {AssertionError} when the error is not originated from a revert.
  */
 export function assertRevert(error, message = 'revert') {
   assert(error.toString().includes(message), error.toString());
+}
+
+/**
+ * @param {Object} transaction the transaction
+ * @param {Number} gasLimit maximum of gas units to consume.
+ * @throws {AssertionError} when the condition is not met.
+ */
+export function assertGasConsumptionNotExceeds({ receipt: { gasUsed } }, gasLimit) {
+  assert(gasUsed < gasLimit, `Gas consumption exceeds ${gasLimit} (gasUsed: ${gasUsed})`);
+}
+
+/**
+ * @param {Object} transaction the transaction where the event was emitted.
+ */
+export function extractEventArgs(transaction) {
+  return transaction.logs[0].args;
 }
 
 /**
