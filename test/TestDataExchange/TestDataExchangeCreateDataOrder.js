@@ -1,4 +1,4 @@
-import { assertRevert, assertEvent } from '../helpers';
+import { assertRevert, assertEvent, assertGasConsumptionNotExceeds } from '../helpers';
 
 const Web3 = require('web3');
 const sha3 = Web3.utils.soliditySha3;
@@ -33,7 +33,7 @@ contract.only('DataExchange', async (accounts) => {
       );
 
       assertEvent(transaction, 'DataOrderCreated', 'Expected event');
-      assert(transaction.receipt.gasUsed < 70000, 'Gas consumption exceeded');
+      assertGasConsumptionNotExceeds(transaction, 700000);
     });
 
     it('cannot create a DataOrder if buyerURLs field is empty', async () => {

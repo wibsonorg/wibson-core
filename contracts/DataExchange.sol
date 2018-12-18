@@ -22,10 +22,10 @@ contract DataExchange {
    * @notice Creates a DataOrder.
    * @dev The `msg.sender` will become the buyer of the order.
    * @param audience Target audience of the order.
-   * @param price Price per added Data Response.
+   * @param price Price that sellers will receive in exchange of their data.
    * @param requestedData Requested data type (Geolocation, Facebook, etc).
    * @param termsAndConditionsHash Hash of the Buyer's terms and conditions for the order.
-   * @param buyerURLs Public URLs of the buyer, it contains:
+   * @param buyerURLs Public URLs of the buyer, containing:
    *                  `dataOrderUrl`: DataOrder information (title, terms, etc.)
    *                  `dataResponsesUrl`: Url where to send DataResponses
    * @return The address of the newly created DataOrder. If the DataOrder could
