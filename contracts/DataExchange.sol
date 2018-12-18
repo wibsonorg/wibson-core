@@ -11,13 +11,26 @@ contract DataExchange {
 
   IERC20 public token;
 
-  event DataOrderCreated(address indexed orderAddr);
+  event DataOrderCreated(address indexed orderAddr, address indexed owner);
   event DataOrderClosed(address indexed orderAddr);
 
   constructor(address token_) public {
     token = IERC20(token_);
   }
 
+  /**
+   * @notice Creates a DataOrder.
+   * @dev The `msg.sender` will become the buyer of the order.
+   * @param audience Target audience of the order.
+   * @param price Price per added Data Response.
+   * @param requestedData Requested data type (Geolocation, Facebook, etc).
+   * @param termsAndConditionsHash Hash of the Buyer's terms and conditions for the order.
+   * @param buyerURLs Public URLs of the buyer, it contains:
+   *                  `dataOrderUrl`: DataOrder information (title, terms, etc.)
+   *                  `dataResponsesUrl`: Url where to send DataResponses
+   * @return The address of the newly created DataOrder. If the DataOrder could
+   *         not be created, reverts.
+   */
   function createDataOrder(
     string audience,
     uint256 price,
@@ -35,7 +48,7 @@ contract DataExchange {
       buyerURLs
     );
 
-    emit DataOrderCreated(dataOrder);
+    emit DataOrderCreated(dataOrder, msg.sender);
     return dataOrder;
   }
 

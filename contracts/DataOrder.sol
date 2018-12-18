@@ -27,6 +27,8 @@ contract DataOrder is Ownable {
     bytes32 termsAndConditionsHash_,
     string buyerURLs_
   ) public {
+    require(bytes(buyerURLs_).length > 0, "buyerURLs must not be empty");
+
     buyer = buyer_;
     audience = audience_;
     price = price_;
