@@ -23,7 +23,7 @@ export function assertRevert(error, message = 'revert') {
 
 /**
  * @param {Object} transaction the transaction
- * @param {Number} gasLimit maximum of gas units to consume. 
+ * @param {Number} gasLimit maximum of gas units to consume.
  * @throws {AssertionError} when the condition is not met.
  */
 export function assertGasConsumptionNotExceeds({ receipt: { gasUsed } }, gasLimit) {
