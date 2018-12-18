@@ -53,8 +53,3 @@ exports.getWIBTokenAddress = function getWIBTokenAddress(environment) {
   const config = getEnvironmentConfig(environment);
   return config.wibTokenAddress;
 };
-
-exports.getBatPayAddress = function getBatPayAddress(environment) {
-  const config = getEnvironmentConfig(environment);
-  return config.batPayAddress;
-};
