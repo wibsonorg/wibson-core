@@ -21,10 +21,11 @@ export function extractEventArgs(transaction) {
 
 /**
  * @param {Error} error the error where the assertion is made.
+ * @param {String} message string that should match the revert message.
  * @throws {AssertionError} when the error is not originated from a revert.
  */
-export function assertRevert(error) {
-  assert(error.toString().includes('revert'), error.toString());
+export function assertRevert(error, message = 'revert') {
+  assert(error.toString().includes(message), error.toString());
 }
 
 /**

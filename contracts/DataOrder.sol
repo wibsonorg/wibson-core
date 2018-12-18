@@ -11,12 +11,12 @@ contract DataOrder is Ownable {
   bytes32 public termsAndConditionsHash;
   string public buyerURLs;
   uint32 public createdAt;
-  OrderStatus public orderStatus;
-  uint32 public transactionCompletedAt;
+  OrderStatus public status;
+  uint32 public closedAt;
 
   enum OrderStatus {
-    OrderCreated,
-    TransactionCompleted
+    Created,
+    Closed
   }
 
   constructor(
@@ -33,21 +33,19 @@ contract DataOrder is Ownable {
     requestedData = requestedData_;
     termsAndConditionsHash = termsAndConditionsHash_;
     buyerURLs = buyerURLs_;
-    orderStatus = OrderStatus.OrderCreated;
+    status = OrderStatus.Created;
     createdAt = uint32(block.timestamp);
-    transactionCompletedAt = 0;
+    closedAt = 0;
   }
 
   /**
    * @notice Closes the Data order.
-   * @dev Once the DataOrder is closed it will no longer accept new DataResponses.
    * @return true if the DataOrder was successfully closed, reverts otherwise.
    */
   function close() public onlyOwner returns (bool) {
-    require(orderStatus != OrderStatus.TransactionCompleted);
-    require(transactionCompletedAt == 0);
-    orderStatus = OrderStatus.TransactionCompleted;
-    transactionCompletedAt = uint32(block.timestamp);
+    require(status != OrderStatus.Closed, "order already closed");
+    status = OrderStatus.Closed;
+    closedAt = uint32(block.timestamp);
     return true;
   }
 }
