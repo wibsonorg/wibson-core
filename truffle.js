@@ -22,7 +22,7 @@ module.exports = {
       gas: 0xfffffffffff,
       gasPrice: 0x01,
     },
-    remoteDevelopment: { // intended to be named as 'development' but it collides with truffle's default
+    remoteDevelopment: { // 'development' collides with truffle's default
       provider: () => DeployUtils.getProvider('ropsten', 'remoteDevelopment'),
       network_id: 3, // official id of the ropsten network
       gas: 7900000,
