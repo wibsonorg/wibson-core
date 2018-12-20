@@ -65,3 +65,26 @@ export function hashMessage(args) {
 export function hashMerkle(buffer) {
   return crypto.createHash('sha256').update(buffer).digest();
 }
+
+/**
+ * Builds a DataOrder payload.
+ * @param {Object} override params that override builder defaults.
+ * @return {Array} the DataOrder payload.
+ */
+export function buildDataOrder(override = {}) {
+  const payload = Object.assign({}, {
+    audience: JSON.stringify([
+      { name: 'age', value: '20' },
+      { name: 'gender', value: 'male' },
+    ]),
+    price: '20000000000',
+    requestedData: JSON.stringify(['geolocation']),
+    termsAndConditionsHash: hashMessage('DataOrder T&C'),
+    buyerURLs: JSON.stringify({
+      dataOrderUrl: '/data-orders/12345',
+      dataResponsesUrl: '/data-responses',
+    }),
+  }, override);
+
+   return Object.values(payload);
+}

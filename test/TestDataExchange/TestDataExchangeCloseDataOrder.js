@@ -1,4 +1,9 @@
-import { assertEvent, assertRevert, assertGasConsumptionNotExceeds } from '../helpers';
+import {
+  assertEvent,
+  assertRevert,
+  assertGasConsumptionNotExceeds,
+  buildDataOrder
+} from '../helpers';
 
 const Web3 = require('web3');
 
@@ -18,17 +23,7 @@ contract.only('DataExchange', async (accounts) => {
   beforeEach(async () => {
     dataExchange = await DataExchange.new(tokenAddress);
     const tx = await dataExchange.createDataOrder(
-      JSON.stringify([
-        { name: 'age', value: '20' },
-        { name: 'gender', value: 'male' },
-      ]),
-      '20000000000',
-      JSON.stringify(['geolocation']),
-      sha3('DataOrder T&C'),
-      JSON.stringify({
-        dataOrderUrl: '/data-orders/12345',
-        dataResponsesUrl: '/data-responses',
-      }),
+      ...buildDataOrder(),
       { from: buyer },
     );
     orderAddress = tx.logs[0].args.orderAddr;
