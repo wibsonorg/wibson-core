@@ -1,4 +1,4 @@
-const DataOrder = artifacts.require('./DataOrder.sol');
+// const DataOrder = artifacts.require('./DataOrder.sol');
 
 const createDataOrder = async ({
   buyer,

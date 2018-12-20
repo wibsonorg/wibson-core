@@ -1,4 +1,4 @@
-const DataOrder = artifacts.require('./DataOrder.sol');
+// const DataOrder = artifacts.require('./DataOrder.sol');
 
 contract('DataOrder', async (accounts) => {
   const owner = accounts[0];
