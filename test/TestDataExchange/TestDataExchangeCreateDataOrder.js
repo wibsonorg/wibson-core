@@ -1,8 +1,9 @@
-import { assertRevert, assertEvent, assertGasConsumptionNotExceeds } from '../helpers';
-
-const Web3 = require('web3');
-
-const sha3 = Web3.utils.soliditySha3;
+import {
+  assertRevert,
+  assertEvent,
+  assertGasConsumptionNotExceeds,
+  buildDataOrder
+} from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
@@ -19,17 +20,7 @@ contract.only('DataExchange', async (accounts) => {
   describe('createDataOrder', () => {
     it('creates a DataOrder', async () => {
       const transaction = await dataExchange.createDataOrder(
-        JSON.stringify([
-          { name: 'age', value: '20' },
-          { name: 'gender', value: 'male' },
-        ]),
-        '20000000000',
-        JSON.stringify(['geolocation']),
-        sha3('DataOrder T&C'),
-        JSON.stringify({
-          dataOrderUrl: '/data-orders/12345',
-          dataResponsesUrl: '/data-responses',
-        }),
+        ...buildDataOrder(),
         { from: buyer },
       );
 
@@ -40,14 +31,7 @@ contract.only('DataExchange', async (accounts) => {
     it('cannot create a DataOrder if buyerURLs field is empty', async () => {
       try {
         await dataExchange.createDataOrder(
-          JSON.stringify([
-            { name: 'age', value: '20' },
-            { name: 'gender', value: 'male' },
-          ]),
-          '20000000000',
-          JSON.stringify(['geolocation']),
-          sha3('DataOrder T&C'),
-          '',
+          ...buildDataOrder({ buyerURLs: '' }),
           { from: buyer },
         );
         assert.fail();
