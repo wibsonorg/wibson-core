@@ -2,7 +2,7 @@ import {
   assertRevert,
   assertEvent,
   assertGasConsumptionNotExceeds,
-  buildDataOrder
+  buildDataOrder,
 } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');

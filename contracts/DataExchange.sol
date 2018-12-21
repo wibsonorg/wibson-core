@@ -12,7 +12,7 @@ contract DataExchange {
   IERC20 public token;
 
   event DataOrderCreated(address indexed orderAddr, address indexed owner);
-  event DataOrderClosed(address indexed orderAddr);
+  event DataOrderClosed(address indexed orderAddr, address indexed owner);
 
   constructor(address token_) public {
     token = IERC20(token_);
@@ -52,16 +52,21 @@ contract DataExchange {
     return dataOrder;
   }
 
+  /**
+   * @notice Closes the DataOrder.
+   * @dev The `msg.sender` must be the buyer of the order.
+   * @param orderAddr Address of the order to close.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
+   */
   function closeDataOrder(
     address orderAddr
   ) public returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    address buyer = order.buyer();
-    require(msg.sender == buyer);
+    DataOrder dataOrder = DataOrder(orderAddr);
+    require(msg.sender == dataOrder.buyer(), "sender can't close the order");
 
-    bool okay = order.close();
+    bool okay = dataOrder.close();
     if (okay) {
-      emit DataOrderClosed(orderAddr);
+      emit DataOrderClosed(orderAddr, msg.sender);
     }
 
     return okay;
