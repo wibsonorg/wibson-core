@@ -2,7 +2,7 @@ import {
   assertEvent,
   assertRevert,
   assertGasConsumptionNotExceeds,
-  buildDataOrder
+  buildDataOrder,
 } from '../helpers';
 
 const Web3 = require('web3');
