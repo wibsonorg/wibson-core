@@ -19,6 +19,17 @@ contract DataOrder is Ownable {
     TransactionCompleted
   }
 
+  /**
+   * @notice Contract's constructor.
+   * @param buyer_ Buyer address
+   * @param audience_ Target audience of the order.
+   * @param price_ Price that sellers will receive in exchange of their data.
+   * @param requestedData_ Requested data type (Geolocation, Facebook, etc).
+   * @param termsAndConditionsHash_ Hash of the Buyer's terms and conditions for the order.
+   * @param buyerURLs_ Public URLs of the buyer, containing:
+   *                  `dataOrderUrl`: DataOrder information (title, terms, etc.)
+   *                  `dataResponsesUrl`: Url where to send DataResponses
+   */
   constructor(
     address buyer_,
     string audience_,
@@ -27,6 +38,8 @@ contract DataOrder is Ownable {
     bytes32 termsAndConditionsHash_,
     string buyerURLs_
   ) public {
+    require(bytes(buyerURLs_).length > 0, "buyerURLs must not be empty");
+
     buyer = buyer_;
     audience = audience_;
     price = price_;

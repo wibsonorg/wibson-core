@@ -13,18 +13,28 @@ export function assertEvent(transaction, eventName, message = '') {
 }
 
 /**
+ * @param {Error} error the error where the assertion is made.
+ * @param {String} message string that should match the revert message.
+ * @throws {AssertionError} when the error is not originated from a revert.
+ */
+export function assertRevert(error, message = 'revert') {
+  assert(error.toString().includes(message), error.toString());
+}
+
+/**
+ * @param {Object} transaction the transaction
+ * @param {Number} gasLimit maximum of gas units to consume.
+ * @throws {AssertionError} when the condition is not met.
+ */
+export function assertGasConsumptionNotExceeds({ receipt: { gasUsed } }, gasLimit) {
+  assert(gasUsed < gasLimit, `Gas consumption exceeds ${gasLimit} (gasUsed: ${gasUsed})`);
+}
+
+/**
  * @param {Object} transaction the transaction where the event was emitted.
  */
 export function extractEventArgs(transaction) {
   return transaction.logs[0].args;
-}
-
-/**
- * @param {Error} error the error where the assertion is made.
- * @throws {AssertionError} when the error is not originated from a revert.
- */
-export function assertRevert(error) {
-  assert(error.toString().includes('revert'), error.toString());
 }
 
 /**
@@ -54,4 +64,27 @@ export function hashMessage(args) {
  */
 export function hashMerkle(buffer) {
   return crypto.createHash('sha256').update(buffer).digest();
+}
+
+/**
+ * Builds a DataOrder payload.
+ * @param {Object} override params that override builder defaults.
+ * @return {Array} the DataOrder payload.
+ */
+export function buildDataOrder(override = {}) {
+  const payload = Object.assign({}, {
+    audience: JSON.stringify([
+      { name: 'age', value: '20' },
+      { name: 'gender', value: 'male' },
+    ]),
+    price: '20000000000',
+    requestedData: JSON.stringify(['geolocation']),
+    termsAndConditionsHash: hashMessage('DataOrder T&C'),
+    buyerURLs: JSON.stringify({
+      dataOrderUrl: '/data-orders/12345',
+      dataResponsesUrl: '/data-responses',
+    }),
+  }, override);
+
+  return Object.values(payload);
 }
