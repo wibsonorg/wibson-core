@@ -86,5 +86,5 @@ export function buildDataOrder(override = {}) {
     }),
   }, override);
 
-   return Object.values(payload);
+  return Object.values(payload);
 }
