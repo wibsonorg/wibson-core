@@ -33,14 +33,13 @@ contract DataExchange {
 
   /**
    * @notice Registers sender as a notary or updates an already existing one.
-   * @dev At least one notary is needed to enable `DataExchange` operation.
    * @param publicUrl Public URL of the notary where the notary info can be obtained.
-   * @return true if the notary was successfully registered, reverts otherwise.
+   * @return true if the notary was successfully registered or updated, reverts otherwise.
    */
   function registerNotary(
     string publicUrl
   ) public returns (bool) {
-    require(isNotEmpty(publicUrl));
+    require(isNotEmpty(publicUrl), "publicUrl must not be empty");
     bool isUpdate = isSenderNotary();
     notaryUrls[msg.sender] = publicUrl;
     if (isUpdate) {
@@ -57,7 +56,7 @@ contract DataExchange {
    */
   function unregisterNotary(
   ) public returns (bool) {
-    require(isSenderNotary());
+    require(isSenderNotary(), "sender must be registered");
     notaryUrls[msg.sender] = "";
     emit NotaryUnregistered(msg.sender);
     return true;
