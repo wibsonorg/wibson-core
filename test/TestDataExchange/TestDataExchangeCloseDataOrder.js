@@ -57,10 +57,7 @@ contract('DataExchange', async (accounts) => {
         '20000000000',
         JSON.stringify(['device_info']),
         sha3('DataOrder 2 T&C'),
-        JSON.stringify({
-          dataOrderUrl: '/data-orders/67890',
-          dataResponsesUrl: '/data-responses',
-        }),
+        '/data-orders/67890',
         { from: buyer },
       );
 
@@ -77,10 +74,7 @@ contract('DataExchange', async (accounts) => {
         '20000000000',
         JSON.stringify(['device_info']),
         sha3('DataOrder 2 T&C'),
-        JSON.stringify({
-          dataOrderUrl: '/data-orders/67890',
-          dataResponsesUrl: '/data-responses',
-        }),
+        '/data-orders/67890',
         { from: buyer },
       );
       const anotherOrderId = anotherTx.logs[0].args.orderId;
