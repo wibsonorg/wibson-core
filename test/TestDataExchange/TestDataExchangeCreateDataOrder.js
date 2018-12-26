@@ -86,15 +86,15 @@ contract('DataExchange', async (accounts) => {
       assert.equal(Number(closedAt), 0);
     });
 
-    it('cannot create a DataOrder if buyerURLs field is empty', async () => {
+    it('cannot create a DataOrder if buyerUrl field is empty', async () => {
       try {
         await dataExchange.createDataOrder(
-          ...buildDataOrder({ buyerURLs: '' }),
+          ...buildDataOrder({ buyerUrl: '' }),
           { from: buyer },
         );
         assert.fail();
       } catch (error) {
-        assertRevert(error, 'buyerURLs must not be empty');
+        assertRevert(error, 'buyerUrl must not be empty');
       }
     });
   });

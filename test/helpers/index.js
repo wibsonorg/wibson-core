@@ -80,10 +80,7 @@ export function buildDataOrder(override = {}) {
     price: '20000000000',
     requestedData: JSON.stringify(['geolocation']),
     termsAndConditionsHash: hashMessage('DataOrder T&C'),
-    buyerURLs: JSON.stringify({
-      dataOrderUrl: '/data-orders/12345',
-      dataResponsesUrl: '/data-responses',
-    }),
+    buyerUrl: '/data-orders/12345',
   }, override);
 
   return Object.values(payload);

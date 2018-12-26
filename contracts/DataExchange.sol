@@ -21,7 +21,7 @@ contract DataExchange {
     uint256 price;
     string requestedData;
     bytes32 termsAndConditionsHash;
-    string buyerURLs;
+    string buyerUrl;
     uint32 createdAt;
     uint32 closedAt;
   }
@@ -79,9 +79,8 @@ contract DataExchange {
    * @param price Price that sellers will receive in exchange of their data.
    * @param requestedData Requested data type (Geolocation, Facebook, etc).
    * @param termsAndConditionsHash Hash of the Buyer's terms and conditions for the order.
-   * @param buyerURLs Public URLs of the buyer, containing:
-   *                  `dataOrderUrl`: DataOrder information (title, terms, etc.)
-   *                  `dataResponsesUrl`: Url where to send DataResponses
+   * @param buyerUrl Public URL of the buyer where more information about the DataOrder
+   *                 can be obtained.
    * @return The index of the newly created DataOrder. If the DataOrder could
    *         not be created, reverts.
    */
@@ -90,9 +89,9 @@ contract DataExchange {
     uint256 price,
     string requestedData,
     bytes32 termsAndConditionsHash,
-    string buyerURLs
+    string buyerUrl
   ) public returns (uint256 orderId) {
-    require(bytes(buyerURLs).length > 0, "buyerURLs must not be empty");
+    require(bytes(buyerUrl).length > 0, "buyerUrl must not be empty");
 
     orderId = dataOrders.length;
     dataOrders.length += 1;
@@ -102,7 +101,7 @@ contract DataExchange {
       price,
       requestedData,
       termsAndConditionsHash,
-      buyerURLs,
+      buyerUrl,
       uint32(now),
       uint32(0)
     );
