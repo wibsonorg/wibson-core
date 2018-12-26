@@ -91,7 +91,7 @@ contract DataExchange {
     bytes32 termsAndConditionsHash,
     string buyerUrl
   ) public returns (uint256 orderId) {
-    require(bytes(buyerUrl).length > 0, "buyerUrl must not be empty");
+    require(isNotEmpty(buyerUrl), "buyerUrl must not be empty");
 
     orderId = dataOrders.length;
     dataOrders.length += 1;
