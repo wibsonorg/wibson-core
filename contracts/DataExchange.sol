@@ -14,8 +14,8 @@ contract DataExchange {
   event NotaryUpdated(address indexed notary);
   event NotaryUnregistered(address indexed notary);
 
-  event DataOrderCreated(address indexed orderAddr);
-  event DataOrderClosed(address indexed orderAddr);
+  event DataOrderCreated(address indexed orderAddr, address indexed owner);
+  event DataOrderClosed(address indexed orderAddr, address indexed owner);
 
   mapping(address => string) public notaryUrls;
 
@@ -62,6 +62,19 @@ contract DataExchange {
     return true;
   }
 
+  /**
+   * @notice Creates a DataOrder.
+   * @dev The `msg.sender` will become the buyer of the order.
+   * @param audience Target audience of the order.
+   * @param price Price that sellers will receive in exchange of their data.
+   * @param requestedData Requested data type (Geolocation, Facebook, etc).
+   * @param termsAndConditionsHash Hash of the Buyer's terms and conditions for the order.
+   * @param buyerURLs Public URLs of the buyer, containing:
+   *                  `dataOrderUrl`: DataOrder information (title, terms, etc.)
+   *                  `dataResponsesUrl`: Url where to send DataResponses
+   * @return The address of the newly created DataOrder. If the DataOrder could
+   *         not be created, reverts.
+   */
   function createDataOrder(
     string audience,
     uint256 price,
@@ -79,20 +92,25 @@ contract DataExchange {
       buyerURLs
     );
 
-    emit DataOrderCreated(dataOrder);
+    emit DataOrderCreated(dataOrder, msg.sender);
     return dataOrder;
   }
 
+  /**
+   * @notice Closes the DataOrder.
+   * @dev The `msg.sender` must be the buyer of the order.
+   * @param orderAddr Address of the order to close.
+   * @return true if the DataOrder was successfully closed, reverts otherwise.
+   */
   function closeDataOrder(
     address orderAddr
   ) public returns (bool) {
-    DataOrder order = DataOrder(orderAddr);
-    address buyer = order.buyer();
-    require(msg.sender == buyer);
+    DataOrder dataOrder = DataOrder(orderAddr);
+    require(msg.sender == dataOrder.buyer(), "sender can't close the order");
 
-    bool okay = order.close();
+    bool okay = dataOrder.close();
     if (okay) {
-      emit DataOrderClosed(orderAddr);
+      emit DataOrderClosed(orderAddr, msg.sender);
     }
 
     return okay;
