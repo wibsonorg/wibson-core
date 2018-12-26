@@ -9,7 +9,7 @@ import {
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange', async (accounts) => {
+contract('DataExchange', async (accounts) => {
   const buyer = accounts[4];
   const tokenAddress = WIBToken.address;
   let dataExchange;
@@ -69,7 +69,7 @@ contract.only('DataExchange', async (accounts) => {
 
       const { orderId } = extractEventArgs(transaction);
       const dataOrder = await dataExchange.dataOrders(orderId);
-      const [createdAt,] = dataOrder.slice(-2);
+      const [createdAt] = dataOrder.slice(-2);
       assert.equal(createdAt, web3.eth.getBlock('latest').timestamp);
     });
 

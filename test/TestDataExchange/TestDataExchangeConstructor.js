@@ -3,7 +3,7 @@ import { assertRevert } from '../helpers';
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract('DataExchange', async (accounts) => {
+contract.skip('DataExchange', async (accounts) => {
   const owner = accounts[0];
   const tokenAddress = WIBToken.address;
   const zeroAddress = '0x0000000000000000000000000000000000000000';

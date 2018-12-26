@@ -3,7 +3,7 @@ import { assertRevert, assertEvent } from '../helpers';
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange', async (accounts) => {
+contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
   const other = accounts[3];
   let dataExchange;

@@ -13,7 +13,7 @@ const sha3 = Web3.utils.soliditySha3;
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 
-contract.only('DataExchange', async (accounts) => {
+contract('DataExchange', async (accounts) => {
   const other = accounts[3];
   const buyer = accounts[4];
   const tokenAddress = WIBToken.address;
@@ -27,7 +27,7 @@ contract.only('DataExchange', async (accounts) => {
       ...buildDataOrder(),
       { from: buyer },
     );
-    orderId = extractEventArgs(tx).orderId;
+    orderId = extractEventArgs(tx).orderId; // eslint-disable-line prefer-destructuring
   });
 
   describe('closeDataOrder', async () => {
@@ -42,7 +42,7 @@ contract.only('DataExchange', async (accounts) => {
     });
 
     it('updates the DataOrder\'s closedAt field', async () => {
-      const transaction = await dataExchange.closeDataOrder(orderId, { from: buyer });
+      await dataExchange.closeDataOrder(orderId, { from: buyer });
       const dataOrder = await dataExchange.dataOrders(orderId);
       const [closedAt] = dataOrder.slice(-1);
       assert.equal(closedAt, web3.eth.getBlock('latest').timestamp);
