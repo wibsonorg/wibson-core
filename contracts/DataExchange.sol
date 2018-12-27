@@ -29,8 +29,13 @@ contract DataExchange {
   DataOrder[] public dataOrders;
   mapping(address => string) public notaryUrls;
 
-  constructor(address token_) public {
-    token = IERC20(token_);
+  /**
+   * @notice Contract constructor.
+   * @param tokenAddress Address of the WIBToken token address.
+   */
+  constructor(address tokenAddress) public {
+    require(tokenAddress != address(0));
+    token = IERC20(tokenAddress);
   }
 
   function isSenderNotary() private view returns (bool) {

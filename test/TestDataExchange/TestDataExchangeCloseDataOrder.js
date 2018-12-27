@@ -27,7 +27,7 @@ contract('DataExchange', async (accounts) => {
       ...buildDataOrder(),
       { from: buyer },
     );
-     ({ orderId } = extractEventArgs(tx));
+    ({ orderId } = extractEventArgs(tx));
   });
 
   describe('closeDataOrder', async () => {
