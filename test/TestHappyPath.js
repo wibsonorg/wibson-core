@@ -9,7 +9,7 @@ const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
 const BatPay = artifacts.require('./BatPay.sol');
 
-contract('DataExchange', (accounts) => {
+contract.skip('DataExchange', (accounts) => {
   let token;
   let batPay;
   let tx;
