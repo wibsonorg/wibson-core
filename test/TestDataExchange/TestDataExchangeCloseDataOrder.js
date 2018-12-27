@@ -27,7 +27,7 @@ contract('DataExchange', async (accounts) => {
       ...buildDataOrder(),
       { from: buyer },
     );
-    orderId = extractEventArgs(tx).orderId; // eslint-disable-line prefer-destructuring
+     ({ orderId } = extractEventArgs(tx));
   });
 
   describe('closeDataOrder', async () => {
