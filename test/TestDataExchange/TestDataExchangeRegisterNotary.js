@@ -1,4 +1,4 @@
-import { assertEvent, assertRevert } from '../helpers';
+import { assertEvent, assertRevert, assertGasConsumptionNotExceeds } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 const WIBToken = artifacts.require('./WIBToken.sol');
@@ -12,11 +12,16 @@ contract('DataExchange', async (accounts) => {
 
   describe('registerNotary', async () => {
     it('should register a new notary', async () => {
-      const registration = await dataExchange.registerNotary('Notary URL', { from: notary });
-      assertEvent(registration, 'NotaryRegistered', 'Could not add a new notary');
+      const tx = await dataExchange.registerNotary('Notary URL', { from: notary });
+      assertEvent(tx, 'NotaryRegistered', 'Could not add a new notary');
 
       const notaryUrl = await dataExchange.notaryUrls.call(notary);
       assert.equal(notaryUrl, 'Notary URL', 'Notary url differs');
+    });
+
+    it('consumes an adequate amount of gas', async () => {
+      const tx = await dataExchange.registerNotary('Notary URL'.repeat(20), { from: notary });
+      assertGasConsumptionNotExceeds(tx, 200000);
     });
 
     it('should fail when passed an invalid url', async () => {
