@@ -11,18 +11,16 @@ const Web3 = require('web3');
 const sha3 = Web3.utils.soliditySha3;
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', async (accounts) => {
   const other = accounts[3];
   const buyer = accounts[4];
-  const tokenAddress = WIBToken.address;
 
   let dataExchange;
   let orderId;
 
   beforeEach(async () => {
-    dataExchange = await DataExchange.new(tokenAddress);
+    dataExchange = await DataExchange.new();
     const tx = await dataExchange.createDataOrder(
       ...buildDataOrder(),
       { from: buyer },

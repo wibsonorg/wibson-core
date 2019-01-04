@@ -7,15 +7,13 @@ import {
 } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', async (accounts) => {
   const buyer = accounts[4];
-  const tokenAddress = WIBToken.address;
   let dataExchange;
 
   beforeEach(async () => {
-    dataExchange = await DataExchange.new(tokenAddress);
+    dataExchange = await DataExchange.new();
   });
 
   describe('createDataOrder', () => {
