@@ -11,11 +11,10 @@ const deployLocal = (deployer, tokenContract, accounts) => {
   return deployer.deploy(tokenContract, from)
     .then(() => tokenContract.deployed())
     .then((instance) => {
-      instance.transfer(accounts.seller, 1000, from);
-      instance.transfer(accounts.buyer, 100000, from);
-      instance.transfer(accounts.notary1, 100000, from);
-      instance.transfer(accounts.notary2, 100000, from);
-      instance.transfer(accounts.notary3, 100000, from);
+      instance.transfer(accounts.buyer, 1800000000000000000, from);
+      instance.transfer(accounts.notary1, 1800000000000000000, from);
+      instance.transfer(accounts.notary2, 1800000000000000000, from);
+      instance.transfer(accounts.notary3, 1800000000000000000, from);
     });
 };
 
