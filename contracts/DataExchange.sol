@@ -1,19 +1,12 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
-
 
 contract DataExchange {
-  using SafeMath for uint256;
-
   event NotaryRegistered(address indexed notary);
   event NotaryUpdated(address indexed notary);
   event NotaryUnregistered(address indexed notary);
   event DataOrderCreated(uint256 indexed orderId, address indexed owner);
   event DataOrderClosed(uint256 indexed orderId, address indexed owner);
-
-  IERC20 public token;
 
   struct DataOrder {
     address buyer;
@@ -28,23 +21,6 @@ contract DataExchange {
 
   DataOrder[] public dataOrders;
   mapping(address => string) public notaryUrls;
-
-  /**
-   * @notice Contract constructor.
-   * @param tokenAddress Address of the WIBToken token address.
-   */
-  constructor(address tokenAddress) public {
-    require(tokenAddress != address(0));
-    token = IERC20(tokenAddress);
-  }
-
-  function isSenderNotary() private view returns (bool) {
-    return isNotEmpty(notaryUrls[msg.sender]);
-  }
-
-  function isNotEmpty(string s) private pure returns (bool) {
-    return bytes(s).length > 0;
-  }
 
   /**
    * @notice Registers sender as a notary or updates an already existing one.
@@ -132,6 +108,14 @@ contract DataExchange {
 
     emit DataOrderClosed(orderId, msg.sender);
     return true;
+  }
+
+  function isSenderNotary() private view returns (bool) {
+    return isNotEmpty(notaryUrls[msg.sender]);
+  }
+
+  function isNotEmpty(string s) private pure returns (bool) {
+    return bytes(s).length > 0;
   }
 
 }

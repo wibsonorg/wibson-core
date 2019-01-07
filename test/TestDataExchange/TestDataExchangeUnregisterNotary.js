@@ -1,14 +1,13 @@
 import { assertRevert, assertEvent, assertGasConsumptionNotExceeds } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
-const WIBToken = artifacts.require('./WIBToken.sol');
 
 contract('DataExchange', async (accounts) => {
   const notary = accounts[1];
   const other = accounts[3];
   let dataExchange;
   beforeEach(async () => {
-    dataExchange = await DataExchange.new(WIBToken.address);
+    dataExchange = await DataExchange.new();
     await dataExchange.registerNotary('Notary URL', { from: notary });
   });
 
