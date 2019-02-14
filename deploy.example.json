@@ -2,24 +2,15 @@
   "infuraToken": "foobarbaz",
   "environments": {
     "remoteDevelopment": {
-      "deployPrivateKey": "<private-key-without-0x>",
-      "accounts": {
-        "multisig": "0x67264081bf7DFf9B9dce5553b4Ac1597FcDa8298"
-      }
+      "deployPrivateKey": "<private-key-without-0x>"
     },
     "staging": {
       "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
-      "deployPrivateKey": "<private-key-without-0x>",
-      "accounts": {
-        "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"
-      }
+      "deployPrivateKey": "<private-key-without-0x>"
     },
     "production": {
       "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
-      "deployPrivateKey": "<private-key-without-0x>",
-      "accounts": {
-        "multisig": "0x26064a2e2b568d9a6d01b93d039d1da9cf2a58cd"
-      }
+      "deployPrivateKey": "<private-key-without-0x>"
     }
   }
 }

@@ -1,4 +1,5 @@
 const WIBToken = artifacts.require('./WIBToken.sol');
+const DataExchange = artifacts.require('./DataExchange.sol');
 
 const DeployUtils = require('../utils/deploymentutils');
 
@@ -20,14 +21,14 @@ const deployLocal = (deployer, tokenContract, accounts) => {
 
 module.exports = function deploy(deployer, network, accounts) {
   const wibTokenAddress = DeployUtils.getWIBTokenAddress(network);
-  if (wibTokenAddress) {
-    return;
+  if (!wibTokenAddress) {
+    if (DeployUtils.isLocal(network)) {
+      const localAccounts = DeployUtils.getLocalAccounts(accounts);
+      deployLocal(deployer, WIBToken, localAccounts);
+    } else {
+      deployer.deploy(WIBToken);
+    }
   }
 
-  if (DeployUtils.isLocal(network)) {
-    const localAccounts = DeployUtils.getLocalAccounts(accounts);
-    deployLocal(deployer, WIBToken, localAccounts);
-  } else {
-    deployer.deploy(WIBToken);
-  }
+  return deployer.deploy(DataExchange);
 };
