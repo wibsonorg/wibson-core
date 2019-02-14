@@ -24,10 +24,8 @@ configured in the `deploy.json` file.
 * `infuraToken`: The API key supplied by [Infura](https://infura.io/) to be used on remote environments.
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
-    * `wibTokenAddress`: Optional. An Ethereum address of an existing `WIBToken` contract. `DataExchange` will use this
-one instead of deploying a new `WIBToken` instance.
+    * `wibTokenAddress`: Optional. An Ethereum address of an existing `WIBToken` contract to avoid redeploying it.
     * `deployPrivateKey`: Private key for the deployer account only used in remote environments.
-    * `accounts.multisig`: Final owner of the `DataExchange` contract.
 
 ## Testing
 ```bash
@@ -57,31 +55,16 @@ $ npm run truffle console --network staging # to test within the console
 #### Deployed Addresses:
 
 -   WIBToken: `0x3f17dd476faf0a4855572f0b6ed5115d9bba22ad`
--   DataExchange: `0xd077c09a7e65c4cca490a776d5e395fb4fe7179a`
--   MultiMap `0x72ae13d70f65c56e59eb63993605abef1ecb9c41`
--   CryptoUtils `0x48819464877341cb7e0bbd91e0c268016ae5e6ad`
--   Math `0x9c2693a1e04eb127b0d628e276a98fef235ee9e2`
--   SafeMath `0x6919a6710bfa555e70cc8cd35bf2e613c355c443`
--   ECRecovery `0x59740db1350bcac14fd3a3451d47205a1d499499`
--   Migrations `0xde2e43f4831cd95a41b3bdc8947209f86670e446`
+-   DataExchange: `TBD`
 
 ## Protocol's Gas Consumption
 
-| Transaction                     | DataExchange | DataOrder |
-| ------------------------------- | ------------ | --------- |
-| newOrder (\*)                   | 1769000      | -         |
-| registerNotary                  | 170000       | -         |
-| unregisterNotary                | 33000        | -         |
-| addNotaryToOrder (\*\*)         | 318000       | 197000    |
-| addDataResponseToOrder (\*\*\*) | 332000       | 180000    |
-| closeDataResponse               | 85000        | 37000     |
-| closeOrder                      | 68000        | 28000     |
-
-\* With Terms and Conditions being about half of the size of the document we are currently using on the Buyer APP, the gas consumption of the `newOrder` transaction scales up to ~7millon (640 units per byte aprox). For the purpose of this document, the gas consumption for this transaction was calculated using a 64 bytes hash instead of the original terms contents (hashing method: `web3Utils.sha3(terms)`).
-
-\*\* Calculated by hashing the Notarization Terms of Service with the same method: `web3Utils.sha3(notarizationTermsOfService)`.
-
-\*\*\* Calculated with a dataHash of 58 bytes.
+| Transaction                     | Gas          |
+| ------------------------------- | ------------ |
+| newOrder                        |       222609 |
+| closeOrder                      |        33207 |
+| registerNotary                  |        26041 |
+| unregisterNotary                |        14683 |
 
 ## Reporting Security Vulnerabilities
 If you think that you have found a security issue in Wibson, please **DO NOT** post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
