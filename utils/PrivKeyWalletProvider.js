@@ -15,6 +15,9 @@ const ethereumjsWallet = require('ethereumjs-wallet');
 // See issue #65 for more
 const singletonNonceSubProvider = new NonceSubProvider();
 
+// FIXME: Hack. See https://github.com/ethereum/web3.js/issues/1119
+Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send;
+
 /* The following provider is a patch over truffle-hdwallet-provider 0.0.7-beta.0
    to support importing accounts by private keys instead of by mnemonic.
    The idea was taken from: https://github.com/rhlsthrm/truffle-hdwallet-provider-privkey
