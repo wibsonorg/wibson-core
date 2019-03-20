@@ -5,8 +5,8 @@ contract DataExchange {
   event NotaryRegistered(address indexed notary);
   event NotaryUpdated(address indexed notary);
   event NotaryUnregistered(address indexed notary);
-  event DataOrderCreated(uint256 indexed orderId, address indexed owner);
-  event DataOrderClosed(uint256 indexed orderId, address indexed owner);
+  event DataOrderCreated(uint256 indexed orderId, address indexed buyer);
+  event DataOrderClosed(uint256 indexed orderId, address indexed buyer);
 
   struct DataOrder {
     address buyer;
@@ -24,15 +24,15 @@ contract DataExchange {
 
   /**
    * @notice Registers sender as a notary or updates an already existing one.
-   * @param publicUrl Public URL of the notary where the notary info can be obtained.
+   * @param notaryUrl Public URL of the notary where the notary info can be obtained.
    * @return true if the notary was successfully registered or updated, reverts otherwise.
    */
   function registerNotary(
-    string publicUrl
+    string notaryUrl
   ) public returns (bool) {
-    require(isNotEmpty(publicUrl), "publicUrl must not be empty");
+    require(isNotEmpty(notaryUrl), "notaryUrl must not be empty");
     bool isUpdate = isSenderNotary();
-    notaryUrls[msg.sender] = publicUrl;
+    notaryUrls[msg.sender] = notaryUrl;
     if (isUpdate) {
       emit NotaryUpdated(msg.sender);
     } else {
