@@ -1,10 +1,15 @@
 pragma solidity ^0.4.24;
 
-
+/**
+ * @title Data Exchange Marketplace
+ * @notice This contract allows Notaries to register themselves and buyers to
+ *         publish data orders, acording to the Wibson Protocol.
+ *         For more information: https://wibson.org/#protocol
+ */
 contract DataExchange {
-  event NotaryRegistered(address indexed notary);
-  event NotaryUpdated(address indexed notary);
-  event NotaryUnregistered(address indexed notary);
+  event NotaryRegistered(address indexed notary, string notaryUrl);
+  event NotaryUpdated(address indexed notary, string oldNotaryUrl, string newNotaryUrl);
+  event NotaryUnregistered(address indexed notary, string oldNotaryUrl);
   event DataOrderCreated(uint256 indexed orderId, address indexed buyer);
   event DataOrderClosed(uint256 indexed orderId, address indexed buyer);
 
@@ -19,25 +24,39 @@ contract DataExchange {
     uint32 closedAt;
   }
 
-  DataOrder[] public dataOrders;
-  mapping(address => string) public notaryUrls;
+  DataOrder[] private dataOrders;
+  mapping(address => string) private notaryUrls;
 
   /**
-   * @notice Registers sender as a notary or updates an already existing one.
+   * @notice Registers sender as a notary.
    * @param notaryUrl Public URL of the notary where the notary info can be obtained.
-   * @return true if the notary was successfully registered or updated, reverts otherwise.
+   *                  This URL has to be signed with the notary PrivateKey to avoid
+   *                  identity theft from other notaries.
+   * @return true if the notary was successfully registered, reverts otherwise.
    */
   function registerNotary(
     string notaryUrl
-  ) public returns (bool) {
-    require(isNotEmpty(notaryUrl), "notaryUrl must not be empty");
-    bool isUpdate = isSenderNotary();
+  ) external returns (bool) {
+    require(_isNotEmpty(notaryUrl), "notaryUrl must not be empty");
+    require(!_isSenderNotary(), "Notary already registered (use updateNotaryUrl to update)");
     notaryUrls[msg.sender] = notaryUrl;
-    if (isUpdate) {
-      emit NotaryUpdated(msg.sender);
-    } else {
-      emit NotaryRegistered(msg.sender);
-    }
+    emit NotaryRegistered(msg.sender, notaryUrl);
+    return true;
+  }
+
+  /**
+   * @notice Updates notary public URL of sender.
+   * @param newNotaryUrl Public URL of the notary where the notary info can be obtained.
+   * @return true if the notary public URL was successfully updated, reverts otherwise.
+   */
+  function updateNotaryUrl(
+    string newNotaryUrl
+  ) external returns (bool) {
+    require(_isNotEmpty(newNotaryUrl), "notaryUrl must not be empty");
+    require(_isSenderNotary(), "Notary not registered");
+    string memory oldNotaryUrl = notaryUrls[msg.sender];
+    notaryUrls[msg.sender] = newNotaryUrl;
+    emit NotaryUpdated(msg.sender, oldNotaryUrl, newNotaryUrl);
     return true;
   }
 
@@ -46,10 +65,11 @@ contract DataExchange {
    * @return true if the notary was successfully unregistered, reverts otherwise.
    */
   function unregisterNotary(
-  ) public returns (bool) {
-    require(isSenderNotary(), "sender must be registered");
-    notaryUrls[msg.sender] = "";
-    emit NotaryUnregistered(msg.sender);
+  ) external returns (bool) {
+    require(_isSenderNotary(), "sender must be registered");
+    string memory oldNotaryUrl = notaryUrls[msg.sender];
+    delete notaryUrls[msg.sender];
+    emit NotaryUnregistered(msg.sender, oldNotaryUrl);
     return true;
   }
 
@@ -71,12 +91,15 @@ contract DataExchange {
     string requestedData,
     bytes32 termsAndConditionsHash,
     string buyerUrl
-  ) public returns (uint256 orderId) {
-    require(isNotEmpty(buyerUrl), "buyerUrl must not be empty");
+  ) external returns (uint256) {
+    require(_isNotEmpty(audience), "audience must not be empty");
+    require(price > 0, "price must be greater than zero");
+    require(_isNotEmpty(requestedData), "requestedData must not be empty");
+    require(termsAndConditionsHash != 0, "termsAndConditionsHash must not be zero");
+    require(_isNotEmpty(buyerUrl), "buyerUrl must not be empty");
 
-    orderId = dataOrders.length;
-    dataOrders.length += 1;
-    dataOrders[orderId] = DataOrder(
+    uint256 orderId = dataOrders.length;
+    dataOrders.push(DataOrder(
       msg.sender,
       audience,
       price,
@@ -85,7 +108,7 @@ contract DataExchange {
       buyerUrl,
       uint32(now),
       uint32(0)
-    );
+    ));
 
     emit DataOrderCreated(orderId, msg.sender);
     return orderId;
@@ -99,9 +122,10 @@ contract DataExchange {
    */
   function closeDataOrder(
     uint256 orderId
-  ) public returns (bool) {
+  ) external returns (bool) {
     require(orderId < dataOrders.length, "invalid order index");
-    DataOrder memory dataOrder = dataOrders[orderId];
+    // TODO: test gas consumption for storage, memory and direct access
+    DataOrder storage dataOrder = dataOrders[orderId];
     require(dataOrder.buyer == msg.sender, "sender can't close the order");
     require(dataOrder.closedAt == 0, "order already closed");
     dataOrders[orderId].closedAt = uint32(now);
@@ -110,12 +134,41 @@ contract DataExchange {
     return true;
   }
 
-  function isSenderNotary() private view returns (bool) {
-    return isNotEmpty(notaryUrls[msg.sender]);
+  function _isSenderNotary(
+  ) private view returns (bool) {
+    return _isNotEmpty(notaryUrls[msg.sender]);
   }
 
-  function isNotEmpty(string s) private pure returns (bool) {
+  function _isNotEmpty(
+    string s
+  ) private pure returns (bool) {
     return bytes(s).length > 0;
   }
 
+  function getNotaryUrl(
+    address notaryAddress
+  ) external view returns (string) {
+    return notaryUrls[notaryAddress];
+  }
+
+  function getDataOrder(
+    uint256 orderId
+  ) external view returns (address, string, uint256, string, bytes32, string, uint32, uint32) {
+    DataOrder storage dataOrder = dataOrders[orderId];
+    return (
+      dataOrder.buyer,
+      dataOrder.audience,
+      dataOrder.price,
+      dataOrder.requestedData,
+      dataOrder.termsAndConditionsHash,
+      dataOrder.buyerUrl,
+      dataOrder.createdAt,
+      dataOrder.closedAt
+    );
+  }
+
+  function getDataOrdersLength(
+  ) external view returns (uint) {
+    return dataOrders.length;
+  }
 }
