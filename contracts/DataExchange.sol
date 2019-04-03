@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 
 contract DataExchange {
   event NotaryRegistered(address indexed notary);
-  event NotaryUpdated(address indexed notary);
+  event NotaryUpdated(address indexed notary, string oldNotaryUrl);
   event NotaryUnregistered(address indexed notary);
   event DataOrderCreated(uint256 indexed orderId, address indexed buyer);
   event DataOrderClosed(uint256 indexed orderId, address indexed buyer);
@@ -24,17 +24,20 @@ contract DataExchange {
 
   /**
    * @notice Registers sender as a notary or updates an already existing one.
-   * @param notaryUrl Public URL of the notary where the notary info can be obtained.
+   * @param newNotaryUrl Public URL of the notary where the notary info can be obtained.
    * @return true if the notary was successfully registered or updated, reverts otherwise.
    */
   function registerNotary(
-    string notaryUrl
+    string newNotaryUrl
   ) public returns (bool) {
-    require(isNotEmpty(notaryUrl), "notaryUrl must not be empty");
+    require(isNotEmpty(newNotaryUrl), "newNotaryUrl must not be empty");
     bool isUpdate = isSenderNotary();
-    notaryUrls[msg.sender] = notaryUrl;
+
+    string memory oldNotaryUrl = notaryUrls[msg.sender];
+    notaryUrls[msg.sender] = newNotaryUrl;
+
     if (isUpdate) {
-      emit NotaryUpdated(msg.sender);
+      emit NotaryUpdated(msg.sender, oldNotaryUrl);
     } else {
       emit NotaryRegistered(msg.sender);
     }
