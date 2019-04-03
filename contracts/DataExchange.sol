@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 
 contract DataExchange {
   event NotaryRegistered(address indexed notary);
-  event NotaryUpdated(address indexed notary, string oldNotaryUrl);
+  event NotaryUpdated(address indexed notary, string oldNotaryUrl, string newNotaryUrl);
   event NotaryUnregistered(address indexed notary);
   event DataOrderCreated(uint256 indexed orderId, address indexed buyer);
   event DataOrderClosed(uint256 indexed orderId, address indexed buyer);
@@ -37,7 +37,7 @@ contract DataExchange {
     notaryUrls[msg.sender] = newNotaryUrl;
 
     if (isUpdate) {
-      emit NotaryUpdated(msg.sender, oldNotaryUrl);
+      emit NotaryUpdated(msg.sender, oldNotaryUrl, newNotaryUrl);
     } else {
       emit NotaryRegistered(msg.sender);
     }
