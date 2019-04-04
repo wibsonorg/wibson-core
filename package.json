@@ -23,7 +23,8 @@
     "ganache": "ganache-cli",
     "test": "scripts/test.sh",
     "test:coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
-    "test:inspect": "INSPECT=true scripts/test.sh"
+    "test:inspect": "INSPECT=true scripts/test.sh",
+    "test:benchmark": "BENCHMARK=true scripts/test.sh"
   },
   "devDependencies": {
     "abi-decoder": "^1.1.0",
