@@ -1,4 +1,4 @@
-import { assertEvent, assertRevert, assertGasConsumptionNotExceeds } from '../helpers';
+import { assertEvent, assertRevert } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 
@@ -12,15 +12,11 @@ contract('DataExchange', async (accounts) => {
   describe('registerNotary', async () => {
     it('should register a new notary', async () => {
       const tx = await dataExchange.registerNotary('Notary URL', { from: notary });
-      assertEvent(tx, 'NotaryRegistered', 'Could not add a new notary');
-
-      const notaryUrl = await dataExchange.notaryUrls.call(notary);
-      assert.equal(notaryUrl, 'Notary URL', 'Notary url differs');
-    });
-
-    it('consumes an adequate amount of gas', async () => {
-      const tx = await dataExchange.registerNotary('Notary URL'.repeat(20), { from: notary });
-      assertGasConsumptionNotExceeds(tx, 200000);
+      assertEvent(tx, 'NotaryRegistered', 'notary', 'notaryUrl');
+      const url = await dataExchange.getNotaryUrl(notary);
+      assert.equal(url, 'Notary URL', 'Stored notary url differs');
+      const { notaryUrl } = tx.logs[0].args;
+      assert.equal(notaryUrl, url, 'Notary url differs');
     });
 
     it('should fail when passed an invalid url', async () => {
@@ -28,19 +24,21 @@ contract('DataExchange', async (accounts) => {
         await dataExchange.registerNotary('', { from: notary });
         assert.fail();
       } catch (error) {
-        assertRevert(error);
+        assertRevert(error, 'notaryUrl must not be empty');
       }
     });
 
-    it('should replace a notary', async () => {
-      const registration = await dataExchange.registerNotary('Notary URL', { from: notary });
-      assertEvent(registration, 'NotaryRegistered', 'Could not register a notary');
-
-      const update = await dataExchange.registerNotary('Updated URL', { from: notary });
-      assertEvent(update, 'NotaryUpdated', 'Could not replace a notary');
-
-      const updatedUrl = await dataExchange.notaryUrls.call(notary);
-      assert.equal(updatedUrl, 'Updated URL', 'Could not update notary url');
+    it('should fail to replace a notary', async () => {
+      const tx = await dataExchange.registerNotary('Notary URL', { from: notary });
+      assertEvent(tx, 'NotaryRegistered', 'notary', 'notaryUrl');
+      try {
+        await dataExchange.registerNotary('Updated URL', { from: notary });
+        assert.fail();
+      } catch (error) {
+        assertRevert(error, 'Notary already registered (use updateNotaryUrl to update)');
+      }
+      const updatedUrl = await dataExchange.getNotaryUrl(notary);
+      assert.equal(updatedUrl, 'Notary URL', 'registerNotary should not update notary url');
     });
   });
 });

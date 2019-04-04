@@ -1,4 +1,4 @@
-import { assertRevert, assertEvent, assertGasConsumptionNotExceeds } from '../helpers';
+import { assertRevert, assertEvent } from '../helpers';
 
 const DataExchange = artifacts.require('./DataExchange.sol');
 
@@ -14,12 +14,9 @@ contract('DataExchange', async (accounts) => {
   describe('unregisterNotary', async () => {
     it('should unregister a notary', async () => {
       const tx = await dataExchange.unregisterNotary({ from: notary });
-      assertEvent(tx, 'NotaryUnregistered', 'Could not unregister notary');
-    });
-
-    it('consumes an adequate amount of gas', async () => {
-      const tx = await dataExchange.unregisterNotary({ from: notary });
-      assertGasConsumptionNotExceeds(tx, 35000);
+      assertEvent(tx, 'NotaryUnregistered', 'notary', 'oldNotaryUrl');
+      const { oldNotaryUrl } = tx.logs[0].args;
+      assert.equal(oldNotaryUrl, 'Notary URL', 'Old notary url differs');
     });
 
     it('should fail when passed an inexistent notary address', async () => {
@@ -27,14 +24,14 @@ contract('DataExchange', async (accounts) => {
         await dataExchange.unregisterNotary({ from: other });
         assert.fail();
       } catch (error) {
-        assertRevert(error);
+        assertRevert(error, 'sender must be registered');
       }
     });
 
     it('should register notary after unregistering it', async () => {
       await dataExchange.unregisterNotary({ from: notary });
-      const res = await dataExchange.registerNotary('New Notary URL', { from: notary });
-      assertEvent(res, 'NotaryRegistered', 'Could not update notary');
+      const tx = await dataExchange.registerNotary('New Notary URL', { from: notary });
+      assertEvent(tx, 'NotaryRegistered', 'notary', 'notaryUrl');
     });
   });
 });
