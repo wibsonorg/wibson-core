@@ -95,7 +95,7 @@ contract DataExchange {
     require(_isNotEmpty(audience), "audience must not be empty");
     require(price > 0, "price must be greater than zero");
     require(_isNotEmpty(requestedData), "requestedData must not be empty");
-    require(termsAndConditionsHash != 0, "termsAndConditionsHash must not be zero");
+    require(termsAndConditionsHash != 0, "termsAndConditionsHash must not be empty");
     require(_isNotEmpty(buyerUrl), "buyerUrl must not be empty");
 
     uint256 orderId = dataOrders.length;
@@ -124,11 +124,10 @@ contract DataExchange {
     uint256 orderId
   ) external returns (bool) {
     require(orderId < dataOrders.length, "invalid order index");
-    // TODO: test gas consumption for storage, memory and direct access
     DataOrder storage dataOrder = dataOrders[orderId];
     require(dataOrder.buyer == msg.sender, "sender can't close the order");
     require(dataOrder.closedAt == 0, "order already closed");
-    dataOrders[orderId].closedAt = uint32(now);
+    dataOrder.closedAt = uint32(now);
 
     emit DataOrderClosed(orderId, msg.sender);
     return true;
