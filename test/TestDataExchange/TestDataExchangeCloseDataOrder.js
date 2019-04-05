@@ -1,23 +1,37 @@
 import {
   assertEvent,
   assertRevert,
-  assertGasConsumptionNotExceeds,
   buildDataOrder,
+  getDataOrder,
   extractEventArgs,
 } from '../helpers';
 
-const Web3 = require('web3');
-
-const sha3 = Web3.utils.soliditySha3;
-
 const DataExchange = artifacts.require('./DataExchange.sol');
-
 contract('DataExchange', async (accounts) => {
   const other = accounts[3];
   const buyer = accounts[4];
 
   let dataExchange;
   let orderId;
+  async function createOtherDataOrder() {
+    const tx = await dataExchange.createDataOrder(
+      ...buildDataOrder({
+        audience: [
+          { name: 'age', value: '25' },
+          { name: 'gender', value: 'female' },
+        ],
+        price: 30000000000,
+        requestedData: ['device-info'],
+        terms: 'OtherDataOrder T&C',
+        buyerUrl: '/data-orders/67890',
+      }),
+      { from: buyer },
+    );
+    return extractEventArgs(tx).orderId;
+  }
+  function assertDataOrderClosedEvent(tx) {
+    assertEvent(tx, 'DataOrderClosed', 'orderId', 'buyer');
+  }
 
   beforeEach(async () => {
     dataExchange = await DataExchange.new();
@@ -30,56 +44,28 @@ contract('DataExchange', async (accounts) => {
 
   describe('closeDataOrder', async () => {
     it('emits an event when a DataOrder is closed', async () => {
-      const transaction = await dataExchange.closeDataOrder(orderId, { from: buyer });
-      assertEvent(transaction, 'DataOrderClosed', 'did not emit `DataOrderClosed` event');
-    });
-
-    it('consumes an adequate amount of gas', async () => {
-      const transaction = await dataExchange.closeDataOrder(orderId, { from: buyer });
-      assertGasConsumptionNotExceeds(transaction, 35000);
+      const tx = await dataExchange.closeDataOrder(orderId, { from: buyer });
+      assertDataOrderClosedEvent(tx);
     });
 
     it('updates the DataOrder\'s closedAt field', async () => {
       await dataExchange.closeDataOrder(orderId, { from: buyer });
-      const dataOrder = await dataExchange.dataOrders(orderId);
-      const [closedAt] = dataOrder.slice(-1);
-      assert.equal(closedAt, web3.eth.getBlock('latest').timestamp);
+      const { closedAt } = await getDataOrder(dataExchange, orderId);
+      const { timestamp: now } = await web3.eth.getBlock('latest');
+      assert.equal(closedAt, now);
     });
 
     it('closes an open order even if another order is created', async () => {
-      await dataExchange.createDataOrder(
-        JSON.stringify([
-          { name: 'age', value: '25' },
-          { name: 'gender', value: 'female' },
-        ]),
-        '20000000000',
-        JSON.stringify(['device_info']),
-        sha3('DataOrder 2 T&C'),
-        '/data-orders/67890',
-        { from: buyer },
-      );
-
-      const transaction = await dataExchange.closeDataOrder(orderId, { from: buyer });
-      assertEvent(transaction, 'DataOrderClosed', 'did not emit `DataOrderClosed` event');
+      await createOtherDataOrder();
+      const tx = await dataExchange.closeDataOrder(orderId, { from: buyer });
+      assertDataOrderClosedEvent(tx);
     });
 
     it('closes an open order even if another order is closed', async () => {
-      const anotherTx = await dataExchange.createDataOrder(
-        JSON.stringify([
-          { name: 'age', value: '25' },
-          { name: 'gender', value: 'female' },
-        ]),
-        '20000000000',
-        JSON.stringify(['device_info']),
-        sha3('DataOrder 2 T&C'),
-        '/data-orders/67890',
-        { from: buyer },
-      );
-      const anotherOrderId = anotherTx.logs[0].args.orderId;
+      const anotherOrderId = await createOtherDataOrder();
       await dataExchange.closeDataOrder(anotherOrderId, { from: buyer });
-
-      const transaction = await dataExchange.closeDataOrder(orderId, { from: buyer });
-      assertEvent(transaction, 'DataOrderClosed', 'did not emit `DataOrderClosed` event');
+      const tx = await dataExchange.closeDataOrder(orderId, { from: buyer });
+      assertDataOrderClosedEvent(tx);
     });
 
     it('fails when called by other than the buyer', async () => {
@@ -93,7 +79,6 @@ contract('DataExchange', async (accounts) => {
 
     it('fails when order is already closed', async () => {
       await dataExchange.closeDataOrder(orderId, { from: buyer });
-
       try {
         await dataExchange.closeDataOrder(orderId, { from: buyer });
         assert.fail();

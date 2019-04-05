@@ -4,12 +4,17 @@ const crypto = require('crypto');
 /**
  * @param {Object} transaction the transaction where the event was emitted.
  * @param {String} eventName the name of emitted event.
- * @param {String} message to display on error.
+ * @param {String[]} argNames the name of the event arguments.
  * @throws {AssertionError} when the error is not originated from a revert.
  */
-export function assertEvent(transaction, eventName, message = '') {
-  const hasEvent = transaction.logs.some(log => log.event === eventName);
-  assert(hasEvent, message);
+export function assertEvent(transaction, eventName, ...argNames) {
+  const event = transaction.logs.find(log => log.event === eventName);
+  assert(event, `Event emit missing: ${eventName}`);
+  const args = Object.keys(event.args);
+  argNames.forEach(argName => assert(
+    args.some(arg => arg === argName),
+    `Event arg missing: ${argName}`,
+  ));
 }
 
 /**
@@ -21,14 +26,6 @@ export function assertRevert(error, message = 'revert') {
   assert(error.toString().includes(message), error.toString());
 }
 
-/**
- * @param {Object} transaction the transaction
- * @param {Number} gasLimit maximum of gas units to consume.
- * @throws {AssertionError} when the condition is not met.
- */
-export function assertGasConsumptionNotExceeds({ receipt: { gasUsed } }, gasLimit) {
-  assert(gasUsed < gasLimit, `Gas consumption exceeds ${gasLimit} (gasUsed: ${gasUsed})`);
-}
 
 /**
  * @param {Object} transaction the transaction where the event was emitted.
@@ -71,17 +68,58 @@ export function hashMerkle(buffer) {
  * @param {Object} override params that override builder defaults.
  * @return {Array} the DataOrder payload.
  */
-export function buildDataOrder(override = {}) {
-  const payload = Object.assign({}, {
-    audience: JSON.stringify([
-      { name: 'age', value: '20' },
-      { name: 'gender', value: 'male' },
-    ]),
-    price: '20000000000',
-    requestedData: JSON.stringify(['geolocation']),
-    termsAndConditionsHash: hashMessage('DataOrder T&C'),
-    buyerUrl: '/data-orders/12345',
-  }, override);
+export const buildDataOrder = ({
+  audience = [
+    { name: 'age', value: '20' },
+    { name: 'gender', value: 'male' },
+  ],
+  price = 20000000000,
+  requestedData = ['geolocation'],
+  termsAndConditions = 'DataOrder T&C',
+  buyerUrl = '/data-orders/12345',
+} = {}) => Object.values({
+  audience: audience ? JSON.stringify(audience) : '',
+  price: price.toString(),
+  requestedData: requestedData ? JSON.stringify(requestedData) : '',
+  termsAndConditionsHash: termsAndConditions ? hashMessage(termsAndConditions) : '0x0',
+  buyerUrl,
+});
 
-  return Object.values(payload);
+/**
+ * @typedef DataOrder
+ * @property {string} buyer
+ * @property {Object<string, *>} audience
+ * @property {Number} price
+ * @property {string[]} requestedData
+ * @property {string} termsAndConditionsHash
+ * @property {string} buyerUrl
+ * @property {Number} createdAt
+ * @property {Number} closedAt
+ *
+ * Gets the dataOrder from the DataExchange
+ * @param {Object} dx DataExchange contract object.
+ * @param {number} idx dataOrder index in the DataExchange.
+ * @return {DataOrder} the DataOrder.
+ */
+export async function getDataOrder(dx, idx) {
+  const [
+    buyer,
+    audience,
+    price,
+    requestedData,
+    termsAndConditionsHash,
+    buyerUrl,
+    createdAt,
+    closedAt,
+  ] = Object.values(await dx.getDataOrder(idx));
+  return {
+    buyer,
+    audience,
+    price,
+    requestedData,
+    termsAndConditionsHash,
+    buyerUrl,
+    createdAt,
+    closedAt,
+  };
 }
