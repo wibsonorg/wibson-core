@@ -25,6 +25,9 @@ contract('DataExchange', async (accounts) => {
     it('emits an event when a DataOrder is created', async () => {
       const { tx } = await createDataOrder();
       assertEvent(tx, 'DataOrderCreated', 'orderId', 'buyer');
+      const { orderId } = extractEventArgs(tx);
+      assert.equal(orderId, 0, 'should be the first order');
+      assert.equal(await dataExchange.getDataOrdersLength(), 1, 'should be the first order');
     });
 
     it('preserves params order when a DataOrder is created', async () => {
