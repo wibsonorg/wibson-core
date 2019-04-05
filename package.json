@@ -51,6 +51,7 @@
     "web3-utils": "^1.0.0-beta.34"
   },
   "dependencies": {
+    "ethereumjs-abi": "^0.6.7",
     "zeppelin-solidity": "^1.10.0"
   }
 }
