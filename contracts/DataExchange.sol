@@ -4,7 +4,7 @@ pragma solidity ^0.4.24;
  * @title Data Exchange Marketplace
  * @notice This contract allows Notaries to register themselves and buyers to
  *         publish data orders, acording to the Wibson Protocol.
- *         For more information: https://wibson.org/#protocol
+ *         For more information: https://wibson.org
  */
 contract DataExchange {
   event NotaryRegistered(address indexed notary, string notaryUrl);
