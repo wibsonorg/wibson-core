@@ -48,7 +48,9 @@
     "web3-utils": "^1.0.0-beta.34"
   },
   "dependencies": {
+    "axios": "0.18.0",
     "openzeppelin-solidity": "^2.0.0",
+    "sinon": "7.3.1",
     "zeppelin-solidity": "^1.10.0"
   }
 }
