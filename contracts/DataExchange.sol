@@ -30,8 +30,9 @@ contract DataExchange {
   /**
    * @notice Registers sender as a notary.
    * @param notaryUrl Public URL of the notary where the notary info can be obtained.
-   *                  This URL has to be signed with the notary PrivateKey to avoid
-   *                  identity theft from other notaries.
+   *                  This URL should serve a JSON signed by the sender to prove
+   *                  authenticity. It is highly recommended to check the signature
+   *                  with the sender's address before using the notary's services.
    * @return true if the notary was successfully registered, reverts otherwise.
    */
   function registerNotary(
@@ -47,6 +48,9 @@ contract DataExchange {
   /**
    * @notice Updates notary public URL of sender.
    * @param newNotaryUrl Public URL of the notary where the notary info can be obtained.
+   *                     This URL should serve a JSON signed by the sender to prove
+   *                     authenticity. It is highly recommended to check the signature
+   *                     with the sender's address before using the notary's services.
    * @return true if the notary public URL was successfully updated, reverts otherwise.
    */
   function updateNotaryUrl(
@@ -61,7 +65,8 @@ contract DataExchange {
   }
 
   /**
-   * @notice Unregisters sender as notary.
+   * @notice Unregisters sender as notary. Once unregistered, the notary does not
+   *         have any obligation to maintain the old public URL.
    * @return true if the notary was successfully unregistered, reverts otherwise.
    */
   function unregisterNotary(
