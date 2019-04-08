@@ -30,9 +30,8 @@ contract('DataExchange', async (accounts) => {
     it('should validate registered public URL.', async () => {
       // 1. Setup: We mock any GET request
       const data = buildSignedNotaryInfo(notaryPrivateKey);
-      const resolved = new Promise(r => r({ data }));
-      const sandbox = sinon.sandbox.create();
-      sandbox.stub(axios, 'get').returns(resolved);
+      const sandbox = sinon.createSandbox();
+      sandbox.stub(axios, 'get').resolves({ data });
 
       // 2. Setup: We register the notary with a Public URL.
       await dataExchange.registerNotary('https://example.com', { from: notary });
