@@ -1,0 +1,18 @@
+{
+  "extends": "solium:all",
+  "plugins": ["security"],
+  "rules": {
+    "lbrace": ["off"],
+    "quotes": ["error", "double"],
+    "indentation": ["error", 2],
+    "arg-overflow": ["warning", 3],
+    "security/enforce-explicit-visibility": ["error"],
+    "security/no-block-members": ["warning"],
+    "security/no-inline-assembly": ["warning"],
+    "zeppelin/constant-candidates": ["warning"],
+    "zeppelin/no-arithmetic-operations": ["error"],
+    "zeppelin/no-state-variable-shadowing": ["warning"],
+    "zeppelin/no-unchecked-send": ["warning"],
+    "zeppelin/no-unused-imports": ["warning"]
+  }
+}

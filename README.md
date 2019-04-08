@@ -24,7 +24,6 @@ configured in the `deploy.json` file.
 * `infuraToken`: The API key supplied by [Infura](https://infura.io/) to be used on remote environments.
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
-    * `wibTokenAddress`: Optional. An Ethereum address of an existing `WIBToken` contract to avoid redeploying it.
     * `deployPrivateKey`: Private key for the deployer account only used in remote environments.
 
 ## Testing
@@ -61,10 +60,11 @@ $ npm run truffle console --network staging # to test within the console
 
 | Transaction                     | Gas          |
 | ------------------------------- | ------------ |
-| newOrder                        |       222609 |
-| closeOrder                      |        33207 |
-| registerNotary                  |        26041 |
-| unregisterNotary                |        14683 |
+| registerNotary                  |        46060 |
+| updateNotaryUrl                 |        33639 |
+| unregisterNotary                |        15794 |
+| createDataOrder                 |       237924 |
+| closeDataOrder                  |        29463 |
 
 ## Reporting Security Vulnerabilities
 If you think that you have found a security issue in Wibson, please **DO NOT** post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
