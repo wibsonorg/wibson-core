@@ -60,11 +60,11 @@ $ npm run truffle console --network staging # to test within the console
 
 | Transaction                     | Gas          |
 | ------------------------------- | ------------ |
-| registerNotary                  |        46060 |
-| updateNotaryUrl                 |        33639 |
-| unregisterNotary                |        15794 |
-| createDataOrder                 |       237924 |
-| closeDataOrder                  |        29463 |
+| registerNotary                  |        46714 |
+| updateNotaryUrl                 |        34593 |
+| unregisterNotary                |        16335 |
+| createDataOrder                 |       239162 |
+| closeDataOrder                  |        29710 |
 
 ## Reporting Security Vulnerabilities
 If you think that you have found a security issue in Wibson, please **DO NOT** post it as a Github issue and don't publish it publicly. Instead, all security issues must be sent to developers@wibson.org.
