@@ -38,17 +38,18 @@
     "eth-crypto": "^1.2.4",
     "ethereumjs-wallet": "0.6.0",
     "ganache-cli": "6.3.0",
+    "ganache-cli-coverage": "github:Agusx1211/ganache-cli#c462b3fc48fe9b16756f7799885c0741114d9ed3",
     "path": "0.12.7",
     "sinon": "7.3.1",
+    "solc": "^0.5.7",
     "solidity-coverage": "github:rotcivegaf/solidity-coverage#5875f5b7bc74d447f3312c9c0e9fc7814b482477",
-    "ganache-cli-coverage": "github:Agusx1211/ganache-cli#c462b3fc48fe9b16756f7799885c0741114d9ed3",
     "solium": "^1.2.3",
     "solium-plugin-zeppelin": "^0.0.2",
-    "truffle": "4.1.11",
+    "truffle": "^5.0.11",
     "truffle-hdwallet-provider": "0.0.6",
-    "web3": "^1.0.0-beta.34",
-    "web3-provider-engine": "^14.0.5",
-    "web3-utils": "^1.0.0-beta.34"
+    "web3": "1.0.0-beta.34",
+    "web3-provider-engine": "14.0.5",
+    "web3-utils": "1.0.0-beta.34"
   },
   "dependencies": {
     "ethereumjs-abi": "^0.6.7",

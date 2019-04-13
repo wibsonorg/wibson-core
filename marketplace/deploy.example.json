@@ -1,15 +1,13 @@
 {
-  "infuraToken": "foobarbaz",
+  "infuraToken": "<infura-token>",
   "environments": {
     "remoteDevelopment": {
       "deployPrivateKey": "<private-key-without-0x>"
     },
     "staging": {
-      "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
       "deployPrivateKey": "<private-key-without-0x>"
     },
     "production": {
-      "wibTokenAddress": "0xd23466605079069acf96544a74ceed3b63e33da4",
       "deployPrivateKey": "<private-key-without-0x>"
     }
   }

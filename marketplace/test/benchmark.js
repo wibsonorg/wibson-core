@@ -8,8 +8,8 @@ const calls = [
   ['closeDataOrder', 0],
 ];
 
-module.exports = async () => {
-  const [from] = web3.eth.accounts || await web3.eth.getAccounts();
+async function doStuff() {
+  const from = web3.eth.accounts[0] || (await web3.eth.getAccounts())[0];
   const DataExchange = await artifacts.require('DataExchange').deployed();
   const benchmarks = [];
   // eslint-disable-next-line no-restricted-syntax
@@ -22,9 +22,11 @@ module.exports = async () => {
     ];
     benchmarks.push(`\n\t${title}${gas}`);
   }
-  // eslint-disable-next-line no-console
-  console.log(`
+  return (`
   Contract: DataExchange
   \tMethod ___________________ Gas${benchmarks.join('')}
   `);
-};
+}
+
+// eslint-disable-next-line no-console
+module.exports = done => doStuff().then(console.log).catch(console.log).then(done);

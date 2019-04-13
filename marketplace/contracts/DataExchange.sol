@@ -1,4 +1,5 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.7;
+
 
 /**
  * @title Data Exchange Marketplace
@@ -36,7 +37,7 @@ contract DataExchange {
    * @return true if the notary was successfully registered, reverts otherwise.
    */
   function registerNotary(
-    string notaryUrl
+    string calldata notaryUrl
   ) external returns (bool) {
     require(_isNotEmpty(notaryUrl), "notaryUrl must not be empty");
     require(!_isSenderNotary(), "Notary already registered (use updateNotaryUrl to update)");
@@ -54,7 +55,7 @@ contract DataExchange {
    * @return true if the notary public URL was successfully updated, reverts otherwise.
    */
   function updateNotaryUrl(
-    string newNotaryUrl
+    string calldata newNotaryUrl
   ) external returns (bool) {
     require(_isNotEmpty(newNotaryUrl), "notaryUrl must not be empty");
     require(_isSenderNotary(), "Notary not registered");
@@ -91,11 +92,11 @@ contract DataExchange {
    *         not be created, reverts.
    */
   function createDataOrder(
-    string audience,
+    string calldata audience,
     uint256 price,
-    string requestedData,
+    string calldata requestedData,
     bytes32 termsAndConditionsHash,
-    string buyerUrl
+    string calldata buyerUrl
   ) external returns (uint256) {
     require(_isNotEmpty(audience), "audience must not be empty");
     require(price > 0, "price must be greater than zero");
@@ -138,26 +139,24 @@ contract DataExchange {
     return true;
   }
 
-  function _isSenderNotary(
-  ) private view returns (bool) {
-    return _isNotEmpty(notaryUrls[msg.sender]);
-  }
-
-  function _isNotEmpty(
-    string s
-  ) private pure returns (bool) {
-    return bytes(s).length > 0;
-  }
-
   function getNotaryUrl(
     address notaryAddress
-  ) external view returns (string) {
+  ) external view returns (string memory) {
     return notaryUrls[notaryAddress];
   }
 
   function getDataOrder(
     uint256 orderId
-  ) external view returns (address, string, uint256, string, bytes32, string, uint32, uint32) {
+  ) external view returns (
+    address,
+    string memory,
+    uint256,
+    string memory,
+    bytes32,
+    string memory,
+    uint32,
+    uint32
+  ) {
     DataOrder storage dataOrder = dataOrders[orderId];
     return (
       dataOrder.buyer,
@@ -174,5 +173,16 @@ contract DataExchange {
   function getDataOrdersLength(
   ) external view returns (uint) {
     return dataOrders.length;
+  }
+
+  function _isSenderNotary(
+  ) private view returns (bool) {
+    return _isNotEmpty(notaryUrls[msg.sender]);
+  }
+
+  function _isNotEmpty(
+    string memory s
+  ) private pure returns (bool) {
+    return bytes(s).length > 0;
   }
 }

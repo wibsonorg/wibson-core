@@ -1,6 +1,6 @@
 require('babel-register'); // eslint-disable-line import/no-extraneous-dependencies
 require('babel-polyfill'); // eslint-disable-line import/no-extraneous-dependencies
-const DeployUtils = require('./utils/deploymentutils');
+const DeployUtils = require('./utils/DeploymentUtils');
 
 module.exports = {
   migrations_directory: './migrations',
@@ -40,11 +40,5 @@ module.exports = {
       gasPrice: 10 * 1000000000,
     },
   },
-  compilers: { solc: { version: '^0.4.24' } },
-  solc: {
-    optimizer: {
-      enabled: true,
-      runs: 200,
-    },
-  },
+  compilers: { solc: { version: '0.5.7' } },
 };
