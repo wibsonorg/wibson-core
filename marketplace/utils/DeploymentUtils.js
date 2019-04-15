@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const PrivKeyWalletProvider = require('./PrivKeyWalletProvider');
+// const PrivKeyWalletProvider = require('./PrivKeyWalletProvider');
+const HDWalletProvider = require('truffle-hdwallet-provider'); // eslint-disable-line import/no-extraneous-dependencies
 
 function getConfig() {
   try {
@@ -18,5 +19,8 @@ exports.getProvider = function getProvider(network, environment) {
   const envConfig = config.environments[environment] || {};
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
   const privKeys = [envConfig.deployPrivateKey];
-  return new PrivKeyWalletProvider(privKeys, infura);
+  // web3-provider-engine is not synced with truffle last version,
+  // so we would use just this at the moment
+  // return new PrivKeyWalletProvider(privKeys, infura);
+  return new HDWalletProvider(privKeys, infura);
 };
