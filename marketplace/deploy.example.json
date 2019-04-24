@@ -2,13 +2,13 @@
   "infuraToken": "<infura-token>",
   "environments": {
     "remoteDevelopment": {
-      "deployPrivateKey": "<private-key-without-0x>"
+      "privateKeys": ["<private-key-without-0x>"]
     },
     "staging": {
-      "deployPrivateKey": "<private-key-without-0x>"
+      "privateKeys": ["<private-key-without-0x>"]
     },
     "production": {
-      "deployPrivateKey": "<private-key-without-0x>"
+      "privateKeys": ["<private-key-without-0x>"]
     }
   }
 }
