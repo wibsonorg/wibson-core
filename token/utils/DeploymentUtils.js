@@ -17,6 +17,6 @@ exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = config.environments[environment] || {};
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
-  const privKeys = envConfig.deployPrivateKey;
+  const privKeys = envConfig.privateKeys;
   return new PrivKeyWalletProvider(privKeys, infura);
 };

@@ -17,6 +17,6 @@ exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = config.environments[environment] || {};
   const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
-  const privKeys = JSON.parse(envConfig.privateKeys);
+  const privKeys = envConfig.privateKeys;
   return new HDWalletProvider(privKeys, infura, 0, privKeys.length, false);
 };
