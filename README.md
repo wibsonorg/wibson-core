@@ -24,7 +24,7 @@ configured in the `deploy.json` file.
 * `infuraToken`: The API key supplied by [Infura](https://infura.io/) to be used on remote environments.
 * `environments`: Allowed keys are `development`, `test`, `coverage`, `remoteDevelopment`, `staging`, `production`.
 * Environment options:
-    * `deployPrivateKey`: Private key for the deployer account only used in remote environments.
+    * `privateKeys`: Private keys for the accounts to be used during deploy in remote environments.
 
 ## Testing
 ```bash
