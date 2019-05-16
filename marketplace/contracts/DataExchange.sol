@@ -25,8 +25,8 @@ contract DataExchange {
         uint32 closedAt;
     }
 
-    DataOrder[] private dataOrders;
-    mapping(address => string) private notaryUrls;
+    DataOrder[] internal dataOrders;
+    mapping(address => string) internal notaryUrls;
 
   /**
    * @notice Registers sender as a notary.
