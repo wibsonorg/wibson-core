@@ -2,7 +2,7 @@
 
 [Wibson](https://wibson.org/) is a blockchain-based, decentralized data marketplace that provides individuals a way to securely and anonymously sell validated private information in a trusted environment.
 
-**wibson-core** is the implementation of the underlying protocol of Wibson using the Ethereum platform.
+**wibson-core** is the implementation of the underlying protocol of Wibson using the Ethereum platform. He leverage [BatPay](https://github.com/wibsonorg/BatchPayments) solution to keep payments costs three orders of magnitude below ERC20 transactions.
 
 > NOTE: For more details about the protocol, please read our white paper [here](https://wibson.org/).
 
