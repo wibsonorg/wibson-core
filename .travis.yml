@@ -2,9 +2,20 @@ language: node_js
 node_js:
   - "8"
 
+env:
+- WORKING_DIR=token
+- WORKING_DIR=marketplace
+
 cache:
   directories:
-    - "node_modules"
+  - "$WORKING_DIR/node_modules"
+
+before_install: npm i -g npm@6.1.0
+
+install:
+- cd $WORKING_DIR
+- npm prune
+- npm install
 
 jobs:
   allow_failures:

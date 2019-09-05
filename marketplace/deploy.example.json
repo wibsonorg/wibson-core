@@ -1,0 +1,14 @@
+{
+  "infuraToken": "<infura-token>",
+  "environments": {
+    "remoteDevelopment": {
+      "privateKeys": ["<private-key-without-0x>"]
+    },
+    "staging": {
+      "privateKeys": ["<private-key-without-0x>"]
+    },
+    "production": {
+      "privateKeys": ["<private-key-without-0x>"]
+    }
+  }
+}

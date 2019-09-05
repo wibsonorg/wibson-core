@@ -1,0 +1,58 @@
+{
+  "name": "wibson-core",
+  "version": "2.0.0",
+  "author": "Wibson Development Team <developers@wibson.org>",
+  "license": "LGPL-3.0",
+  "engines": {
+    "node": "~8.11.3",
+    "npm": ">= 6.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wibsonorg/wibson-core.git"
+  },
+  "scripts": {
+    "compile": "truffle compile",
+    "lint:sol": "solium -d .",
+    "lint:sol:fix": "solium -d . --fix",
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint . --fix",
+    "lint:all": "npm run lint:js; npm run lint:sol",
+    "lint:all:fix": "npm run lint:js:fix; npm run lint:sol:fix",
+    "truffle": "truffle",
+    "ganache": "ganache-cli",
+    "test": "scripts/test.sh",
+    "test:coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
+    "test:inspect": "INSPECT=true scripts/test.sh",
+    "test:benchmark": "BENCHMARK=true scripts/test.sh"
+  },
+  "devDependencies": {
+    "abi-decoder": "^1.1.0",
+    "axios": "0.18.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eth-crypto": "^1.2.4",
+    "ethereumjs-wallet": "0.6.0",
+    "ganache-cli": "6.3.0",
+    "ganache-cli-coverage": "github:Agusx1211/ganache-cli#c462b3fc48fe9b16756f7799885c0741114d9ed3",
+    "path": "0.12.7",
+    "sinon": "7.3.1",
+    "solc": "^0.5.7",
+    "solidity-coverage": "github:rotcivegaf/solidity-coverage#5875f5b7bc74d447f3312c9c0e9fc7814b482477",
+    "solium": "^1.2.3",
+    "solium-plugin-zeppelin": "^0.0.2",
+    "truffle": "^5.0.11",
+    "truffle-hdwallet-provider": "1.0.6",
+    "web3": "1.0.0-beta.34",
+    "web3-provider-engine": "14.0.5",
+    "web3-utils": "1.0.0-beta.34"
+  },
+  "dependencies": {
+    "ethereumjs-abi": "^0.6.7",
+    "zeppelin-solidity": "^1.10.0"
+  }
+}
