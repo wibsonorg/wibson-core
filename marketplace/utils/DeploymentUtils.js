@@ -16,7 +16,10 @@ function getConfig() {
 exports.getProvider = function getProvider(network, environment) {
   const config = getConfig();
   const envConfig = config.environments[environment] || {};
-  const infura = `https://${network}.infura.io/v3/${config.infuraToken}`;
+  const publicNode =
+    environment === 'rsk'
+      ? `https://public-node.${network}.rsk.co:443`
+      : `https://${network}.infura.io/v3/${config.infuraToken}`;
   const privKeys = envConfig.privateKeys;
-  return new HDWalletProvider(privKeys, infura, 0, privKeys.length, false);
+  return new HDWalletProvider(privKeys, publicNode, 0, privKeys.length, false);
 };

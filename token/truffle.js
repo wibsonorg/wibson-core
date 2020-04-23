@@ -39,6 +39,13 @@ module.exports = {
       gas: 7900000,
       gasPrice: 10 * 1000000000,
     },
+    rsk: {
+      provider: () => DeployUtils.getProvider('testnet', 'rsk'),
+      host: 'https://public-node.testnet.rsk.co/',
+      port: 443,
+      network_id: '*',
+      gasPrice: 8 * 1000000000,
+    },
   },
   compilers: { solc: { version: '0.4.24' } },
   solc: {
